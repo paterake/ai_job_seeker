@@ -26,3 +26,7 @@ venv/
 # Harness runtime (per-run identifiers, not source)
 .claude/current_run_id
 .claude/tool_call_count
+
+# PII — candidate profiles and generated application packets never enter git
+config/profile/
+outputs/

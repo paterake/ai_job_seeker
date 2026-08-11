@@ -1,0 +1,22 @@
+# LLM-authoring backend for the judgment steps (match scoring, drafting).
+# The pipeline is otherwise deterministic — only this step swaps.
+# Pattern lifted from ai_platform/implementation/ai_doc (Execution Modes A/C/D).
+#
+# Exactly one backend is active per run. Precedence when flags are passed:
+#   --llm-provider/--llm-model  -> cloud   (opt-in; requires BOTH)
+#   --ollama-model              -> local
+#   (neither)                   -> agent   (default: the coding agent authors in-session, no API key)
+#
+# Secrets never live here. Cloud keys are read from the environment (.env, gitignored).
+
+default_mode: agent          # agent | local | cloud
+
+local:
+  model: ""                  # e.g. "llama3.1" — set to enable local without a flag
+  base_url: "http://localhost:11434"
+  timeout_s: 300.0
+
+cloud:
+  provider: ""               # e.g. "anthropic" — opt-in only, never defaulted
+  model: ""                  # e.g. "claude-opus-5"
+  # api key resolved from env, not stored here

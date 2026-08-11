@@ -1,0 +1,30 @@
+# Job-source configuration (mechanism, not candidate data).
+# Candidate-specific scope (target roles, locations, remote preference) lives in
+# the gitignored profile YAML, never here — keeps this file free of PII.
+#
+# API keys are read from the environment (.env, gitignored), never stored here.
+
+sources:
+  adzuna:
+    enabled: true
+    country: gb                       # UK
+    base_url: "https://api.adzuna.com/v1/api/jobs"
+    # credentials from env: ADZUNA_APP_ID, ADZUNA_APP_KEY
+    results_per_page: 50
+    max_pages: 3
+
+  reed:
+    enabled: true
+    base_url: "https://www.reed.co.uk/api/1.0/search"
+    # credential from env: REED_API_KEY
+    results_to_take: 100
+
+  themuse:
+    enabled: true
+    base_url: "https://www.themuse.com/api/public/jobs"
+    # optional credential from env: THEMUSE_API_KEY (works keyless, rate-limited)
+
+# Generic filters applied across all sources. Candidate scope refines these.
+filters:
+  max_age_days: 21                    # drop stale postings
+  dedupe_on: ["title", "company"]     # cross-source dedupe key

@@ -1,16 +1,17 @@
 # REPO_CONTRACT — ai_job_seeker
 
-> **Freshly scaffolded.** Complete this contract before the repo takes on governed work.
-> It declares how this repo extends the platform without contradicting it.
+Declares how this repo extends the platform without contradicting it. An AI agent that applies
+to jobs on `ai_agent_core`.
 
 ## Additive Content Map
 
 | Spoke | Additions |
 |---|---|
-| harness | _(repo-specific skills/rules under `ai_context/project/ai_harness/`, or "none yet")_ |
-| governance | _(repo-specific contracts under `ai_context/project/governance/`, or "none yet")_ |
-| operations | _(repo-specific workflow under `ai_context/project/operations/`, or "none yet")_ |
-| knowledge | _(repo-specific system description under `ai_context/project/knowledge/`, or "none yet")_ |
+| harness | Repo-specific application/submission skills and rules under `ai_context/project/ai_harness/` (none yet) |
+| governance | Submission approval gate + PII/credential handling contract under `ai_context/project/governance/` (to author) |
+| security | Trust-tier policy for job-posting sources, applied per `security-threat-model.md` (to author) |
+| operations | Application workflow, budgets, and phase decomposition under `ai_context/project/operations/` (to author) |
+| knowledge | System description (profile → match → draft → submit) under `ai_context/project/knowledge/` (to author) |
 
 ## Additive-Only Acknowledgment
 
@@ -22,11 +23,19 @@ This repo is additive-only relative to `ai_agent_pco`:
 
 ## Sensor Layer Declaration
 
-- Computational sensors: none declared.
-- LLMOps substrate: no `ai_agent_core` dependency is declared yet.
+- **LLMOps substrate: depends on `ai_agent_core`.** LLM calls, retrieval, telemetry, budgets,
+  tracing, and circuit-breaking are brokered through the shared substrate — not reimplemented here.
+  The dependency must be pinned explicitly (no floating latest), per `operations.md`.
+- Computational sensors: inherited from `ai_agent_core` (telemetry events, budget guardrails,
+  run manifests). Repo-specific behavioural sensors (non-impersonation check, no-fabrication
+  check on generated CVs) are to be authored and wired as hooks.
 
 ## Guide/Sensor Coherence Map
 
 | Platform pillar | Primary guide | Primary sensor |
 |---|---|---|
-| Safety / injection posture | `ai_context/pco/ai_harness/rules/security-threat-model.md` | None declared yet |
+| Safety / injection posture (trifecta) | `ai_context/pco/ai_harness/rules/security-threat-model.md` | Source trust-tier gate on posting ingestion (to author) |
+| Non-impersonation | `security-threat-model.md` §5 + project `ASSISTANTS.md` | Recruiter-message impersonation check (to author) |
+| No fabricated experience | Project `ASSISTANTS.md` non-negotiables | No-fabrication check on generated CVs (to author) |
+| Outbound submission control | Submission approval gate (to author) | Approval-record hook before send (to wire) |
+| Bounded LLM execution | `ai_context/pco/ai_harness/rules/operations.md` | `ai_agent_core` budget + circuit breaker |
