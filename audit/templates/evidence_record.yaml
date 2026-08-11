@@ -1,0 +1,53 @@
+# Evidence Record — governed run artefact
+#
+# Usage:
+#   cp this file to audit/runs/<run_id>.yaml and populate all fields.
+#   Validate with: python3 scripts/distill_harness.py evidence-validate --record audit/runs/<run_id>.yaml
+#
+# Append-only once closed_at is set (operations rule).
+# run_id must be taken from .claude/current_run_id — never generated mid-run.
+
+schema_version: 1
+
+# --- Header (policy/identity binding) ---
+
+run_id: ""                  # from .claude/current_run_id
+policy_set: "pco-core/v1"  # must match a registered policy pack id
+workflow: ""                # brief description of this session's work
+model_identity: ""          # model id used — must match a registered model name
+tool_identity: ""           # tool or skill invoked (empty if operator-driven session)
+
+approvals: []               # list of approval record ids (APR-*) used during this run
+exceptions: []              # list of exception ids granted during this run
+
+# --- Trajectory + verification (human-on-the-loop reviewable) ---
+
+files_changed: []           # list of relative file paths written or edited
+  # - path/to/file.py
+
+tool_calls: []              # ordered sequence of tool invocations
+  # - tool: Edit
+  #   input_hash: ""        # sha256 of the input (path + old_string)
+  #   outcome: success      # success | error | skipped
+  # - tool: Bash
+  #   input_hash: ""
+  #   outcome: success
+
+verification_commands: []   # MUST contain re-runnable commands with recorded output
+  # - command: "python3 scripts/distill_harness.py governed-repo-validate --repo ."
+  #   output: |
+  #     (paste full command output here)
+  # - command: "bash scripts/test_expiry_enforcement.sh"
+  #   output: |
+  #     (paste full command output here)
+
+tasks_completed: []         # brief description of each completed task
+tasks_skipped: []           # brief description of skipped tasks and reason
+
+# Optional: populate only when the run was stopped by an execution limit (not for normal close).
+# stop_condition:
+#   type: limit_hit
+#   limit: max_tool_calls          # name of the limit that was reached
+#   value_at_stop: 0               # counter value when the limit fired
+
+closed_at: ""               # ISO 8601 timestamp — set when the record is written

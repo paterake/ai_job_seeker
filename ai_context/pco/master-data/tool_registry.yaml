@@ -1,0 +1,29 @@
+schema_version: 1
+tools:
+  - name: harness-gov-audit
+    description: Governance self-audit — detects contradictions between declared policy and required artefacts, missing mandatory registries, and expired exceptions
+    owner: pco-owner
+    evidence: scripts/distill_harness.py
+    schema_version: "1.0.0"
+    risk_tier: low
+    requires_approval: false
+    scope: pco-only
+    entitlements:
+      roles: [any]
+      environments: [any]
+    invocation: "python3 scripts/distill_harness.py governance-audit --repo ."
+
+  - name: harness-gov-validate
+    description: Harness wiring validation — checks that repo structure matches the platform expectation (REPO_CONTRACT, skill symlinks, routing table completeness)
+    owner: pco-owner
+    evidence: scripts/distill_harness.py
+    schema_version: "1.0.0"
+    risk_tier: low
+    requires_approval: false
+    scope: pco-only
+    entitlements:
+      roles: [any]
+      environments: [any]
+    invocation: "python3 scripts/distill_harness.py validate --target . --scope full"
+
+mcp_servers: []

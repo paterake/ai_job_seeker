@@ -1,0 +1,22 @@
+schema_version: 1
+models:
+  - name: claude-sonnet-4-6
+    provider: anthropic
+    version: "4.6"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; primary harness model"
+    allowlist_scope: [pco-governance, developer-assistance]
+
+  - name: claude-opus-4-8
+    provider: anthropic
+    version: "4.8"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; high-capability tasks and fast mode"
+    allowlist_scope: [pco-governance, developer-assistance]
+
+  - name: claude-haiku-4-5-20251001
+    provider: anthropic
+    version: "4.5"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; lightweight and latency-sensitive tasks"
+    allowlist_scope: [pco-governance, developer-assistance]

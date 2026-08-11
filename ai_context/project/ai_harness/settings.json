@@ -1,0 +1,44 @@
+{
+  "_comment": "Project-owned harness settings, symlinked into .claude/.trae/.qwen. Hook paths are harness-agnostic (resolved from the git root) so the same file works under every harness. Add project-specific hooks below the governed baseline.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/init_run_id.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/gate_git_push.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_exception_expiry.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_execution_limits.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/remind_evidence_package.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

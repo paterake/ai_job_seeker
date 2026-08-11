@@ -1,0 +1,76 @@
+# Skill: /evidence-package
+
+## Purpose
+
+Write and validate the evidence record for the current governed run. Invoked at the end of a
+governed session to produce an append-only audit artefact in `audit/runs/<run_id>.yaml`.
+
+## When to Invoke
+
+- At the end of any governed work session before closing.
+- When the `remind_evidence_package.sh` Stop hook emits a governance reminder.
+
+## Steps
+
+1. **Read the run_id**
+   ```
+   cat .claude/current_run_id
+   ```
+   If the file does not exist, stop and tell the operator: the run was not initialised with
+   a run_id (the `init_run_id.sh` hook may not be wired — check settings.json).
+
+2. **Copy the template**
+   ```
+   cp audit/templates/evidence_record.yaml audit/runs/<run_id>.yaml
+   ```
+
+3. **Populate the header fields** from session context:
+   - `run_id`: value from `.claude/current_run_id`
+   - `policy_set`: `pco-core/v1` (unless a different policy pack was declared)
+   - `workflow`: one-sentence description of what this session accomplished
+   - `model_identity`: the Claude model used (e.g. `claude-sonnet-4-6`) — must match a
+     registered model in `ai_context/pco/master-data/model_registry.yaml`
+   - `tool_identity`: blank if operator-driven; tool name if a governed tool was invoked
+   - `approvals`: list of APR-* ids, or empty list
+   - `exceptions`: list of exception ids, or empty list
+
+4. **Populate the trajectory fields** from this session:
+   - `files_changed`: list every file you wrote or edited (relative paths)
+   - `tool_calls`: ordered list — for each Bash or Edit call, record `tool`, `input_hash`
+     (sha256 of the input), and `outcome` (`success` / `error` / `skipped`)
+   - `tasks_completed`: short phrase per completed task
+   - `tasks_skipped`: short phrase + reason per skipped task
+
+5. **Record verification commands with actual output** — this is the critical field.
+   For each verification step run during the session, write the exact command and paste
+   the full output. Do NOT write a pass/fail flag; write the command and its output so
+   the operator can re-run it independently:
+   ```yaml
+   verification_commands:
+     - command: "python3 scripts/distill_harness.py governed-repo-validate --repo ."
+       output: |
+         Repo: /path/to/repo
+         ...
+         (full output)
+     - command: "bash scripts/test_expiry_enforcement.sh"
+       output: |
+         ...
+   ```
+
+6. **Set `closed_at`** to the current UTC timestamp in ISO 8601 format.
+
+7. **Validate the record**:
+   ```
+   python3 scripts/distill_harness.py evidence-validate --record audit/runs/<run_id>.yaml
+   ```
+   Fix any reported issues before declaring the run closed.
+
+8. **Clear the run_id file** so the next session starts fresh:
+   ```
+   rm .claude/current_run_id
+   ```
+
+## Append-Only Rule
+
+Once `closed_at` is set the record must not be modified. If a correction is needed, file a
+new record referencing the original `run_id` with a `corrects:` field.

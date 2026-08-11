@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Environments
+.venv/
+venv/
+.env
+
+# uv
+# (uv.lock IS committed — do not ignore it)
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Harness runtime (per-run identifiers, not source)
+.claude/current_run_id
+.claude/tool_call_count

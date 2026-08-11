@@ -1,0 +1,19 @@
+schema_version: 1
+
+# Mandatory execution limits for a governed session.
+# Every value must be a positive integer with a rationale.
+# A value of 0 or an absent limit is a governance violation ("unbounded" is not permitted).
+# On Azure deployment: these also become fiscal controls — calibrate conservatively.
+
+limits:
+  max_tool_calls:
+    value: 150
+    rationale: "Human-on-the-loop sessions need a defined review point. 150 tool calls is generous for focused work; a session exceeding this is accumulating context without a review checkpoint."
+
+  max_files_changed:
+    value: 30
+    rationale: "A session touching >30 files is a code sweep, not a focused task. Scope down to a coherent slice and open a new session."
+
+  max_retries_per_operation:
+    value: 3
+    rationale: "3 retries handles transient failures. Exceeding this without human intervention signals a stuck loop, not a transient fault."

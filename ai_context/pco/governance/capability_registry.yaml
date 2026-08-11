@@ -1,0 +1,56 @@
+schema_version: 1
+capabilities:
+  - name: distill_harness_sync
+    tier: 2
+    stage: established
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "scripts/distill_harness.py implements scoped sync into ai_context/pco/ and structural conformance validation."
+  - name: distill_harness_validate
+    tier: 2
+    stage: established
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "scripts/distill_harness.py validate enforces structural parity and downstream REPO_CONTRACT presence/shape."
+  - name: distill_harness_governance_audit
+    tier: 2
+    stage: emerging
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "scripts/distill_harness.py governance-audit provides a heuristic contradiction scan across docs/agent-management and ai_context."
+  - name: harness_hook_gate_git_push
+    tier: 2
+    stage: established
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "ai_context/pco/ai_harness/hooks/gate_git_push.sh enforces pre-push constraints as a deterministic guardrail."
+  - name: skill_sync_pco
+    tier: 1
+    stage: established
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "ai_context/project/ai_harness/skills/sync-pco/SKILL.md defines the controlled sync procedure for consumers."
+  - name: skill_backlog_continuity
+    tier: 1
+    stage: established
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "ai_context/pco/ai_harness/skills/backlog-continuity/SKILL.md defines checkpointing for cross-session backlog execution."
+  - name: skill_use_context
+    tier: 1
+    stage: established
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "ai_context/pco/ai_harness/skills/use-context/SKILL.md defines context loading discipline before execution."
+  - name: skill_capture_lessons
+    tier: 1
+    stage: emerging
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "ai_context/pco/ai_harness/skills/capture-lessons/SKILL.md defines selective capture of non-obvious implementation lessons."
+  - name: assistant_repo_mutation
+    tier: 3
+    stage: emerging
+    stage_since: 2026-05-19
+    owner: rpatel
+    evidence: "Approved via APR-2026-05-19-001 (audit/approvals/2026-05-19_APR-2026-05-19-001_assistant_repo_mutation.md). Scope: assistant ability to modify repo state via controlled edit/delete/command primitives; bounded by platform rules requiring audit trails + human approval for governance changes."
