@@ -7,10 +7,10 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 
 ## Resume (start here)
 
-- **Status:** Stage 0 (scaffold) and Stage 1 (profile) complete and verified.
-- **Next:** Stage 2 — Ingest. **Blocked on the user** registering free job-source
-  API keys (Adzuna `app_id`+`app_key`, Reed key, optional Muse). Build the Adzuna
-  client first once the key exists.
+- **Status:** Stage 0 (scaffold), Stage 1 (profile), and Stage 2 (ingest) code complete and verified. Ingest runs offline via `--dry-run` with synthetic samples; live runs need API keys.
+- **Next:** User action — register free job-source API keys in `.env`, then Stage 3 (Match) which reuses the ingest output and the wired `ai_agent_core.execution` LLM switch.
+- **Session start prompt (paste verbatim at start of a new session):**
+  `from docs/todo/TODO.md continue`
 - **Before touching code, read:**
   - `ai_context/project/ASSISTANTS.md` (repo non-negotiables) then the platform
     `ai_context/pco/ASSISTANTS.md`.
@@ -40,12 +40,28 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 **Still todo (user action)**
 1. Review `implementation/job_seeker/config/profile/kiera.yaml` with Kiera — confirm `target.roles`/`remote` and the audit-role end date.
 
-### Stage 2 — Ingest  ⏳ NEXT (blocked on API keys)
-**Still todo**
-1. Register free keys → gitignored `.env`: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`, optional `THEMUSE_API_KEY`.
-2. Build Adzuna client (`implementation/job_seeker/src/ai_job_seeker/ingest/adzuna.py`) → normalise to one listing schema.
-3. Add Reed + Muse clients; cross-source dedupe per `implementation/job_seeker/config/search.yaml` filters.
-4. Treat all posting text as **untrusted data**, never instructions (trifecta isolation).
+### Stage 2 — Ingest  ✅ CODE COMPLETE (live API keys pending user action)
+**Done**
+- Unified schema: `implementation/job_seeker/src/ai_job_seeker/ingest/schema.py` — `JobListing` dataclass, `ListingSource` enum, `age_days()`, `dedupe_key`, date/string normalisers.
+- Config loader: `implementation/job_seeker/src/ai_job_seeker/ingest/config.py` — validates `search.yaml` (source enablement, base_urls, `max_age_days`, `dedupe_on`); raises `SearchConfigError` loudly.
+- Three clients with env-based key loading:
+  - [adzuna.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/ingest/adzuna.py) — `ADZUNA_APP_ID` + `ADZUNA_APP_KEY`, multi-page fetch, normaliser.
+  - [reed.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/ingest/reed.py) — `REED_API_KEY` via Basic auth, normaliser.
+  - [themuse.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/ingest/themuse.py) — optional `THEMUSE_API_KEY`, keyless falls back to rate-limited.
+- Pipeline: `implementation/job_seeker/src/ai_job_seeker/ingest/pipeline.py` — `run_ingest()` (live fan-out), `run_ingest_dry()` (synthetic per-source samples, no keys), `dedupe_listings()`, `apply_filters()` (age + empty title/company drop).
+- CLI: `ai-job-seeker ingest --dry-run [--search <terms>] [--location <loc>] [--json <path>]`; `_load_dotenv()` loads `.env` into `os.environ` on startup (no extra dep).
+- 16 tests in `implementation/job_seeker/tests/test_ingest.py`: config load, dedupe, age filter, drop empty, dry-run sample, all three normalisers against sample payloads, CLI dry-run stdout, CLI dry-run JSON output.
+- Verified: `uv run ai-job-seeker ingest --dry-run` prints 4 listings (2 adzuna, dedupe of adzuna/reed title+company dupes); 16/16 tests pass facet-level and workspace-level; PII still gitignored.
+
+**Still todo (user action — blocks live ingest)**
+1. Register free keys and write gitignored `.env`:
+   ```
+   ADZUNA_APP_ID=...
+   ADZUNA_APP_KEY=...
+   REED_API_KEY=...
+   THEMUSE_API_KEY=...   # optional
+   ```
+2. Smoke-test live: `uv run ai-job-seeker ingest --search "marketing,content" --location "London"`
 
 ### Stage 3 — Match  ⬜ TODO
 Score normalised listings against the profile; shortlist. First stage that uses the LLM-authoring step. Backend switch uses `ai_agent_core.execution` (generate_text/generate_json + add_execution_args) — tri-mode: agent handoff / local Ollama / cloud API.
@@ -76,10 +92,22 @@ Assemble a ready-to-send folder per job (drafts + apply link/email) under `imple
   `uv run ai-job-seeker profile`
 - PII is not tracked:
   `git check-ignore implementation/job_seeker/config/profile/kiera.yaml` (must print the path)
-- (Stage 2+) add per-stage commands here as stages land.
+- Backend tri-mode switch (from the wire-up item):
+  `uv run ai-job-seeker match` → `Selected backend mode: agent`
+  `uv run ai-job-seeker match --ollama-model qwen3.5:9b` → `ollama`
+  `uv run ai-job-seeker draft --llm-provider openrouter --llm-model google/gemma-4-31b-it:free` → `cloud` + resolved base_url
+- Stage 2 (Ingest) offline plumbing:
+  `uv run ai-job-seeker ingest --dry-run` → prints source breakdown + dedupe/filter summary
+  `uv run --project implementation/job_seeker python -m pytest implementation/job_seeker/tests/ -q` → 16 passed
+- Project-wide pytest (no regressions):
+  `uv run python -m pytest -q` → 16 passed
 
 ---
 
 ## Gotchas
 
-- _(placeholder — fill as friction is discovered)_
+- **Live ingest needs .env keys.** `run_ingest()` checks env vars inside each `fetch_*` function. Register keys first, then `uv run ai-job-seeker ingest --search "X" --location "Y"`.
+- **Dedupe key is normalised.** Whitespace/case in title+company is collapsed before compare; dry-run intentionally surfaces this (2 adzuna + 1 reed + 1 muse = 4 listings, not 6).
+- **Double `/v1` 404 defence lives in ai_agent_core.execution, not ingest.** Ingest HTTP clients (adzuna/reed/themuse) use the base URLs verbatim from search.yaml, which intentionally do not include `/v1` suffixes.
+- **Search.yaml carries only mechanism, never PII.** Candidate target roles/locations stay in the gitignored profile; the pipeline combines both when Stage 3 lands.
+- **Posting text is untrusted data (trifecta).** `JobListing.description` never reaches prompt-template assembly without a boundary: Match stage (Stage 3) reads it as dict data only, never concatenates it into the system-prompt position.
