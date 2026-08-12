@@ -1,6 +1,6 @@
 # LLM-authoring backend for the judgment steps (match scoring, drafting).
 # The pipeline is otherwise deterministic — only this step swaps.
-# Pattern lifted from ai_platform/implementation/ai_doc (Execution Modes A/C/D).
+# Consumed by ai_job_seeker.backend → ai_agent_core.execution (tri-mode shared lib).
 #
 # Exactly one backend is active per run. Precedence when flags are passed:
 #   --llm-provider/--llm-model  -> cloud   (opt-in; requires BOTH)

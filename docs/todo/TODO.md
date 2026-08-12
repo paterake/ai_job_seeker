@@ -26,7 +26,7 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 **Done**
 - `pyproject.toml` (uv workspace root; members in `implementation/job_seeker`); `uv.lock`.
 - `.gitignore`: added `implementation/job_seeker/config/profile/` and `implementation/job_seeker/outputs/` so PII never enters git.
-- `implementation/job_seeker/config/backend.yaml`: 3-way LLM switch (agent default / local Ollama / cloud), lifted from ai_doc.
+- `implementation/job_seeker/config/backend.yaml`: 3-way LLM switch (agent default / local Ollama / cloud), consumed via `ai_agent_core.execution`.
 - `implementation/job_seeker/config/search.yaml`: Adzuna + Reed + Muse sources; generic filters; no PII, no keys.
 - `implementation/job_seeker/src/ai_job_seeker/` package with `profile/` and `cli.py`.
 
