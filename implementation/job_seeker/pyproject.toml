@@ -2,8 +2,6 @@
 name = "ai-job-seeker"
 version = "0.1.0"
 description = "AI-assisted job search pipeline: profile -> match -> draft -> packet. Deterministic plumbing; a single swappable LLM-authoring step (agent / local Ollama / cloud)."
-readme = "../../README.md"
-license = {text = "Apache-2.0"}
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "pyyaml>=6.0",
