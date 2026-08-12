@@ -7,10 +7,12 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 
 ## Resume (start here)
 
-- **Status:** Stage 0 (scaffold), Stage 1 (profile), and Stage 2 (ingest) code complete and verified. Ingest runs offline via `--dry-run` with synthetic samples; live runs need API keys.
-- **Next:** User action — register free job-source API keys in `.env`, then Stage 3 (Match) which reuses the ingest output and the wired `ai_agent_core.execution` LLM switch.
+- **Status:** Stage 0 (scaffold), Stage 1 (profile), and Stage 2 (ingest) code complete and verified. Ingest runs offline via `--dry-run` with synthetic samples; live runs need API keys. Stage 3 (Match) is pre-planned but not started.
+- **Next:** `docs/todo/TODO_STAGE3_MATCH.md` Still-todo step 1 — scaffold `match/` package. Workflow: paste the session-start prompt below into a new session.
 - **Session start prompt (paste verbatim at start of a new session):**
-  `from docs/todo/TODO.md continue`
+  ```
+  from docs/todo/TODO_STAGE3_MATCH.md continue
+  ```
 - **Before touching code, read:**
   - `ai_context/project/ASSISTANTS.md` (repo non-negotiables) then the platform
     `ai_context/pco/ASSISTANTS.md`.

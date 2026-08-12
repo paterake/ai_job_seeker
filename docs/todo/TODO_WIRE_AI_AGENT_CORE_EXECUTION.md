@@ -16,11 +16,13 @@ a fresh session should be able to execute Still-Todo from this file alone.
   All 6 Verification checks pass (imports, profile, 3× mode-switch, 3× smoke
   tests, project-wide pytest, PII gitignore). Workspace pattern matches
   `ai_platform` exactly (editable source via `[tool.uv.sources]`).
-- **Next:** Item closed. Resume from project-level `docs/TODO.md` → Stage 2
-  (Ingest) once keys available; Stage 3 (Match) reuses the wired surfaces.
+- **Next:** Item closed. Resume from
+  `docs/todo/TODO_STAGE3_MATCH.md` → Still-todo step 1
+  (two-phase scorer package scaffold). Stage 2 ingest also complete; dry-run
+  synthetic listings feed Stage 3 out of the box.
 - **Session start prompt (paste verbatim at start of a new session):**
   (item complete — no resumption needed; if re-opening, run the Verification
-  section first to confirm state.)
+  section first to confirm state, then go to TODO_STAGE3_MATCH.md.)
 - **Before touching code, read (in order):**
   1. `ai_context/project/ASSISTANTS.md` then platform `ai_context/pco/ASSISTANTS.md`.
   2. `ai_context/project/governance/REPO_CONTRACT.md` — confirms ai_job_seeker
