@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from ai_agent_core.execution import (
+    AgentHandoffRequired,
     ExecutionConfigError,
     add_execution_args,
     execution_config_from_namespace,
@@ -23,14 +24,17 @@ from ai_job_seeker.ingest import (
     IngestConfig,
     IngestSource,
     JobListing,
+    ListingSource,
     load_search_config,
     run_ingest,
     run_ingest_dry,
 )
 from ai_job_seeker.ingest.config import SearchConfigError
+from ai_job_seeker.match import rank_listings
 from ai_job_seeker.profile.loader import ProfileError, load_profile
 
 DEFAULT_PROFILE = "implementation/job_seeker/config/profile/kiera.yaml"
+DEFAULT_SEARCH_CFG = "implementation/job_seeker/config/search.yaml"
 DOTENV_PATH = ".env"
 
 
@@ -76,6 +80,61 @@ def _build_mode(args: argparse.Namespace) -> tuple:
         print(f"error: {e}", file=sys.stderr)
         raise SystemExit(2)
     return cfg, mode
+
+
+def _load_listings_from_json(path: str) -> list[JobListing]:
+    """Load JobListing records from a JSON file written by `ingest --json`.
+
+    Tolerant of extra keys; coerces source strings back to ListingSource
+    enums. Never raises on bad rows — skips them with a stderr warning.
+    """
+    p = Path(path)
+    if not p.is_file():
+        print(f"error: ingest JSON not found: {p}", file=sys.stderr)
+        raise SystemExit(1)
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"error: could not read ingest JSON ({p}): {e}", file=sys.stderr)
+        raise SystemExit(1)
+
+    from ai_job_seeker.ingest.schema import _parse_date
+
+    if not isinstance(data, list):
+        print(f"error: ingest JSON must be a list of listing dicts ({p})", file=sys.stderr)
+        raise SystemExit(1)
+
+    out: list[JobListing] = []
+    for i, row in enumerate(data):
+        if not isinstance(row, dict):
+            print(f"warning: skipping row {i} (not a dict)", file=sys.stderr)
+            continue
+        try:
+            src_val = str(row.get("source", "")).strip()
+            source = ListingSource(src_val) if src_val else ListingSource.ADZUNA
+        except ValueError:
+            print(f"warning: skipping row {i} (unknown source {src_val!r})", file=sys.stderr)
+            continue
+        try:
+            out.append(
+                JobListing(
+                    source=source,
+                    source_id=str(row.get("source_id", f"json-{i}")),
+                    title=str(row.get("title", "")),
+                    company=str(row.get("company", "")),
+                    location=str(row.get("location", "")),
+                    description=str(row.get("description", "")),
+                    url=str(row.get("url", "")),
+                    posted_at=_parse_date(row.get("posted_at")),
+                    salary_min=row.get("salary_min"),
+                    salary_max=row.get("salary_max"),
+                    remote=row.get("remote"),
+                    contract_type=row.get("contract_type"),
+                )
+            )
+        except Exception as e:
+            print(f"warning: skipping row {i}: {e}", file=sys.stderr)
+    return out
 
 
 def _cmd_ingest(args: argparse.Namespace) -> int:
@@ -124,9 +183,72 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
 
 
 def _cmd_match(args: argparse.Namespace) -> int:
-    _, mode = _build_mode(args)
-    print(f"Selected backend mode: {mode.value}")
-    print("Stage 3 (match scoring) not implemented yet.")
+    try:
+        profile = load_profile(args.candidate)
+    except ProfileError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
+    try:
+        search_cfg = load_search_config(args.search_config)
+    except SearchConfigError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
+    cfg, mode = _build_mode(args)
+    print(f"Backend mode: {mode.value}")
+
+    ingest_json = (args.ingest_json or "").strip()
+    if ingest_json:
+        listings = _load_listings_from_json(ingest_json)
+        print(f"Listings (from --ingest-json): {len(listings)}")
+    else:
+        listings = run_ingest_dry(search_cfg)
+        print(f"Listings (ingest dry-run): {len(listings)}")
+
+    try:
+        scored = rank_listings(
+            profile,
+            listings,
+            cfg=cfg if mode.value != "agent" else None,
+            mode=mode if mode.value != "agent" else None,
+            top_n=args.top,
+            max_age_days=search_cfg.max_age_days,
+        )
+    except AgentHandoffRequired:
+        return 2
+
+    if mode.value == "agent":
+        print("Note: phase-2 LLM judge skipped — AGENT mode. Phase-1 scores only.")
+
+    print()
+    hdr = f"{'#':>3}  {'Final':>5}  {'P1':>5}  {'P2':>5}  {'Src':<7}  Title"
+    print(hdr)
+    print("-" * len(hdr))
+    for s in scored:
+        p2 = f"{s.phase2_score:5.1f}" if s.phase2_score is not None else "   -"
+        title = s.listing.title[:50]
+        print(
+            f"{s.ranked_position:3d}  {s.final_score:5.1f}  "
+            f"{s.phase1_score:5.1f}  {p2}  {s.listing.source.value:<7}  {title}"
+        )
+
+    print()
+    print(f"Shortlisted: {len(scored)} (--top {args.top})")
+    if scored:
+        fabricated_total = sum(len(s.fabricated_claim_flags) for s in scored)
+        if fabricated_total:
+            print(f"Fabricated-claim flags: {fabricated_total}")
+
+    json_path = (args.json or "").strip()
+    if json_path:
+        out_dir = Path(json_path).parent
+        if out_dir and not out_dir.exists():
+            out_dir.mkdir(parents=True, exist_ok=True)
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump([s.to_dict() for s in scored], f, indent=2, ensure_ascii=False)
+        print(f"Wrote ranked JSON: {json_path}")
+
     return 0
 
 
@@ -184,8 +306,21 @@ def main(argv: list[str] | None = None) -> int:
 
     p_match = sub.add_parser(
         "match",
-        help="Stage 3 — score ingested listings against the profile (placeholder)",
+        help="Stage 3 — score ingested listings against the profile and rank",
     )
+    p_match.add_argument("--candidate", default=DEFAULT_PROFILE, help="Path to profile YAML")
+    p_match.add_argument(
+        "--search-config",
+        default=DEFAULT_SEARCH_CFG,
+        help="Path to search.yaml (for dry-run defaults and max_age)",
+    )
+    p_match.add_argument(
+        "--ingest-json",
+        default="",
+        help="Path to a listings JSON file written by `ingest --json` (bypasses dry-run)",
+    )
+    p_match.add_argument("--top", type=int, default=10, help="Cap ranked shortlist to N (default 10)")
+    p_match.add_argument("--json", default="", help="Write ranked ScoredListing dicts to this JSON path")
     add_execution_args(p_match, defaults=backend_defaults)
     p_match.set_defaults(func=_cmd_match)
 

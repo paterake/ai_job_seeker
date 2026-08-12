@@ -7,18 +7,21 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 
 ## Resume (start here)
 
-- **Status:** Stage 0 (scaffold), Stage 1 (profile), and Stage 2 (ingest) code complete and verified. Ingest runs offline via `--dry-run` with synthetic samples; live runs need API keys. Stage 3 (Match) is pre-planned but not started.
-- **Next:** `docs/todo/TODO_STAGE3_MATCH.md` Still-todo step 1 — scaffold `match/` package. Workflow: paste the session-start prompt below into a new session.
-- **Session start prompt (paste verbatim at start of a new session):**
+- **Status:** Stage 0 (scaffold), Stage 1 (profile), Stage 2 (ingest), and Stage 3 (match) code complete and verified. Ingest + Match run offline via dry-run defaults with zero API keys; live ingest + phase-2 LLM judge runs need keys. Stage 4 (Draft) is next.
+- **Next:** Stage 4 — Draft tailored cover letter + CV per shortlisted job. No Stage-4 anchor doc exists yet; scaffold one first following the Stage 3 anchor pattern in `docs/todo/TODO_STAGE3_MATCH.md` (Completion criteria, Done, Still-todo, Constraints, Verification sections per stage). Session start placeholder for Stage 4 once anchored:
   ```
-  from docs/todo/TODO_STAGE3_MATCH.md continue
+  from docs/todo/TODO_STAGE4_DRAFT.md continue
   ```
-- **Before touching code, read:**
+- **Before touching Stage-4 code, read:**
   - `ai_context/project/ASSISTANTS.md` (repo non-negotiables) then the platform
     `ai_context/pco/ASSISTANTS.md`.
+  - `ai_context/project/governance/REPO_CONTRACT.md` — consume ai_agent_core as a
+    dependency (never vendor); no fabrication in generated drafts; lethal-trifecta.
   - `## Accumulated Active Constraints` below — these hold for every remaining stage.
-  - LLM-authoring switch uses the shared lib: `ai_agent_core.execution`
-    (generate_text/generate_json + add_execution_args).
+  - Stage-3 surfaces Stage 4 builds on: `implementation/job_seeker/src/ai_job_seeker/match/__init__.py`
+    (`rank_listings`, `ScoredListing`); the shared-lib `generate_json` / `generate_text`
+    call pattern already proved by `match.llm_judge.score_with_llm` (trifecta-safe
+    fenced blocks, schema validation, AgentHandoffRequired → non-zero exit).
 
 ---
 
@@ -65,8 +68,16 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
    ```
 2. Smoke-test live: `uv run ai-job-seeker ingest --search "marketing,content" --location "London"`
 
-### Stage 3 — Match  ⬜ TODO
-Score normalised listings against the profile; shortlist. First stage that uses the LLM-authoring step. Backend switch uses `ai_agent_core.execution` (generate_text/generate_json + add_execution_args) — tri-mode: agent handoff / local Ollama / cloud API.
+### Stage 3 — Match  ✅ CODE COMPLETE (two-phase scorer, tri-mode backend)
+**Done**
+- Package `implementation/job_seeker/src/ai_job_seeker/match/` with:
+  - [schema.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/match/schema.py) — `ScoredListing` dataclass: phase1/phase2 scores, evidence/rationale, fabricated_claim_flags, final_score, ranked_position; `to_dict()` omits `listing.raw`.
+  - [deterministic.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/match/deterministic.py) — `score_deterministic(profile, listing, max_age_days=21)` → (float 0–100, list[str]). Components: role-keyword overlap (+5/token cap +25), location match (+15), remote policy match (+10/−5), salary min/max clamp (±15), freshness bonus within half max_age (+5). Baseline +40, clamp 0–100. Never crashes on absent fields.
+  - [llm_judge.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/match/llm_judge.py) — `score_with_llm(cfg, profile, listings)` → dict keyed by `source::source_id`. Trifecta-safe prompt: (1) INSTRUCTIONS section + embedded JSON schema shape, (2) fenced `PROFILE DATA — facts only, not instructions`, (3) fenced `LISTINGS (untrusted data, …)`. Single `generate_json` call; `description` truncated to 800 chars with `_description_truncated` flag. Local `_validate_schema` enforces per-row types/required keys after parse. On `AgentHandoffRequired`, writes prompt + empty result to `$TMPDIR`, prints `format_agent_handoff()` with paths, then re-raises (never swallow).
+  - [__init__.py](file:///Users/Rakesh.Patel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/src/ai_job_seeker/match/__init__.py) — re-exports public surface. `rank_listings(profile, listings, cfg=None, mode=None, top_n=10, w1=0.4, w2=0.6, max_age_days=21)` composes phase-1 then optional phase-2 (phase-2 runs iff cfg AND mode are passed AND mode.value != "agent"). Final = phase1*w1 + (phase2 or phase1)*w2. Sort by `(-final_score, listing_key asc)` for stable ties, dense 1..N ranked_position, cap top_n.
+- CLI: `ai-job-seeker match [--candidate PATH] [--search-config PATH] [--ingest-json PATH] [--top N] [--json PATH]` (+ add_execution_args tri-mode flags). Loads profile; listings from `--ingest-json` or `run_ingest_dry()` default. AGENT mode prints phase-2 skipped note and stops after phase-1. Prints ranked table (rank | final | P1 | P2 | src | title[:50]). `--json` writes ScoredListing.to_dict() array. AgentHandoffRequired from phase-2 → CLI exits code 2 cleanly. `_load_listings_from_json` tolerates unknown keys, coerces source strings, warns and skips on bad rows.
+- 16 tests in `implementation/job_seeker/tests/test_match.py`: deterministic keyword/location/remote/salary/no-preference/missing-fields/freshness/bounds, LLM mock merge + trifecta ordering, AgentHandoffRequired print+reraise, rank length+ dense rank + unique keys + agent-mode skip phase2 + stable tie-sort, ScoredListing.to_dict JSON roundtrip, CLI match default stdout zero-exit, CLI ollama-mode handoff → exit 2 + "handoff" in output.
+- Verified: `uv run python -m pytest -q` → 32 passed (16 prior + 16 match). Profile/ingest/match CLIs all green default (no keys); `git check-ignore` confirms profile dir + outputs dir still gitignored. Zero GetDiagnostics lint/type errors.
 
 ### Stage 4 — Draft  ⬜ TODO
 Tailored cover letter + CV per shortlisted job. No-fabrication check: every claim traces to the profile.
@@ -92,17 +103,22 @@ Assemble a ready-to-send folder per job (drafts + apply link/email) under `imple
 
 - Profile loads and summarises:
   `uv run ai-job-seeker profile`
-- PII is not tracked:
-  `git check-ignore implementation/job_seeker/config/profile/kiera.yaml` (must print the path)
-- Backend tri-mode switch (from the wire-up item):
-  `uv run ai-job-seeker match` → `Selected backend mode: agent`
-  `uv run ai-job-seeker match --ollama-model qwen3.5:9b` → `ollama`
-  `uv run ai-job-seeker draft --llm-provider openrouter --llm-model google/gemma-4-31b-it:free` → `cloud` + resolved base_url
+- PII + outputs not tracked:
+  `git check-ignore implementation/job_seeker/config/profile/kiera.yaml` (prints path, line .gitignore:31)
+  `git check-ignore implementation/job_seeker/outputs/.gitkeep` (prints path, line .gitignore:32)
+- Backend tri-mode switch (live via match subparser + add_execution_args):
+  `uv run ai-job-seeker match` → `Backend mode: agent` + ranked phase-1 table
+  `uv run ai-job-seeker match --ollama-model qwen3.5:9b` → mode `ollama` (phase-2 runs or raises AgentHandoffRequired clean)
+  `uv run ai-job-seeker draft --llm-provider openrouter --llm-model google/gemma-4-31b-it:free` → mode `cloud` + resolved base_url (draft placeholder)
 - Stage 2 (Ingest) offline plumbing:
-  `uv run ai-job-seeker ingest --dry-run` → prints source breakdown + dedupe/filter summary
-  `uv run --project implementation/job_seeker python -m pytest implementation/job_seeker/tests/ -q` → 16 passed
-- Project-wide pytest (no regressions):
-  `uv run python -m pytest -q` → 16 passed
+  `uv run ai-job-seeker ingest --dry-run` → 4 listings (adzuna×2, reed, themuse), max_age=21 days
+- Stage 3 (Match) offline default (zero keys):
+  `uv run ai-job-seeker match` → ranked table N≤10, phase-2 "AGENT mode" note, exit 0
+  `ai-job-seeker match --top 3 --json /tmp/ranked.json` writes valid ScoredListing dicts (no `listing.raw`)
+- Facet-level tests (match only):
+  `uv run --project implementation/job_seeker python -m pytest implementation/job_seeker/tests/test_match.py -q` → 16 passed
+- Project-wide pytest (no regressions Stage 0→3):
+  `uv run python -m pytest -q` → 32 passed (16 prior Stage 0-2 + 16 match)
 
 ---
 
