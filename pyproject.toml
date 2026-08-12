@@ -1,20 +1,19 @@
 [project]
-name = "ai-job-seeker"
+name = "ai-job-seeker-workspace"
 version = "0.1.0"
-description = "AI-assisted job search pipeline: profile -> match -> draft -> packet. Deterministic plumbing; a single swappable LLM-authoring step (agent / local Ollama / cloud)."
+description = "Multi-implementation workspace — job-selection management facets (job_seeker + future aspects)"
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "pyyaml>=6.0",
-    "python-docx>=1.1.0",
-    "requests>=2.32.0",
+    "ai-job-seeker",
 ]
 
-[project.scripts]
-ai-job-seeker = "ai_job_seeker.cli:main"
+[tool.uv.workspace]
+members = ["implementation/job_seeker"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.uv.sources]
+ai-job-seeker = { workspace = true }
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/ai_job_seeker"]
+[tool.pytest.ini_options]
+cache_dir = ".ignore/.pytest_cache"
+addopts = ["--import-mode=importlib"]
+pythonpath = ["implementation/job_seeker/src"]

@@ -1,0 +1,28 @@
+[project]
+name = "ai-job-seeker"
+version = "0.1.0"
+description = "AI-assisted job search pipeline: profile -> match -> draft -> packet. Deterministic plumbing; a single swappable LLM-authoring step (agent / local Ollama / cloud)."
+readme = "../../README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "pyyaml>=6.0",
+    "python-docx>=1.1.0",
+    "requests>=2.32.0",
+]
+
+[project.scripts]
+ai-job-seeker = "ai_job_seeker.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_job_seeker"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=4.0.0",
+]

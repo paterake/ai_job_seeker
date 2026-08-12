@@ -28,5 +28,5 @@ venv/
 .claude/tool_call_count
 
 # PII — candidate profiles and generated application packets never enter git
-config/profile/
-outputs/
+implementation/job_seeker/config/profile/
+implementation/job_seeker/outputs/

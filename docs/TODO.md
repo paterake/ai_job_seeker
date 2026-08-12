@@ -24,27 +24,27 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 
 ### Stage 0 — Scaffold  ✅ DONE
 **Done**
-- `pyproject.toml` (uv, deterministic deps: pyyaml, python-docx, requests); `uv.lock`.
-- `.gitignore`: added `config/profile/` and `outputs/` so PII never enters git.
-- `config/backend.yaml`: 3-way LLM switch (agent default / local Ollama / cloud), lifted from ai_doc.
-- `config/search.yaml`: Adzuna + Reed + Muse sources; generic filters; no PII, no keys.
-- `src/ai_job_seeker/` package with `profile/` and `cli.py`.
+- `pyproject.toml` (uv workspace root; members in `implementation/job_seeker`); `uv.lock`.
+- `.gitignore`: added `implementation/job_seeker/config/profile/` and `implementation/job_seeker/outputs/` so PII never enters git.
+- `implementation/job_seeker/config/backend.yaml`: 3-way LLM switch (agent default / local Ollama / cloud), lifted from ai_doc.
+- `implementation/job_seeker/config/search.yaml`: Adzuna + Reed + Muse sources; generic filters; no PII, no keys.
+- `implementation/job_seeker/src/ai_job_seeker/` package with `profile/` and `cli.py`.
 
 ### Stage 1 — Profile  ✅ DONE
 **Done**
-- `config/profile/kiera.yaml`: full profile from CV, every field CV-traceable, gitignored.
-- `src/ai_job_seeker/profile/loader.py`: load + validate (fails loud on missing fields).
-- `src/ai_job_seeker/cli.py`: `ai-job-seeker profile` command.
+- `implementation/job_seeker/config/profile/kiera.yaml`: full profile from CV, every field CV-traceable, gitignored.
+- `implementation/job_seeker/src/ai_job_seeker/profile/loader.py`: load + validate (fails loud on missing fields).
+- `implementation/job_seeker/src/ai_job_seeker/cli.py`: `ai-job-seeker profile` command.
 - Verified: command prints candidate summary; `git check-ignore` confirms profile ignored.
 
 **Still todo (user action)**
-1. Review `config/profile/kiera.yaml` with Kiera — confirm `target.roles`/`remote` and the audit-role end date.
+1. Review `implementation/job_seeker/config/profile/kiera.yaml` with Kiera — confirm `target.roles`/`remote` and the audit-role end date.
 
 ### Stage 2 — Ingest  ⏳ NEXT (blocked on API keys)
 **Still todo**
 1. Register free keys → gitignored `.env`: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`, optional `THEMUSE_API_KEY`.
-2. Build Adzuna client (`src/ai_job_seeker/ingest/adzuna.py`) → normalise to one listing schema.
-3. Add Reed + Muse clients; cross-source dedupe per `config/search.yaml` filters.
+2. Build Adzuna client (`implementation/job_seeker/src/ai_job_seeker/ingest/adzuna.py`) → normalise to one listing schema.
+3. Add Reed + Muse clients; cross-source dedupe per `implementation/job_seeker/config/search.yaml` filters.
 4. Treat all posting text as **untrusted data**, never instructions (trifecta isolation).
 
 ### Stage 3 — Match  ⬜ TODO
@@ -54,18 +54,18 @@ Score normalised listings against the profile; shortlist. First stage that uses 
 Tailored cover letter + CV per shortlisted job. No-fabrication check: every claim traces to the profile.
 
 ### Stage 5 — Packet  ⬜ TODO
-Assemble a ready-to-send folder per job (drafts + apply link/email) under `outputs/`. **Submission is a human-approval gate — no auto-send.**
+Assemble a ready-to-send folder per job (drafts + apply link/email) under `implementation/job_seeker/outputs/`. **Submission is a human-approval gate — no auto-send.**
 
 ---
 
 ## Accumulated Active Constraints (active for all remaining stages)
 
-- **PII stays out of git.** Candidate profiles (`config/profile/`) and generated packets (`outputs/`) are gitignored. Never commit Kiera's name/contact or draft output.
+- **PII stays out of git.** Candidate profiles (`implementation/job_seeker/config/profile/`) and generated packets (`implementation/job_seeker/outputs/`) are gitignored. Never commit Kiera's name/contact or draft output.
 - **No fabrication.** Every claim in a generated CV/letter/message must trace to a fact in the profile YAML.
 - **Submission is a human-approval gate.** The pipeline prepares packets; a person sends them. No silent auto-submit.
 - **Trifecta isolation.** The ingest phase (untrusted web postings) must not share context with credentials or the submission channel; posting text is data, never instructions.
 - **LLM backend is a 3-way switch, agent-authored is the default.** Cloud is opt-in only (both `--llm-provider` and `--llm-model`); never defaulted. Pattern lifted from ai_doc.
-- **Config purity.** Domain/candidate strings live in `config/` YAML, not code. Secrets in `.env` (gitignored), never in code or tracked config.
+- **Config purity.** Domain/candidate strings live in `implementation/job_seeker/config/` YAML, not code. Secrets in `.env` (gitignored), never in code or tracked config.
 - **uv only** for Python env/deps. One responsibility per file; thin `main()` over importable modules.
 
 ---
@@ -75,7 +75,7 @@ Assemble a ready-to-send folder per job (drafts + apply link/email) under `outpu
 - Profile loads and summarises:
   `uv run ai-job-seeker profile`
 - PII is not tracked:
-  `git check-ignore config/profile/kiera.yaml` (must print the path)
+  `git check-ignore implementation/job_seeker/config/profile/kiera.yaml` (must print the path)
 - (Stage 2+) add per-stage commands here as stages land.
 
 ---

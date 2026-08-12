@@ -9,7 +9,7 @@ import sys
 
 from ai_job_seeker.profile.loader import ProfileError, load_profile
 
-DEFAULT_PROFILE = "config/profile/kiera.yaml"
+DEFAULT_PROFILE = "implementation/job_seeker/config/profile/kiera.yaml"
 
 
 def _cmd_profile(args: argparse.Namespace) -> int:
