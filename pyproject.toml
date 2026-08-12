@@ -11,6 +11,7 @@ dependencies = [
 members = ["implementation/job_seeker"]
 
 [tool.uv.sources]
+ai-agent-core = { path = "../ai_agent_core/implementation/ai_agent_core" }
 ai-job-seeker = { workspace = true }
 
 [tool.pytest.ini_options]

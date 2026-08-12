@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "AI-assisted job search pipeline: profile -> match -> draft -> packet. Deterministic plumbing; a single swappable LLM-authoring step (agent / local Ollama / cloud)."
 requires-python = ">=3.11,<3.14"
 dependencies = [
+    "ai-agent-core>=0.5.0",
     "pyyaml>=6.0",
     "python-docx>=1.1.0",
     "requests>=2.32.0",
