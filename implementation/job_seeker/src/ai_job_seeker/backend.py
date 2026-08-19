@@ -1,23 +1,30 @@
 """Thin YAML → shared-lib bridge for backend.yaml.
 
-Keeps < 150 lines; all heavy lifting defers to ai_agent_core.execution.
+Keeps < 200 lines; all heavy lifting defers to ai_agent_core.execution.
 Also exposes profile-level defaults (cv_dir + expected stems) read from the
 same YAML — keeps mechanism config in one file.
+
+ai_agent_core imports are deliberately lazy in the two functions that actually
+need it (load_backend_defaults / apply_backend_overrides) — the profile
+defaults function (load_profile_defaults) has zero dependency on ai_agent_core
+so profile/ingest keep working even when the ai_agent_core sibling checkout
+is missing on disk.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import yaml
 
-from ai_agent_core.execution import (
-    ArgDefaults,
-    ExecutionConfig,
-    ExecutionConfigError,
-)
+if TYPE_CHECKING:
+    from ai_agent_core.execution import (  # noqa: F401 — used lazily at runtime
+        ArgDefaults,
+        ExecutionConfig,
+        ExecutionConfigError,
+    )
 
 DEFAULT_BACKEND_CFG = "implementation/job_seeker/config/backend.yaml"
 
@@ -66,8 +73,23 @@ def _load_yaml(cfg_path: str | Path) -> dict[str, Any]:
 
 def load_backend_defaults(
     cfg_path: str | Path = DEFAULT_BACKEND_CFG,
-) -> ArgDefaults:
-    """Read backend.yaml and project-preferred ArgDefaults for the parser."""
+) -> Any:
+    """Read backend.yaml and project-preferred ArgDefaults for the parser.
+
+    ai_agent_core.execution is imported lazily — this is only called while
+    building the match/draft subparsers, never by profile or ingest.
+    """
+    try:
+        from ai_agent_core.execution import ArgDefaults
+    except ImportError as e:
+        raise ImportError(
+            "ai_agent_core.execution.ArgDefaults is unavailable — needed only "
+            "to build the match/draft CLI subparsers (they carry LLM-mode "
+            "flags). Clone/checkout ai_agent_core next to ai_job_seeker at "
+            "../ai_agent_core/ or install as a released package. Profile and "
+            "ingest commands work without ai_agent_core."
+        ) from e
+
     cfg = _load_yaml(cfg_path)
     local = cfg.get("local", {}) or {}
     return ArgDefaults(
@@ -113,23 +135,34 @@ def load_profile_defaults(
 
 
 def apply_backend_overrides(
-    cfg: ExecutionConfig,
+    cfg: Any,
     cfg_path: str | Path = DEFAULT_BACKEND_CFG,
-) -> ExecutionConfig:
+) -> Any:
     """Merge backend.yaml intent into an already-built ExecutionConfig.
 
     Only fills fields the CLI left empty. Preserves the "never default cloud"
     invariant: cloud is filled only when backend.yaml already has BOTH
     provider AND model. If YAML has one without the other, raises
     ExecutionConfigError loudly instead of silently proceeding.
+
+    ai_agent_core.execution types are imported lazily — this is only called
+    by match/draft after they've already imported the core successfully.
     """
+    try:
+        from ai_agent_core.execution import ExecutionConfigError
+    except ImportError as e:
+        raise ImportError(
+            "ai_agent_core.execution.ExecutionConfigError unavailable — "
+            "apply_backend_overrides needs ai_agent_core on the import path."
+        ) from e
+
     raw = _load_yaml(cfg_path)
     default_mode = str(raw.get("default_mode") or "agent").strip().lower()
     local = raw.get("local", {}) or {}
     cloud = raw.get("cloud", {}) or {}
 
     local_model = str(local.get("model") or "").strip()
-    if default_mode == "local" and local_model and not cfg.ollama.model:
+    if default_mode == "local" and local_model and not getattr(cfg.ollama, "model", ""):
         cfg.ollama.model = local_model
 
     cloud_provider = str(cloud.get("provider") or "").strip()

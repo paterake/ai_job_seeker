@@ -1,5 +1,12 @@
 """Thin CLI entry point. Each subcommand is a thin wrapper over an importable
 phase module. Stage 1 ships `profile` only; further phases add subcommands.
+
+ai_agent_core.execution is only used by the match (phase-2 LLM judge) and
+draft (LLM generation) stages. For the stages that don't need it (profile,
+ingest), we deliberately defer that import to the point of use so the whole
+tool keeps working even if the ai_agent_core sibling checkout is missing on
+disk — the failure becomes a clear per-subcommand message instead of a
+venv-resolution failure at `uv run` time.
 """
 
 from __future__ import annotations
@@ -9,15 +16,7 @@ import json
 import os
 import sys
 from pathlib import Path
-
-from ai_agent_core.execution import (
-    AgentHandoffRequired,
-    ExecutionConfigError,
-    add_execution_args,
-    execution_config_from_namespace,
-    resolve_cloud_endpoint_and_key,
-    resolve_execution_mode,
-)
+from typing import Any, TYPE_CHECKING
 
 from ai_job_seeker.backend import apply_backend_overrides, load_backend_defaults, load_profile_defaults
 from ai_job_seeker.ingest import (
@@ -33,9 +32,52 @@ from ai_job_seeker.ingest.config import SearchConfigError
 from ai_job_seeker.match import rank_listings
 from ai_job_seeker.profile.loader import ProfileError, load_profile
 
+if TYPE_CHECKING:
+    from ai_agent_core.execution import (  # noqa: F401 — used at runtime, re-imported lazily below
+        AgentHandoffRequired,
+        ExecutionConfig,
+        ExecutionConfigError,
+        ArgDefaults,
+    )
+
 DEFAULT_PROFILE = "implementation/job_seeker/config/profile/kiera.yaml"
 DEFAULT_SEARCH_CFG = "implementation/job_seeker/config/search.yaml"
 DOTENV_PATH = ".env"
+
+_AI_AGENT_CORE_IMPORT_ERR_HINT = (
+    "ai_agent_core could not be imported. It is declared as a sibling path "
+    "dependency in the workspace pyproject.toml — clone/checkout "
+    "ai_agent_core next to ai_job_seeker at "
+    "../ai_agent_core/ (relative to the workspace root), or install it as a "
+    "released package. It is only required for the match (phase-2 LLM judge) "
+    "and draft (LLM generation) stages; profile + ingest work without it."
+)
+
+
+def _require_ai_agent_core(what: str) -> Any:
+    """Import and return the ai_agent_core.execution module.
+
+    Called only from the commands that actually need it (_build_mode →
+    match/draft). If unavailable, prints a remediation hint and exits 2 —
+    never raises ImportError silently, never blames a missing transitive.
+    """
+    try:
+        import ai_agent_core.execution as mod  # noqa: WPS433 — lazy by design
+    except ImportError as e:
+        print(f"error: cannot run {what}: {_AI_AGENT_CORE_IMPORT_ERR_HINT}", file=sys.stderr)
+        print(f"       import trace: {e}", file=sys.stderr)
+        raise SystemExit(2)
+    return mod
+
+
+def _add_execution_args(parser: argparse.ArgumentParser, *, defaults: Any) -> None:
+    """Mirror the shared-lib add_execution_args call; import lazily.
+
+    Used only for match/draft parsers; profile/ingest never hit this path so
+    they stay 100% PyPI-dep-only.
+    """
+    mod = _require_ai_agent_core(parser.prog)
+    mod.add_execution_args(parser, defaults=defaults)
 
 
 def _load_dotenv(path: str | Path = DOTENV_PATH) -> None:
@@ -80,11 +122,12 @@ def _cmd_profile(args: argparse.Namespace) -> int:
 
 
 def _build_mode(args: argparse.Namespace) -> tuple:
-    cfg = execution_config_from_namespace(args)
+    mod = _require_ai_agent_core("match/draft backend-mode resolution")
+    cfg = mod.execution_config_from_namespace(args)
     apply_backend_overrides(cfg)
     try:
-        mode = resolve_execution_mode(cfg)
-    except ExecutionConfigError as e:
+        mode = mod.resolve_execution_mode(cfg)
+    except mod.ExecutionConfigError as e:
         print(f"error: {e}", file=sys.stderr)
         raise SystemExit(2)
     return cfg, mode
@@ -223,7 +266,7 @@ def _cmd_match(args: argparse.Namespace) -> int:
             top_n=args.top,
             max_age_days=search_cfg.max_age_days,
         )
-    except AgentHandoffRequired:
+    except _require_ai_agent_core("match phase-2 AgentHandoffRequired handling").AgentHandoffRequired:
         return 2
 
     if mode.value == "agent":
@@ -261,10 +304,11 @@ def _cmd_match(args: argparse.Namespace) -> int:
 
 
 def _cmd_draft(args: argparse.Namespace) -> int:
+    mod = _require_ai_agent_core("draft LLM backend resolution")
     cfg, mode = _build_mode(args)
     print(f"Selected backend mode: {mode.value}")
     if mode.value == "cloud":
-        base_url, _ = resolve_cloud_endpoint_and_key(cfg.cloud)
+        base_url, _ = mod.resolve_cloud_endpoint_and_key(cfg.cloud)
         print(f"Resolved cloud base_url: {base_url}")
 
     cv_defaults = load_profile_defaults()
@@ -278,8 +322,26 @@ def _cmd_draft(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    _load_dotenv()
+def _needs_execution_args(argv0: str | None) -> bool:
+    """True iff the chosen subcommand is match or draft (they carry LLM flags).
+
+    Used to defer the ai_agent_core import at parse-time, not just at
+    command-time — otherwise running *any* `ai-job-seeker profile/ingest`
+    command would still build the match/draft subparsers unconditionally and
+    try to import ai_agent_core via _add_execution_args.
+    """
+    return argv0 in {"match", "draft"}
+
+
+def _build_base_parser(
+    argv0: str | None,
+) -> tuple[argparse.ArgumentParser, argparse._SubParsersAction]:  # type: ignore[name-defined]
+    """Build the common parser + profile + ingest subparsers unconditionally.
+
+    The match/draft subparsers (which carry LLM-mode flags via
+    _add_execution_args and therefore require ai_agent_core on the import
+    path) are added separately by main() only when argv0 says so.
+    """
     parser = argparse.ArgumentParser(prog="ai-job-seeker", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -318,34 +380,68 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_ingest.set_defaults(func=_cmd_ingest)
 
-    backend_defaults = load_backend_defaults()
+    # Even for match/draft we add a stub parser *without* the LLM flags first,
+    # so --help and unknown-arg errors stay clean when ai_agent_core is
+    # missing. The real flags (--ollama-model etc.) are layered on top below
+    # only when argv0 actually matches.
+    if argv0 == "match":
+        p_match = sub.add_parser(
+            "match",
+            help="Stage 3 — score ingested listings against the profile and rank",
+        )
+        p_match.add_argument("--candidate", default=DEFAULT_PROFILE, help="Path to profile YAML")
+        p_match.add_argument(
+            "--search-config",
+            default=DEFAULT_SEARCH_CFG,
+            help="Path to search.yaml (for dry-run defaults and max_age)",
+        )
+        p_match.add_argument(
+            "--ingest-json",
+            default="",
+            help="Path to a listings JSON file written by `ingest --json` (bypasses dry-run)",
+        )
+        p_match.add_argument("--top", type=int, default=10, help="Cap ranked shortlist to N (default 10)")
+        p_match.add_argument("--json", default="", help="Write ranked ScoredListing dicts to this JSON path")
+        p_match.set_defaults(func=_cmd_match)
+    elif argv0 == "draft":
+        p_draft = sub.add_parser(
+            "draft",
+            help="Stage 4 — draft tailored cover letter + CV per shortlist (placeholder)",
+        )
+        p_draft.set_defaults(func=_cmd_draft)
 
-    p_match = sub.add_parser(
-        "match",
-        help="Stage 3 — score ingested listings against the profile and rank",
-    )
-    p_match.add_argument("--candidate", default=DEFAULT_PROFILE, help="Path to profile YAML")
-    p_match.add_argument(
-        "--search-config",
-        default=DEFAULT_SEARCH_CFG,
-        help="Path to search.yaml (for dry-run defaults and max_age)",
-    )
-    p_match.add_argument(
-        "--ingest-json",
-        default="",
-        help="Path to a listings JSON file written by `ingest --json` (bypasses dry-run)",
-    )
-    p_match.add_argument("--top", type=int, default=10, help="Cap ranked shortlist to N (default 10)")
-    p_match.add_argument("--json", default="", help="Write ranked ScoredListing dicts to this JSON path")
-    add_execution_args(p_match, defaults=backend_defaults)
-    p_match.set_defaults(func=_cmd_match)
+    return parser, sub
 
-    p_draft = sub.add_parser(
-        "draft",
-        help="Stage 4 — draft tailored cover letter + CV per shortlist (placeholder)",
-    )
-    add_execution_args(p_draft, defaults=backend_defaults)
-    p_draft.set_defaults(func=_cmd_draft)
+
+def main(argv: list[str] | None = None) -> int:
+    _load_dotenv()
+
+    real_argv = list(sys.argv[1:] if argv is None else argv)
+    argv0 = next((a for a in real_argv if a and not a.startswith("-")), None)
+
+    parser, sub = _build_base_parser(argv0)
+
+    if _needs_execution_args(argv0):
+        # ai_agent_core is required only now (match or draft command). The
+        # import is nested here to keep profile/ingest 100% PyPI-dep-only — if
+        # ai_agent_core is missing, execution fails with the remediation hint
+        # from _require_ai_agent_core rather than an ImportError at import.
+        try:
+            backend_defaults = load_backend_defaults()
+        except ImportError as e:
+            print(f"error: cannot build {argv0} parser: {e}", file=sys.stderr)
+            return 2
+        # Layer the LLM-mode flags onto the already-registered match/draft
+        # subparser via the shared add_execution_args helper.
+        chosen: argparse.ArgumentParser | None = None
+        for act in sub._choices_actions:  # type: ignore[attr-defined]
+            if act.dest == argv0:
+                chosen = sub.choices[act.dest]
+                break
+        if chosen is None:  # pragma: no cover — _needs_execution_args gated argv0
+            print(f"error: subparser for {argv0!r} not registered", file=sys.stderr)
+            return 2
+        _add_execution_args(chosen, defaults=backend_defaults)
 
     args = parser.parse_args(argv)
     return args.func(args)

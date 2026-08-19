@@ -1,18 +1,24 @@
 """Stage 3 — Match scoring: deterministic pre-pass + optional LLM judge.
 
 Public surface re-exports everything the CLI or downstream draft stage needs.
+
+ExecutionConfig/ExecutionMode (from ai_agent_core) are used only by the LLM
+judge gate (phase-2). They are imported lazily by rank_listings() so the rest
+of the pipeline (profile + ingest) works even when ai_agent_core is missing
+on disk. That keeps profile/ingest 100% PyPI-dep-only.
 """
 
 from __future__ import annotations
 
-from typing import Any
-
-from ai_agent_core.execution import ExecutionConfig, ExecutionMode
+from typing import Any, TYPE_CHECKING
 
 from ai_job_seeker.ingest.schema import JobListing
 from ai_job_seeker.match.deterministic import score_deterministic
 from ai_job_seeker.match.llm_judge import score_with_llm
 from ai_job_seeker.match.schema import ScoredListing
+
+if TYPE_CHECKING:
+    from ai_agent_core.execution import ExecutionConfig, ExecutionMode  # noqa: F401
 
 __all__ = [
     "ScoredListing",
@@ -29,12 +35,31 @@ def _listing_key(l: JobListing) -> str:
     return f"{l.source.value}::{l.source_id}"
 
 
+def _require_ai_agent_core_for_phase2() -> tuple[Any, Any]:
+    """Return (ExecutionConfig, ExecutionMode) classes — or import loudly.
+
+    Used only when the caller actually passes cfg AND mode (i.e. phase-2 LLM
+    judge will run). If ai_agent_core isn't installed, phase-1 still works
+    (caller passes cfg=None, mode=None) — this is the "agent mode" default.
+    """
+    try:
+        from ai_agent_core.execution import ExecutionConfig as _EC, ExecutionMode as _EM
+    except ImportError as e:
+        raise ImportError(
+            "ai_agent_core could not be imported — needed only for phase-2 LLM "
+            "judge scoring. Clone/checkout ai_agent_core next to ai_job_seeker "
+            "at ../ai_agent_core/ or skip phase-2 by running match without "
+            "--ollama-model / --llm-provider flags (agent default = phase-1 only)."
+        ) from e
+    return _EC, _EM
+
+
 def rank_listings(
     profile: dict[str, Any],
     listings: list[JobListing],
     *,
-    cfg: ExecutionConfig | None = None,
-    mode: ExecutionMode | None = None,
+    cfg: Any = None,
+    mode: Any = None,
     top_n: int = 10,
     w1: float = _DEFAULT_W1,
     w2: float = _DEFAULT_W2,
@@ -60,9 +85,18 @@ def rank_listings(
     run_phase2 = (
         cfg is not None
         and mode is not None
-        and mode.value != "agent"
+        and getattr(mode, "value", None) != "agent"
     )
     if run_phase2 and scored:
+        # Type-check the user-passed cfg/mode against ai_agent_core types only
+        # when phase-2 is actually requested — otherwise keep the import cold.
+        _EC, _EM = _require_ai_agent_core_for_phase2()
+        if not isinstance(cfg, _EC) or not isinstance(mode, _EM):
+            raise TypeError(
+                "rank_listings(..., cfg=X, mode=Y) types when phase-2 is "
+                f"requested must be ExecutionConfig + ExecutionMode; got "
+                f"{type(cfg).__name__} and {type(mode).__name__}."
+            )
         phase2 = score_with_llm(cfg, profile, [s.listing for s in scored])
         for s in scored:
             key = _listing_key(s.listing)
