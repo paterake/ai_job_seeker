@@ -2,7 +2,9 @@
 
 API docs: https://www.reed.co.uk/developers/jobseeker
 Auth: Basic auth with API key as username, empty password.
-Secret lives in env: REED_API_KEY (from .env, gitignored).
+Canonical secret sources (first hit wins):
+  1. ~/Documents/__cfg/apikey/reed/api_key
+  2. env: REED_API_KEY (e.g. via gitignored .env)
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ from typing import Any, Iterable
 import requests
 
 from ai_job_seeker.ingest.schema import JobListing, ListingSource, _parse_date
+from ai_job_seeker.secrets import SecretNotFound, require_secret
 
 
 class ReedClientError(RuntimeError):
@@ -22,11 +25,21 @@ class ReedClientError(RuntimeError):
 
 
 def _get_creds() -> str:
-    key = os.environ.get("REED_API_KEY", "").strip()
+    """Return Reed API key from canonical sources.
+
+    Prefers the on-disk layout under ~/Documents/__cfg/apikey/reed/ so that
+    secrets live outside the repo. Falls back to env var REED_API_KEY so
+    .env-based setups keep working.
+    """
+    try:
+        key = require_secret("reed", "api_key", "REED_API_KEY") or ""
+    except SecretNotFound as e:
+        raise ReedClientError(str(e)) from None
     if not key:
         raise ReedClientError(
-            "Reed API key not set. Define REED_API_KEY in the environment "
-            "(e.g. via .env)."
+            "Reed API key not set. Populate either\n"
+            "  ~/Documents/__cfg/apikey/reed/api_key,\n"
+            "  or env var REED_API_KEY."
         )
     return key
 

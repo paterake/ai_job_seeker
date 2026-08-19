@@ -2,7 +2,9 @@
 
 API docs: https://developer.adzuna.com/overview
 Auth: `app_id` + `app_key` as query-string params on every request.
-Secrets live in env: ADZUNA_APP_ID, ADZUNA_APP_KEY (from .env, gitignored).
+Canonical secret sources (first hit wins):
+  1. ~/Documents/__cfg/apikey/adzuna/app_id  +  app_key
+  2. env: ADZUNA_APP_ID, ADZUNA_APP_KEY (e.g. via gitignored .env)
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from typing import Any, Iterable
 import requests
 
 from ai_job_seeker.ingest.schema import JobListing, ListingSource, _parse_date
+from ai_job_seeker.secrets import SecretNotFound, require_secret
 
 
 class AdzunaClientError(RuntimeError):
@@ -21,12 +24,22 @@ class AdzunaClientError(RuntimeError):
 
 
 def _get_creds() -> tuple[str, str]:
-    app_id = os.environ.get("ADZUNA_APP_ID", "").strip()
-    app_key = os.environ.get("ADZUNA_APP_KEY", "").strip()
+    """Return (app_id, app_key) from canonical sources.
+
+    Prefers the on-disk layout under ~/Documents/__cfg/apikey/adzuna/ so that
+    secrets live outside the repo and are reusable across repos. Falls back
+    to env vars (the previous behaviour) so .env-based setups keep working.
+    """
+    try:
+        app_id = require_secret("adzuna", "app_id", "ADZUNA_APP_ID") or ""
+        app_key = require_secret("adzuna", "app_key", "ADZUNA_APP_KEY") or ""
+    except SecretNotFound as e:
+        raise AdzunaClientError(str(e)) from None
     if not app_id or not app_key:
         raise AdzunaClientError(
-            "Adzuna credentials not set. Define ADZUNA_APP_ID and ADZUNA_APP_KEY "
-            "in the environment (e.g. via .env)."
+            "Adzuna credentials not set. Populate either\n"
+            "  ~/Documents/__cfg/apikey/adzuna/app_id and app_key,\n"
+            "  or env vars ADZUNA_APP_ID + ADZUNA_APP_KEY."
         )
     return app_id, app_key
 

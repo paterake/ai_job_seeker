@@ -19,7 +19,7 @@ from ai_agent_core.execution import (
     resolve_execution_mode,
 )
 
-from ai_job_seeker.backend import apply_backend_overrides, load_backend_defaults
+from ai_job_seeker.backend import apply_backend_overrides, load_backend_defaults, load_profile_defaults
 from ai_job_seeker.ingest import (
     IngestConfig,
     IngestSource,
@@ -68,6 +68,14 @@ def _cmd_profile(args: argparse.Namespace) -> int:
     print(f"Remote    : {target.get('remote', '-')}")
     print(f"Skills    : {len(profile.get('skills', []))} listed")
     print(f"Experience: {len(profile.get('experience', []))} roles")
+
+    cv_defaults = load_profile_defaults()
+    docx = cv_defaults.with_existing_docx()
+    pdf = cv_defaults.with_existing_pdf()
+    print()
+    print(f"CV dir    : {cv_defaults.cv_dir}")
+    print(f"CV docx   : {docx if docx else f'(not found — expected {cv_defaults.cv_docx})'}")
+    print(f"CV pdf    : {pdf if pdf else f'(not found — expected {cv_defaults.cv_pdf})'}")
     return 0
 
 
@@ -258,6 +266,14 @@ def _cmd_draft(args: argparse.Namespace) -> int:
     if mode.value == "cloud":
         base_url, _ = resolve_cloud_endpoint_and_key(cfg.cloud)
         print(f"Resolved cloud base_url: {base_url}")
+
+    cv_defaults = load_profile_defaults()
+    docx = cv_defaults.with_existing_docx()
+    print(f"CV dir (default)    : {cv_defaults.cv_dir}")
+    if docx:
+        print(f"CV source .docx     : {docx}")
+    else:
+        print(f"CV source .docx     : (not found in {cv_defaults.cv_dir} — no source CV for drafting)")
     print("Stage 4 (draft) not implemented yet.")
     return 0
 

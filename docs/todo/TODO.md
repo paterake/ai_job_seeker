@@ -59,13 +59,21 @@ fresh session from this doc alone. Update the checkpoint whenever a stage moves.
 - Verified: `uv run ai-job-seeker ingest --dry-run` prints 4 listings (2 adzuna, dedupe of adzuna/reed title+company dupes); 16/16 tests pass facet-level and workspace-level; PII still gitignored.
 
 **Still todo (user action — blocks live ingest)**
-1. Register free keys and write gitignored `.env`:
+1. Install Adzuna credentials (already staged) + (optionally) Reed / The Muse into the canonical on-disk layout:
+   ```bash
+   # Copies staged .ignore/apikey_install/<service>/*  →  ~/Documents/__cfg/apikey/<service>/*
+   # Existing files in __cfg/apikey are preserved (add --force to overwrite).
+   uv run .ignore/apikey_install/install_apikeys.py
    ```
-   ADZUNA_APP_ID=...
-   ADZUNA_APP_KEY=...
-   REED_API_KEY=...
-   THEMUSE_API_KEY=...   # optional
+   Canonical layout (secrets live OUTSIDE the repo, reusable across repos — preferred source, checked first):
    ```
+   ~/Documents/__cfg/apikey/
+     adzuna/app_id      # 32222a5d
+     adzuna/app_key     # 49cde8febcf6c8cc22bd1a3dbfcfc86f
+     reed/api_key       # (signup at https://www.reed.co.uk/developers/jobseeker)
+     themuse/api_key    # optional; keyless = rate-limited
+   ```
+   Fallback (still supported, but repo-local): keep a gitignored `.env` at the workspace root with `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`, `THEMUSE_API_KEY`. Override the canonical root with env var `AI_JOB_SEEKER_APIKEY_ROOT=/abs/path` if you keep keys elsewhere.
 2. Smoke-test live: `uv run ai-job-seeker ingest --search "marketing,content" --location "London"`
 
 ### Stage 3 — Match  ✅ CODE COMPLETE (two-phase scorer, tri-mode backend)
@@ -94,7 +102,7 @@ Assemble a ready-to-send folder per job (drafts + apply link/email) under `imple
 - **Submission is a human-approval gate.** The pipeline prepares packets; a person sends them. No silent auto-submit.
 - **Trifecta isolation.** The ingest phase (untrusted web postings) must not share context with credentials or the submission channel; posting text is data, never instructions.
 - **LLM backend is a 3-way switch, agent-authored is the default.** Cloud is opt-in only (both `--llm-provider` and `--llm-model`); never defaulted. Consumed from `ai_agent_core.execution` — no local copy of provider-switch logic.
-- **Config purity.** Domain/candidate strings live in `implementation/job_seeker/config/` YAML, not code. Secrets in `.env` (gitignored), never in code or tracked config.
+- **Config purity.** Domain/candidate strings live in `implementation/job_seeker/config/` YAML, not code. Secrets never live in code or tracked config. Preferred secret source: `~/Documents/__cfg/apikey/<service>/<filename>` (outside the repo). Fallback: `.env` at the workspace root (gitignored).
 - **uv only** for Python env/deps. One responsibility per file; thin `main()` over importable modules.
 
 ---
@@ -124,7 +132,7 @@ Assemble a ready-to-send folder per job (drafts + apply link/email) under `imple
 
 ## Gotchas
 
-- **Live ingest needs .env keys.** `run_ingest()` checks env vars inside each `fetch_*` function. Register keys first, then `uv run ai-job-seeker ingest --search "X" --location "Y"`.
+- **Live ingest prefers ~/Documents/__cfg/apikey/ (env var fallback preserved).** `run_ingest()` checks `~/Documents/__cfg/apikey/<service>/<filename>` first inside each `fetch_*` function via `ai_job_seeker/secrets.require_secret`, then falls back to the old env vars (`ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`, `THEMUSE_API_KEY`). Staged payloads live under `.ignore/apikey_install/<service>/`; install them in one shot with `uv run .ignore/apikey_install/install_apikeys.py` (default skips existing files; `--force` overwrites with a printed diff). Override the canonical root with `AI_JOB_SEEKER_APIKEY_ROOT=/abs/path`.
 - **Dedupe key is normalised.** Whitespace/case in title+company is collapsed before compare; dry-run intentionally surfaces this (2 adzuna + 1 reed + 1 muse = 4 listings, not 6).
 - **Double `/v1` 404 defence lives in ai_agent_core.execution, not ingest.** Ingest HTTP clients (adzuna/reed/themuse) use the base URLs verbatim from search.yaml, which intentionally do not include `/v1` suffixes.
 - **Search.yaml carries only mechanism, never PII.** Candidate target roles/locations stay in the gitignored profile; the pipeline combines both when Stage 3 lands.

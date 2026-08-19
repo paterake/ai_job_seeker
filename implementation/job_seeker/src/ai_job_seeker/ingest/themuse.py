@@ -2,7 +2,9 @@
 
 API docs: https://www.themuse.com/developers/api/v2
 Auth: optional `api_key` query param. Keyless calls are rate-limited.
-Secret (optional) lives in env: THEMUSE_API_KEY.
+Canonical secret sources (first hit wins, key is OPTIONAL):
+  1. ~/Documents/__cfg/apikey/themuse/api_key
+  2. env: THEMUSE_API_KEY
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from typing import Any, Iterable
 import requests
 
 from ai_job_seeker.ingest.schema import JobListing, ListingSource, _parse_date
+from ai_job_seeker.secrets import require_secret
 
 
 class MuseClientError(RuntimeError):
@@ -21,7 +24,14 @@ class MuseClientError(RuntimeError):
 
 
 def _get_creds() -> str:
-    return os.environ.get("THEMUSE_API_KEY", "").strip()
+    """Return Muse API key if available, else empty string.
+
+    The Muse works keylessly (rate-limited), so absence of the key is not an
+    error. Preferred source: on-disk under ~/Documents/__cfg/apikey/themuse/.
+    Fallback: env var THEMUSE_API_KEY.
+    """
+    value = require_secret("themuse", "api_key", "THEMUSE_API_KEY", optional=True) or ""
+    return value or ""
 
 
 def _build_url(

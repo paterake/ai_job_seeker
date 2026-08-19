@@ -1,5 +1,6 @@
-# LLM-authoring backend for the judgment steps (match scoring, drafting).
-# The pipeline is otherwise deterministic — only this step swaps.
+# LLM-authoring backend for the judgment steps (match scoring, drafting),
+# plus profile-level defaults that the pipeline stages consume.
+# The pipeline is otherwise deterministic — only LLM steps swap.
 # Consumed by ai_job_seeker.backend → ai_agent_core.execution (tri-mode shared lib).
 #
 # Exactly one backend is active per run. Precedence when flags are passed:
@@ -8,6 +9,8 @@
 #   (neither)                   -> agent   (default: the coding agent authors in-session, no API key)
 #
 # Secrets never live here. Cloud keys are read from the environment (.env, gitignored).
+# Candidate PII (the profile YAML, draft output) lives under gitignored paths — this file
+# carries pointers only, never CV content or profile facts.
 
 default_mode: agent          # agent | local | cloud
 
@@ -20,3 +23,14 @@ cloud:
   provider: ""               # e.g. "anthropic" — opt-in only, never defaulted
   model: ""                  # e.g. "claude-opus-5"
   # api key resolved from env, not stored here
+
+# Profile-level defaults (mechanism, not facts). Draft stage + CV→YAML helpers use cv_dir
+# as the default location for the raw .docx/.pdf source CVs. Paths are resolved verbatim —
+# may be absolute (recommended, since CVs live outside the repo for PII separation) or
+# relative to the workspace root.
+profile:
+  cv_dir: "/Users/kierapatel/Documents/__personal/careers/cv"
+  # Expected filename stems inside cv_dir. Stage-4 draft and any CV→profile converter
+  # will look for these and fall back to whatever *.docx exists if the names don't match.
+  cv_docx_stem: "Kiera_Patel_CV"
+  cv_pdf_stem: "Kiera_Patel_CV"
