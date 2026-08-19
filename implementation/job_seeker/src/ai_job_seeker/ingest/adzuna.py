@@ -15,6 +15,7 @@ from typing import Any, Iterable
 
 import requests
 
+from ai_job_seeker.ingest.pipeline import IngestSourceSkip
 from ai_job_seeker.ingest.schema import JobListing, ListingSource, _parse_date
 from ai_job_seeker.secrets import SecretNotFound, require_secret
 
@@ -29,17 +30,26 @@ def _get_creds() -> tuple[str, str]:
     Prefers the on-disk layout under ~/Documents/__cfg/apikey/adzuna/ so that
     secrets live outside the repo and are reusable across repos. Falls back
     to env vars (the previous behaviour) so .env-based setups keep working.
+
+    Raises IngestSourceSkip (not AdzunaClientError) when the specific
+    credentials are missing from BOTH canonical sources — that signals
+    "gracefully skip Adzuna in this ingest run". Actual client errors (HTTP
+    401 / malformed response / etc.) still raise AdzunaClientError.
     """
     try:
         app_id = require_secret("adzuna", "app_id", "ADZUNA_APP_ID") or ""
         app_key = require_secret("adzuna", "app_key", "ADZUNA_APP_KEY") or ""
     except SecretNotFound as e:
-        raise AdzunaClientError(str(e)) from None
+        raise IngestSourceSkip(
+            "adzuna",
+            f"credentials not set — {e}",
+        ) from None
     if not app_id or not app_key:
-        raise AdzunaClientError(
-            "Adzuna credentials not set. Populate either\n"
-            "  ~/Documents/__cfg/apikey/adzuna/app_id and app_key,\n"
-            "  or env vars ADZUNA_APP_ID + ADZUNA_APP_KEY."
+        raise IngestSourceSkip(
+            "adzuna",
+            "credentials empty — populate either "
+            "~/Documents/__cfg/apikey/adzuna/{app_id,app_key} or "
+            "ADZUNA_APP_ID/ADZUNA_APP_KEY",
         )
     return app_id, app_key
 
@@ -54,9 +64,10 @@ def _build_url(
 ) -> str:
     country = (country or "gb").lower().strip()
     what = " ".join(t.strip() for t in search_terms if t and t.strip())
+    app_id, app_key = _get_creds()
     params: dict[str, Any] = {
-        "app_id": _get_creds()[0],
-        "app_key": _get_creds()[1],
+        "app_id": app_id,
+        "app_key": app_key,
         "results_per_page": int(results_per_page),
     }
     if what:
@@ -91,7 +102,7 @@ def _normalise(raw: dict[str, Any]) -> JobListing:
         salary_min=smin,
         salary_max=smax,
         contract_type=_norm_contract(raw.get("contract_type")),
-        remote=None,
+        remote=_norm_remote(raw.get("latitude"), raw.get("longitude"), raw.get("location_is_remote")),
         raw=raw,
     )
 
@@ -100,9 +111,18 @@ def _norm_contract(value: Any) -> str | None:
     if not value:
         return None
     v = str(value).strip().lower()
-    if v in {"permanent", "contract", "full_time", "part_time"}:
+    if v in {"permanent", "contract", "full_time", "part_time", "temp"}:
         return v
     return None
+
+
+def _norm_remote(lat: Any, lon: Any, explicit: Any) -> bool | None:
+    flag = str(explicit or "").strip().lower()
+    if flag in {"1", "true", "yes"}:
+        return True
+    if lat is None and lon is None:
+        return None
+    return False
 
 
 def fetch_adzuna(
@@ -112,22 +132,21 @@ def fetch_adzuna(
     *,
     timeout_s: float = 30.0,
 ) -> list[JobListing]:
-    """Fetch all pages from Adzuna for the given search terms.
+    """Fetch listings from Adzuna across configured pages.
 
-    `source` is an IngestSource from load_search_config(). Its extras carry
-    `country`, `results_per_page`, `max_pages`.
+    Credentials are fetched lazily on the first URL build; if they are
+    missing from both canonical sources we raise IngestSourceSkip so the
+    pipeline can skip this source and continue with the others.
     """
     extras = source.extras or {}
     country = str(extras.get("country") or "gb").strip()
-    rpp = int(extras.get("results_per_page") or 50)
-    max_pages = int(extras.get("max_pages") or 3)
+    results_per_page = int(extras.get("results_per_page") or 50)
+    max_pages = int(extras.get("max_pages") or 1)
     base_url = source.base_url
-
-    _get_creds()
 
     listings: list[JobListing] = []
     for page in range(1, max_pages + 1):
-        url = _build_url(base_url, country, rpp, page, search_terms, location)
+        url = _build_url(base_url, country, results_per_page, page, search_terms, location)
         resp = requests.get(url, timeout=timeout_s)
         if resp.status_code != 200:
             raise AdzunaClientError(
@@ -142,6 +161,4 @@ def fetch_adzuna(
                 listings.append(_normalise(raw))
             except Exception:
                 continue
-        if len(results) < rpp:
-            break
     return listings

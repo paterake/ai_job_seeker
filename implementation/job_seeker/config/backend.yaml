@@ -13,6 +13,10 @@
 # carries pointers only, never CV content or profile facts.
 
 default_mode: agent          # agent | local | cloud
+                             # HARDWARE CONSTRAINT (Kiera's M3 Air 8GB): local Ollama is too heavy
+                             # for this machine — keep agent as the default and only ever use
+                             # --ollama-model / local mode on a bigger box. Cloud mode remains
+                             # opt-in only (--llm-provider + --llm-model, or fill cloud section).
 
 local:
   model: ""                  # e.g. "llama3.1" — set to enable local without a flag

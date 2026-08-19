@@ -26,7 +26,40 @@ if TYPE_CHECKING:
         ExecutionConfigError,
     )
 
-DEFAULT_BACKEND_CFG = "implementation/job_seeker/config/backend.yaml"
+_DEFAULT_BACKEND_CFG_REL = "implementation/job_seeker/config/backend.yaml"
+
+
+def _resolve_workspace_relative(rel_path: str) -> Path:
+    """Resolve a workspace-relative config path (works from any cwd)."""
+    here = Path(__file__).resolve()
+    raw_candidates: list[Path] = []
+    for parent in [here, *here.parents][:7]:
+        if (parent / "pyproject.toml").is_file():
+            raw_candidates.append(parent)
+    cwd = Path.cwd().resolve()
+    for parent in [cwd, *cwd.parents][:7]:
+        if (parent / "pyproject.toml").is_file() and parent not in raw_candidates:
+            raw_candidates.append(parent)
+
+    def _is_workspace_root(p: Path) -> bool:
+        if (p / "ai_context").is_dir():
+            return True
+        target = (p / rel_path).resolve()
+        if target.is_file():
+            return True
+        return False
+
+    candidates = [p for p in raw_candidates if _is_workspace_root(p)]
+    if not candidates:
+        candidates = list(raw_candidates)
+    for root in candidates:
+        target = (root / rel_path).resolve()
+        if target.is_file():
+            return target
+    return (Path(candidates[0]) / rel_path).resolve() if candidates else Path(rel_path).resolve()
+
+
+DEFAULT_BACKEND_CFG = str(_resolve_workspace_relative(_DEFAULT_BACKEND_CFG_REL))
 
 
 @dataclass(frozen=True)

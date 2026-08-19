@@ -6,6 +6,8 @@ Public surface re-exports everything the CLI or downstream match stage needs.
 
 from ai_job_seeker.ingest.config import IngestConfig, IngestSource, load_search_config
 from ai_job_seeker.ingest.pipeline import (
+    IngestResult,
+    IngestSourceSkip,
     apply_filters,
     dedupe_listings,
     run_ingest,
@@ -15,7 +17,9 @@ from ai_job_seeker.ingest.schema import JobListing, ListingSource
 
 __all__ = [
     "IngestConfig",
+    "IngestResult",
     "IngestSource",
+    "IngestSourceSkip",
     "JobListing",
     "ListingSource",
     "apply_filters",

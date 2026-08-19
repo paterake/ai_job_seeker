@@ -13,9 +13,53 @@ from typing import Any
 
 import yaml
 
-DEFAULT_SEARCH_CFG = "implementation/job_seeker/config/search.yaml"
+_DEFAULT_SEARCH_CFG_REL = "implementation/job_seeker/config/search.yaml"
 
 KNOWN_SOURCES = ("adzuna", "reed", "themuse")
+
+
+def _resolve_workspace_relative(rel_path: str) -> Path:
+    """Resolve a workspace-relative path against a heuristic workspace root.
+
+    Walks up from this source file (or cwd) looking for workspace markers. We
+    distinguish the actual workspace root from a facet subproject root (the
+    facet also has a pyproject.toml) using two signals — either the dir has
+    a sibling `ai_context/` (only present at the actual workspace root), or
+    `<candidate>/<rel_path>` actually exists on disk.
+
+    Works seamlessly whether pytest runs from the workspace root or from
+    inside the facet subdirectory.
+    """
+    here = Path(__file__).resolve()
+    raw_candidates: list[Path] = []
+    for parent in [here, *here.parents][:7]:
+        if (parent / "pyproject.toml").is_file():
+            raw_candidates.append(parent)
+    cwd = Path.cwd().resolve()
+    for parent in [cwd, *cwd.parents][:7]:
+        if (parent / "pyproject.toml").is_file() and parent not in raw_candidates:
+            raw_candidates.append(parent)
+
+    def _is_workspace_root(p: Path) -> bool:
+        if (p / "ai_context").is_dir():
+            return True
+        target = (p / rel_path).resolve()
+        if target.is_file():
+            return True
+        return False
+
+    candidates: list[Path] = [p for p in raw_candidates if _is_workspace_root(p)]
+    # Fallback: keep everything, surface a FileNotFoundError downstream.
+    if not candidates:
+        candidates = list(raw_candidates)
+    for root in candidates:
+        target = (root / rel_path).resolve()
+        if target.is_file():
+            return target
+    return (Path(candidates[0]) / rel_path).resolve() if candidates else Path(rel_path).resolve()
+
+
+DEFAULT_SEARCH_CFG = str(_resolve_workspace_relative(_DEFAULT_SEARCH_CFG_REL))
 
 
 @dataclass(slots=True)

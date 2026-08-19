@@ -42,3 +42,37 @@ def load_profile(path: str | Path) -> dict[str, Any]:
         raise ProfileError(f"Profile {p} is missing required fields: {', '.join(missing)}")
 
     return data
+
+
+def save_profile(profile: dict[str, Any], path: str | Path, *, overwrite: bool = False) -> Path:
+    """Write a profile dict to YAML at ``path``, creating parent dirs.
+
+    - Uses yaml.safe_dump with sort_keys=False so sections keep the order we
+      wrote them in (identity → summary → skills → experience → education →
+      … → target — easy to review).
+    - Refuses to overwrite unless overwrite=True (guard against clobbering a
+      hand-edited profile YAML by accident).
+    - Creates the parent directory with 0o700 perms — profile files are PII,
+      gitignored, and should not be world-readable.
+    """
+    p = Path(path)
+    if p.exists() and not overwrite:
+        raise ProfileError(
+            f"Refusing to overwrite existing profile: {p}. "
+            "Pass overwrite=True to regenerate."
+        )
+    p.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import os as _os
+        _os.chmod(p.parent, 0o700)
+    except OSError:
+        pass
+
+    dumped = yaml.safe_dump(profile, sort_keys=False, allow_unicode=True, width=120)
+    p.write_text(dumped, encoding="utf-8")
+    try:
+        import os as _os
+        _os.chmod(p, 0o600)
+    except OSError:
+        pass
+    return p

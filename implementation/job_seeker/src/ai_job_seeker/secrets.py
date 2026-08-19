@@ -57,6 +57,24 @@ def _read_env_secret(env_var: str) -> str | None:
     return value or None
 
 
+def check_secret_available(
+    service: str,
+    filename: str,
+    env_var: str,
+) -> bool:
+    """Return True iff the secret has any non-empty value from canonical sources.
+
+    Unlike require_secret, this never raises — it just reports availability.
+    Used by ingest clients to surface "credentials missing → skip this source
+    gracefully" rather than fail the whole pipeline.
+    """
+    from_file = _read_file_secret(service, filename)
+    if from_file:
+        return True
+    from_env = _read_env_secret(env_var)
+    return bool(from_env)
+
+
 def require_secret(
     service: str,
     filename: str,

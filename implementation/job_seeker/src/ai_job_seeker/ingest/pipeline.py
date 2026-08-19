@@ -1,8 +1,8 @@
 """Ingest pipeline: fan out to enabled sources, dedupe, apply filters.
 
 Exposes:
-- run_ingest(cfg, profile_target) -> list[JobListing]  — live API calls
-- run_ingest_dry(...) -> list[JobListing]              — synthetic samples, no API
+- run_ingest(cfg, profile_target) -> IngestResult     — live API calls (per-source graceful skip when credentials are missing)
+- run_ingest_dry(...) -> IngestResult                 — synthetic samples, no API
 - dedupe_listings(listings, cfg) -> list[JobListing]
 - apply_filters(listings, cfg) -> list[JobListing]
 
@@ -13,11 +13,54 @@ content as instructions; it just carries and filters it.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable
 
 from ai_job_seeker.ingest.config import IngestConfig
 from ai_job_seeker.ingest.schema import JobListing, ListingSource
+
+
+class IngestSourceSkip(RuntimeError):
+    """Raised by a fetch_* client when a source should be skipped gracefully.
+
+    Carries (source_name, reason). The pipeline catches this and records the
+    skip rather than failing the whole ingest run — used specifically for
+    "required credentials not yet populated" kinds of skips where the rest
+    of the pipeline still succeeds.
+
+    Non-credential failures (HTTP non-200, parse failures, etc.) still raise
+    their original client exceptions and fail hard, as they should.
+    """
+
+    def __init__(self, source_name: str, reason: str) -> None:
+        super().__init__(f"{source_name}: {reason}")
+        self.source_name = source_name
+        self.reason = reason
+
+
+@dataclass
+class IngestResult:
+    """Return value of run_ingest / run_ingest_dry.
+
+    Listings + per-source reporting so the CLI (or match stage, or tests) can
+    show what came from where and which sources were skipped, without
+    leaking secrets or failing the whole pipeline because one source is
+    misconfigured.
+    """
+
+    listings: list[JobListing] = field(default_factory=list)
+    source_counts: dict[str, int] = field(default_factory=dict)
+    source_skips: list[tuple[str, str]] = field(default_factory=list)
+
+    def __len__(self) -> int:
+        return len(self.listings)
+
+    def __iter__(self):
+        return iter(self.listings)
+
+    def __getitem__(self, idx):
+        return self.listings[idx]
 
 
 def _fetch_by_source(
@@ -94,29 +137,44 @@ def run_ingest(
     location: str = "",
     *,
     now: datetime | None = None,
-) -> list[JobListing]:
-    """Fan-out to all enabled sources, then dedupe + filter.
+) -> IngestResult:
+    """Fan-out to all enabled sources, recording skips per source, then dedupe + filter.
 
-    Raises any client errors for sources whose credentials are missing;
-    callers handle the UX (e.g. skip on --dry or surface clearly).
+    Skips (e.g. required credentials not populated) are caught and recorded
+    in the returned IngestResult.source_skips; they never abort the run.
+    Hard failures (HTTP errors, malformed responses, etc.) still raise as
+    before.
     """
     listings: list[JobListing] = []
+    source_counts: dict[str, int] = {}
+    source_skips: list[tuple[str, str]] = []
     for source in cfg.enabled_sources():
         try:
-            listings.extend(_fetch_by_source(source, search_terms, location))
-        except Exception:
-            raise
-    listings = dedupe_listings(listings, cfg)
-    listings = apply_filters(listings, cfg, now=now)
-    return listings
+            fetched = _fetch_by_source(source, search_terms, location)
+        except IngestSourceSkip as skip:
+            source_skips.append((skip.source_name, skip.reason))
+            continue
+        listings.extend(fetched)
+        source_counts[source.name] = source_counts.get(source.name, 0) + len(fetched)
+    deduped = dedupe_listings(listings, cfg)
+    filtered = apply_filters(deduped, cfg, now=now)
+    final_counts: dict[str, int] = {}
+    for lst in filtered:
+        k = lst.source.value
+        final_counts[k] = final_counts.get(k, 0) + 1
+    return IngestResult(
+        listings=filtered,
+        source_counts=final_counts,
+        source_skips=source_skips,
+    )
 
 
 def run_ingest_dry(
     cfg: IngestConfig,
     *,
     now: datetime | None = None,
-) -> list[JobListing]:
-    """Return synthetic listings so CLI + match/draft dev works without API keys.
+) -> IngestResult:
+    """Return synthetic IngestResult so CLI + match/draft dev works without API keys.
 
     Dry-run listings cover every source marked enabled in search.yaml, so
     the dedupe + filter pipeline is exercised end-to-end. Trifecta note:
@@ -135,9 +193,17 @@ def run_ingest_dry(
     if cfg.sources.get("themuse") and cfg.sources["themuse"].enabled:
         samples.append(_sample(ListingSource.THEMUSE, now))
         samples.append(_sample(ListingSource.THEMUSE, now, idx=2, title="Staff Data Engineer", company="OtherCo"))
-    samples = dedupe_listings(samples, cfg)
-    samples = apply_filters(samples, cfg, now=now)
-    return samples
+    deduped = dedupe_listings(samples, cfg)
+    filtered = apply_filters(deduped, cfg, now=now)
+    final_counts: dict[str, int] = {}
+    for lst in filtered:
+        k = lst.source.value
+        final_counts[k] = final_counts.get(k, 0) + 1
+    return IngestResult(
+        listings=filtered,
+        source_counts=final_counts,
+        source_skips=[],
+    )
 
 
 def _sample(src: ListingSource, now: datetime, *, idx: int = 1, title: str = "Data Engineer", company: str = "Acme Ltd") -> JobListing:

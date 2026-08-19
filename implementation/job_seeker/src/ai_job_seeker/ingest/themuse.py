@@ -44,6 +44,8 @@ def _build_url(
     key = _get_creds()
     if key:
         params["api_key"] = key
+    if location:
+        params["location"] = location
     qs = urllib.parse.urlencode(params)
     return f"{base_url.rstrip('/')}?{qs}"
 

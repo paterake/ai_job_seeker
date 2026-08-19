@@ -16,6 +16,7 @@ from typing import Any, Iterable
 
 import requests
 
+from ai_job_seeker.ingest.pipeline import IngestSourceSkip
 from ai_job_seeker.ingest.schema import JobListing, ListingSource, _parse_date
 from ai_job_seeker.secrets import SecretNotFound, require_secret
 
@@ -30,16 +31,23 @@ def _get_creds() -> str:
     Prefers the on-disk layout under ~/Documents/__cfg/apikey/reed/ so that
     secrets live outside the repo. Falls back to env var REED_API_KEY so
     .env-based setups keep working.
+
+    Raises IngestSourceSkip (not ReedClientError) when the key is missing from
+    both canonical sources — the pipeline skips Reed and continues with the
+    other sources. Actual HTTP / parse failures still raise ReedClientError.
     """
     try:
         key = require_secret("reed", "api_key", "REED_API_KEY") or ""
     except SecretNotFound as e:
-        raise ReedClientError(str(e)) from None
+        raise IngestSourceSkip(
+            "reed",
+            f"api_key not set — {e}",
+        ) from None
     if not key:
-        raise ReedClientError(
-            "Reed API key not set. Populate either\n"
-            "  ~/Documents/__cfg/apikey/reed/api_key,\n"
-            "  or env var REED_API_KEY."
+        raise IngestSourceSkip(
+            "reed",
+            "api_key empty — populate either "
+            "~/Documents/__cfg/apikey/reed/api_key or REED_API_KEY",
         )
     return key
 

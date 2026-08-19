@@ -30,7 +30,8 @@ from ai_job_seeker.ingest import (
 )
 from ai_job_seeker.ingest.config import SearchConfigError
 from ai_job_seeker.match import rank_listings
-from ai_job_seeker.profile.loader import ProfileError, load_profile
+from ai_job_seeker.profile.extractor import extract_profile_from_docx
+from ai_job_seeker.profile.loader import ProfileError, load_profile, save_profile
 
 if TYPE_CHECKING:
     from ai_agent_core.execution import (  # noqa: F401 — used at runtime, re-imported lazily below
@@ -40,8 +41,56 @@ if TYPE_CHECKING:
         ArgDefaults,
     )
 
-DEFAULT_PROFILE = "implementation/job_seeker/config/profile/kiera.yaml"
-DEFAULT_SEARCH_CFG = "implementation/job_seeker/config/search.yaml"
+_DEFAULT_PROFILE_REL = "implementation/job_seeker/config/profile/kiera.yaml"
+_DEFAULT_SEARCH_CFG_REL = "implementation/job_seeker/config/search.yaml"
+
+
+def _resolve_workspace_relative(rel_path: str) -> str:
+    """Resolve a workspace-relative config path (works from any cwd)."""
+    here = Path(__file__).resolve()
+    raw_candidates: list[Path] = []
+    for parent in [here, *here.parents][:7]:
+        if (parent / "pyproject.toml").is_file():
+            raw_candidates.append(parent)
+    cwd = Path.cwd().resolve()
+    for parent in [cwd, *cwd.parents][:7]:
+        if (parent / "pyproject.toml").is_file() and parent not in raw_candidates:
+            raw_candidates.append(parent)
+
+    def _is_workspace_root(p: Path) -> bool:
+        if (p / "ai_context").is_dir():
+            return True
+        target = (p / rel_path).resolve()
+        if target.is_file():
+            return True
+        # For gitignored paths like the profile YAML (tests create it),
+        # accept a workspace-like root if the *directory* exists under the
+        # candidate. That disambiguates workspace vs facet subproject roots
+        # even when the final file hasn't been materialised yet.
+        rel_parent = Path(rel_path).parent
+        if rel_parent != Path(".") and (p / rel_parent).is_dir():
+            return True
+        return False
+
+    candidates = [p for p in raw_candidates if _is_workspace_root(p)]
+    if not candidates:
+        candidates = list(raw_candidates)
+    for root in candidates:
+        target = (root / rel_path).resolve()
+        if target.is_file():
+            return str(target)
+    # For intentionally-gitignored paths (like the profile YAML) we still
+    # want a stable absolute default — workspace-root-relative.
+    return str((Path(candidates[0]) / rel_path).resolve()) if candidates else rel_path
+
+
+DEFAULT_PROFILE = _resolve_workspace_relative(_DEFAULT_PROFILE_REL)
+DEFAULT_SEARCH_CFG = _resolve_workspace_relative(_DEFAULT_SEARCH_CFG_REL)
+def _resolve_workspace_relative_dir(rel_dir: str) -> str:
+    """Resolve a workspace-relative dir default (works from any cwd)."""
+    sentinel = _resolve_workspace_relative(f"{rel_dir}/.gitkeep")
+    return str(Path(sentinel).parent)
+DEFAULT_OUTPUT_DIR = _resolve_workspace_relative_dir("implementation/job_seeker/config/output")
 DOTENV_PATH = ".env"
 
 _AI_AGENT_CORE_IMPORT_ERR_HINT = (
@@ -96,6 +145,47 @@ def _load_dotenv(path: str | Path = DOTENV_PATH) -> None:
 
 
 def _cmd_profile(args: argparse.Namespace) -> int:
+    cv_defaults = load_profile_defaults()
+    docx = cv_defaults.with_existing_docx() if hasattr(cv_defaults, "with_existing_docx") else None
+    if args.extract:
+        src = (args.cv_docx or "").strip() or (str(docx) if docx else "")
+        if not src or not Path(src).is_file():
+            print(
+                f"error: --extract requires a CV .docx path (via --cv-docx or backend.yaml profile.cv_dir+cv_docx_stem). "
+                f"Got: {src!r}",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            result = extract_profile_from_docx(src)
+        except ProfileError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 1
+
+        out_path = (args.output or "").strip() or args.candidate
+        try:
+            written = save_profile(result.profile, out_path, overwrite=args.force)
+        except ProfileError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
+        ident = result.profile["identity"]
+        target = result.profile.get("target", {})
+        print(f"Extracted CV      : {src}")
+        print(f"Wrote profile to  : {written}")
+        print(f"Candidate         : {ident.get('name', '?')}")
+        print(f"Skills (hard/soft): {len(result.profile['skills'].get('hard', []))}/{len(result.profile['skills'].get('soft', []))}")
+        print(f"Experience roles  : {len(result.profile.get('experience', []))}")
+        print(f"Education entries : {len(result.profile.get('education', []))}")
+        print(f"Achievements      : {len(result.profile.get('achievements_and_awards', []))}")
+        if target.get("roles"):
+            print(f"Target roles (hint): {', '.join(target['roles'])}")
+        if result.required_review:
+            print()
+            print("Required review (populate in the YAML, then re-run `ai-job-seeker profile`):")
+            for field in result.required_review:
+                print(f"  - {field}")
+        return 0
+
     try:
         profile = load_profile(args.candidate)
     except ProfileError as e:
@@ -103,17 +193,18 @@ def _cmd_profile(args: argparse.Namespace) -> int:
         return 1
 
     ident = profile["identity"]
-    target = profile["target"]
+    target = profile.get("target", {})
     print(f"Candidate : {ident.get('name', '?')}")
     print(f"Roles     : {', '.join(target.get('roles', [])) or '-'}")
     print(f"Locations : {', '.join(target.get('locations', [])) or '-'}")
     print(f"Remote    : {target.get('remote', '-')}")
-    print(f"Skills    : {len(profile.get('skills', []))} listed")
+    print(f"Min salary: {target.get('salary_min_gbp', '-')}")
+    print(f"Skills    : {sum(len(v) for v in profile.get('skills', {}).values()) if isinstance(profile.get('skills'), dict) else len(profile.get('skills', []))} listed")
     print(f"Experience: {len(profile.get('experience', []))} roles")
 
     cv_defaults = load_profile_defaults()
-    docx = cv_defaults.with_existing_docx()
-    pdf = cv_defaults.with_existing_pdf()
+    docx = cv_defaults.with_existing_docx() if hasattr(cv_defaults, "with_existing_docx") else None
+    pdf = cv_defaults.with_existing_pdf() if hasattr(cv_defaults, "with_existing_pdf") else None
     print()
     print(f"CV dir    : {cv_defaults.cv_dir}")
     print(f"CV docx   : {docx if docx else f'(not found — expected {cv_defaults.cv_docx})'}")
@@ -197,7 +288,9 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
 
     enabled = [s.name for s in cfg.enabled_sources()]
     if args.dry_run:
-        listings = run_ingest_dry(cfg)
+        result = run_ingest_dry(cfg)
+        listings = result.listings
+        skips: list[tuple[str, str]] = []
         print(f"[dry-run] Enabled sources: {', '.join(enabled) if enabled else '(none)'}")
     else:
         if not enabled:
@@ -206,18 +299,23 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
         terms = [t.strip() for t in (args.search or "").split(",") if t.strip()]
         location = (args.location or "").strip()
         try:
-            listings = run_ingest(cfg, search_terms=terms, location=location)
+            result = run_ingest(cfg, search_terms=terms, location=location)
+            listings = result.listings
+            skips = list(result.source_skips)
         except Exception as e:
             print(f"error: ingest failed: {e}", file=sys.stderr)
             return 1
 
-    by_src: dict[str, int] = {}
-    for lst in listings:
-        by_src[lst.source.value] = by_src.get(lst.source.value, 0) + 1
+    by_src: dict[str, int] = dict(result.source_counts) if hasattr(result, "source_counts") else {}
+    if not by_src:
+        for lst in listings:
+            by_src[lst.source.value] = by_src.get(lst.source.value, 0) + 1
 
     print(f"Listings fetched : {len(listings)}")
     for src in sorted(by_src):
         print(f"  {src:<8}      : {by_src[src]}")
+    for src_name, reason in skips:
+        print(f"  {src_name:<8}      : SKIP — {reason}")
     print(f"Filter (max_age) : {cfg.max_age_days} days")
     print(f"Dedupe key       : {', '.join(cfg.dedupe_on)}")
 
@@ -231,6 +329,112 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
         print(f"Wrote JSON       : {out_path}")
 
     return 0
+
+
+def _write_shortlist_markdown(
+    scored: list[Any],
+    out_path: str | Path,
+    *,
+    candidate_name: str,
+    search_terms: str = "",
+    location: str = "",
+) -> Path:
+    """Write a ranked shortlist as Markdown — clickable links, for review.
+
+    Output shape intentionally simple so Kiera can open it in any editor /
+    Markdown preview and click links directly.
+    """
+    from datetime import datetime
+
+    p = Path(out_path)
+    if str(p.parent).strip():
+        p.parent.mkdir(parents=True, exist_ok=True)
+
+    lines: list[str] = []
+    lines.append(f"# Job Shortlist — {candidate_name}")
+    lines.append("")
+    meta_bits = [f"Generated: {datetime.now().isoformat(timespec='seconds')}"]
+    if search_terms:
+        meta_bits.append(f"Search: `{search_terms}`")
+    if location:
+        meta_bits.append(f"Location: `{location}`")
+    lines.append(" · ".join(meta_bits))
+    lines.append("")
+    lines.append(f"**{len(scored)}** shortlisted roles (sorted by final score, descending).")
+    lines.append("")
+
+    # Table
+    hdr = "| # | Score | Source | Role | Company | Location | Salary | Posted |"
+    sep = "|---|---:|---|---|---|---|---|---|"
+    lines.append(hdr)
+    lines.append(sep)
+    for s in scored:
+        lst = s.listing
+        url = lst.url or ""
+        role = (lst.title[:80] + "…") if len(lst.title) > 80 else lst.title
+        if url:
+            role_md = f"[{role}]({url})"
+        else:
+            role_md = role
+        salary = ""
+        if lst.salary_min and lst.salary_max:
+            salary = f"£{lst.salary_min:,}–£{lst.salary_max:,}"
+        elif lst.salary_min:
+            salary = f"£{lst.salary_min:,}+"
+        elif lst.salary_max:
+            salary = f"≤£{lst.salary_max:,}"
+        posted = lst.posted_at.strftime("%Y-%m-%d") if lst.posted_at else ""
+        remote_bit = f" ({lst.remote})" if lst.remote else ""
+        location_txt = f"{lst.location}{remote_bit}" if lst.location else remote_bit.strip()
+        lines.append(
+            f"| {s.ranked_position} "
+            f"| {s.final_score:.1f} "
+            f"| {lst.source.value} "
+            f"| {role_md} "
+            f"| {lst.company or ''} "
+            f"| {location_txt} "
+            f"| {salary} "
+            f"| {posted} |"
+        )
+    lines.append("")
+    lines.append("## Score breakdown per role")
+    lines.append("")
+    for s in scored:
+        lst = s.listing
+        lines.append(f"### {s.ranked_position}. {lst.title} — {lst.company or ''}")
+        lines.append("")
+        lines.append(f"- **Final score:** {s.final_score:.1f}  ")
+        lines.append(f"  · Phase-1 (deterministic): {s.phase1_score:.1f}")
+        if s.phase2_score is not None:
+            lines.append(f"  · Phase-2 (LLM judge): {s.phase2_score:.1f}")
+            if s.phase2_rationale:
+                lines.append(f"  · Phase-2 rationale: {s.phase2_rationale}")
+        else:
+            lines.append(f"  · Phase-2 (LLM judge): skipped (agent mode — default for 8GB M3 Air)")
+        lines.append(f"- **Source:** {lst.source.value} — `{lst.source_id}`")
+        if lst.url:
+            lines.append(f"- **Apply link:** {lst.url}")
+        evidence = getattr(s, "phase1_evidence", None)
+        if evidence:
+            lines.append("- **Phase-1 evidence:**")
+            if isinstance(evidence, dict):
+                for k, v in evidence.items():
+                    if isinstance(v, float):
+                        lines.append(f"  - {k}: {v:.1f}")
+                    else:
+                        lines.append(f"  - {k}: {v}")
+            elif isinstance(evidence, list):
+                for item in evidence:
+                    lines.append(f"  - {item}")
+            else:
+                lines.append(f"  - {evidence}")
+        flags = getattr(s, "fabricated_claim_flags", None) or []
+        if flags:
+            lines.append(f"- **Fabricated-claim flags:** {flags}")
+        lines.append("")
+
+    p.write_text("\n".join(lines), encoding="utf-8")
+    return p
 
 
 def _cmd_match(args: argparse.Namespace) -> int:
@@ -300,6 +504,20 @@ def _cmd_match(args: argparse.Namespace) -> int:
             json.dump([s.to_dict() for s in scored], f, indent=2, ensure_ascii=False)
         print(f"Wrote ranked JSON: {json_path}")
 
+    md_path = (args.md or "").strip()
+    if md_path:
+        name = (profile.get("identity") or {}).get("name") or "Candidate"
+        # If --ingest-json came from ingest --search X --location Y we won't
+        # have those strings here; leave them blank and the md just omits them.
+        _write_shortlist_markdown(
+            scored,
+            md_path,
+            candidate_name=name,
+            search_terms=(args.search or "") if hasattr(args, "search") else "",
+            location=(args.location or "") if hasattr(args, "location") else "",
+        )
+        print(f"Wrote shortlist MD : {md_path}")
+
     return 0
 
 
@@ -347,6 +565,26 @@ def _build_base_parser(
 
     p_profile = sub.add_parser("profile", help="Load and summarise a candidate profile")
     p_profile.add_argument("--candidate", default=DEFAULT_PROFILE, help="Path to profile YAML")
+    p_profile.add_argument(
+        "--extract",
+        action="store_true",
+        help="Generate a profile YAML by extracting facts from a CV .docx (source-of-truth path via backend.yaml profile defaults, or --cv-docx).",
+    )
+    p_profile.add_argument(
+        "--cv-docx",
+        default="",
+        help="Override the .docx path used by --extract (default: backend.yaml profile.cv_dir + cv_docx_stem)",
+    )
+    p_profile.add_argument(
+        "--output",
+        default="",
+        help="Override the output profile YAML path used by --extract (default: --candidate path)",
+    )
+    p_profile.add_argument(
+        "--force",
+        action="store_true",
+        help="Allow --extract to overwrite an existing profile YAML (default: refuse, to preserve hand-edits).",
+    )
     p_profile.set_defaults(func=_cmd_profile)
 
     p_ingest = sub.add_parser(
@@ -355,7 +593,7 @@ def _build_base_parser(
     )
     p_ingest.add_argument(
         "--search-config",
-        default="implementation/job_seeker/config/search.yaml",
+        default=DEFAULT_SEARCH_CFG,
         help="Path to search.yaml (sources + filters)",
     )
     p_ingest.add_argument(
@@ -402,6 +640,9 @@ def _build_base_parser(
         )
         p_match.add_argument("--top", type=int, default=10, help="Cap ranked shortlist to N (default 10)")
         p_match.add_argument("--json", default="", help="Write ranked ScoredListing dicts to this JSON path")
+        p_match.add_argument("--md", default="", help="Write a reviewable Markdown shortlist (clickable links) to this path")
+        p_match.add_argument("--search", default="", help="Informational only — written into Markdown shortlist header")
+        p_match.add_argument("--location", default="", help="Informational only — written into Markdown shortlist header")
         p_match.set_defaults(func=_cmd_match)
     elif argv0 == "draft":
         p_draft = sub.add_parser(
