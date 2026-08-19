@@ -31,13 +31,15 @@ A single role may appear in *both* sections if it scores well under both criteri
 
 ## Trigger phrases
 
-Invoke this skill whenever the user says anything close to:
+Invoke this skill whenever the user says ANYTHING close to "run Kiera's job search end-to-end and give me the output paths so I can review the shortlist". Explicit triggers include (Kiera may use first-person greetings like "Hi, I am Kiera"):
 
-- "perform job search for Kiera Patel"
-- "run a job search for Kiera"
-- "find jobs for Kiera Patel"
-- "search job boards for Kiera"
-- any similar request that means "pull live listings and rank them against Kiera's CV"
+- "Hi, I am kiera, perform the job search" / "Hi, I am Kiera, do the job search" / first-person Kiera greeting + any job-search request
+- "perform job search for kiera patel" / "perform job search for Kiera"
+- "run a job search for Kiera (Patel)"
+- "find jobs for Kiera Patel" / "find me jobs" (if the user has identified as Kiera)
+- "search job boards for Kiera (Patel)"
+- "do the job search" / "run the job search" (in context where the project/repo is ai_job_seeker)
+- any similar request that means "pull live listings and rank them against Kiera's CV + History graduate strengths"
 
 If the user explicitly specifies **search terms** or a **location** in the same prompt, override the defaults above; otherwise keep them.
 
@@ -225,9 +227,10 @@ Dual-cohort ranked shortlist written:
     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/pool_research.json
 
 📥 To open in Kiera's default browser from a LOCAL terminal (outside Trae sandbox):
-   DATE=$(date +%Y-%m-%d) ; cp \
-     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.html \
-     ~/Downloads/Kiera-Job-Shortlist-${DATE}.html && open ~/Downloads/Kiera-Job-Shortlist-${DATE}.html
+   OUT=/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output
+   NEWEST=$(ls -t $OUT/latest_shortlist_*.html 2>/dev/null | head -n 1)
+   SUFFIX=$(basename "$NEWEST" .html | sed 's/^latest_shortlist_//')
+   cp -a "$NEWEST" ~/Downloads/Kiera-Job-Shortlist-${SUFFIX}.html && open ~/Downloads/Kiera-Job-Shortlist-${SUFFIX}.html
 
 💡 Tip for Kiera: a role can appear in BOTH sections if it fits both criteria (e.g. Content Executive suits marketing AND uses the strong written-communication skills History graduates build via essays/dissertations).
 ```
