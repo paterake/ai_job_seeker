@@ -14,7 +14,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
@@ -92,6 +94,70 @@ def _resolve_workspace_relative_dir(rel_dir: str) -> str:
     return str(Path(sentinel).parent)
 DEFAULT_OUTPUT_DIR = _resolve_workspace_relative_dir("implementation/job_seeker/config/output")
 DOTENV_PATH = ".env"
+
+
+def _stamp_for_output(ts: datetime | None = None) -> tuple[datetime, str]:
+    """Return (ts, stamp) where stamp is filename-safe YYYYMMDD_HHMM.
+
+    A single shared timestamp per command-call keeps all 5 shortlist outputs
+    (html, md, combined.json, marketing.json, history.json) aligned with the
+    same suffix so each rerun deposits a brand-new set of files and never
+    overwrites prior ones.
+    """
+    ts = ts or datetime.now()
+    return ts, ts.strftime("%Y%m%d_%H%M")
+
+
+def _timestamped_output_paths(
+    latest_path: str | Path,
+    *,
+    ts: datetime | None = None,
+) -> tuple[Path, Path]:
+    """Given a `latest_shortlist.<ext>` path → return (stamped, latest).
+
+    stamped = <parent>/<stem>_YYYYMMDD_HHMM<suffix>  — unique per rerun, never replaced
+    latest  = <parent>/<stem><suffix>                 — stable alias (copy of stamped),
+                                                         kept for IDE shortcuts and skill paths
+    """
+    _, stamp = _stamp_for_output(ts)
+    latest = Path(latest_path)
+    if str(latest.parent).strip():
+        latest.parent.mkdir(parents=True, exist_ok=True)
+    stem, suffix = latest.stem, latest.suffix
+    stamped = latest.with_name(f"{stem}_{stamp}{suffix}") if suffix else latest.with_name(f"{stem}_{stamp}")
+    return stamped, latest
+
+
+def _write_with_timestamp(
+    latest_path: str | Path,
+    write_func,
+    *,
+    ts: datetime | None = None,
+) -> tuple[Path, Path]:
+    """Run `write_func(stamped_path)`, then copy stamped → latest.
+
+    write_func(stamped_path) must write the content to stamped_path and
+    return the path actually written.  After writing we shutil.copy2
+    stamped → latest (overwriting latest is fine — latest is the *stable
+    alias*, stamped copies accumulate forever).
+
+    Wraps ALL shortlist writers so a rerun never destroys prior HTML/MD/JSON.
+    """
+    stamped, latest = _timestamped_output_paths(latest_path, ts=ts)
+    written = Path(write_func(stamped))
+    src = written if written.exists() else stamped
+    shutil.copy2(src, latest)
+    return written, latest
+
+
+def _atomic_json_dump(obj: Any, out_path: str | Path) -> Path:
+    """json.dump(obj → out_path) with utf-8 + ensure_ascii=False. Returns Path."""
+    p = Path(out_path)
+    if str(p.parent).strip():
+        p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2, ensure_ascii=False)
+    return p
 
 _AI_AGENT_CORE_IMPORT_ERR_HINT = (
     "ai_agent_core could not be imported. It is declared as a sibling path "
@@ -279,6 +345,143 @@ def _load_listings_from_json(path: str) -> list[JobListing]:
     return out
 
 
+def _merge_listings_pools(pools: list[list[JobListing]]) -> list[JobListing]:
+    """Dedupe-merge multiple ingest pools on (title.lower(), company.lower()).
+
+    First-seen wins (so order of pool files matters — put the primary,
+    richer-descriptions pool first). Returns a single deduplicated list.
+    """
+    seen: set[tuple[str, str]] = set()
+    merged: list[JobListing] = []
+    for pool in pools:
+        for lst in pool:
+            key = (lst.title.strip().lower(), (lst.company or "").strip().lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(lst)
+    return merged
+
+
+def _render_table_rows(scored: list[Any]) -> str:
+    """Render <tr>…</tr> blocks for a scored cohort (shared by single + dual HTML)."""
+    from html import escape as _h
+
+    def esc(x: str | None) -> str:
+        return "" if x is None else _h(str(x))
+
+    parts: list[str] = []
+    for s in scored:
+        lst = s.listing
+        url = lst.url or ""
+        role = (lst.title[:90] + "…") if len(lst.title) > 90 else lst.title
+        if url:
+            role_html = f'<a href="{esc(url)}" target="_blank" rel="noopener nofollow">{esc(role)}</a>'
+        else:
+            role_html = esc(role)
+        salary = ""
+        if lst.salary_min and lst.salary_max:
+            salary = f"£{lst.salary_min:,}–£{lst.salary_max:,}"
+        elif lst.salary_min:
+            salary = f"£{lst.salary_min:,}+"
+        elif lst.salary_max:
+            salary = f"≤£{lst.salary_max:,}"
+        posted = lst.posted_at.strftime("%Y-%m-%d") if lst.posted_at else ""
+        remote_bit = f"&nbsp;<small>({esc(lst.remote)})</small>" if lst.remote else ""
+        location_txt = (
+            f"{esc(lst.location)}{remote_bit}" if lst.location else remote_bit.strip()
+        )
+        parts.append(
+            f"<tr>"
+            f"<td class='pos'>{s.ranked_position}</td>"
+            f"<td class='score'>{s.final_score:.1f}</td>"
+            f"<td class='src'>{esc(lst.source.value)}</td>"
+            f"<td class='role'>{role_html}</td>"
+            f"<td>{esc(lst.company or '')}</td>"
+            f"<td>{location_txt}</td>"
+            f"<td class='sal'>{esc(salary)}</td>"
+            f"<td class='dt'>{esc(posted)}</td>"
+            f"</tr>"
+        )
+    return "\n".join(parts)
+
+
+def _render_detail_cards(scored: list[Any], *, anchor_prefix: str = "") -> str:
+    """Render accordion <details class='card'>…</details> blocks for a cohort."""
+    from html import escape as _h
+
+    def esc(x: str | None) -> str:
+        return "" if x is None else _h(str(x))
+
+    parts: list[str] = []
+    for s in scored:
+        lst = s.listing
+        inner: list[str] = []
+        inner.append(f"<div class='score-line'>Final score:&nbsp;<b>{s.final_score:.1f}</b>")
+        inner.append(f"<span class='pill'>Phase-1 (deterministic): {s.phase1_score:.1f}</span>")
+        if s.phase2_score is not None:
+            inner.append(
+                f"<span class='pill pill-green'>Phase-2 (LLM judge): {s.phase2_score:.1f}</span>"
+            )
+            if s.phase2_rationale:
+                inner.append(f"<div class='rationale'>{esc(s.phase2_rationale)}</div>")
+        else:
+            inner.append(
+                f"<span class='pill pill-grey'>Phase-2 (LLM judge): skipped — agent mode (default for 8GB M3 Air)</span>"
+            )
+        inner.append("</div>")
+        inner.append(f"<div>Source:&nbsp;<code>{esc(lst.source.value)}</code>&nbsp;·&nbsp;ID:&nbsp;<code>{esc(lst.source_id)}</code></div>")
+        if lst.url:
+            inner.append(
+                f"<div>Apply link:&nbsp;<a class='apply' href='{esc(lst.url)}' target='_blank' rel='noopener nofollow'>{esc(lst.url)}</a></div>"
+            )
+        evidence = getattr(s, "phase1_evidence", None)
+        if evidence:
+            inner.append("<div class='ev'><b>Phase-1 evidence</b><ul>")
+            if isinstance(evidence, dict):
+                for k, v in evidence.items():
+                    val = f"{v:.1f}" if isinstance(v, float) else str(v)
+                    inner.append(f"<li>{esc(k)}:&nbsp;{esc(val)}</li>")
+            elif isinstance(evidence, list):
+                for item in evidence:
+                    inner.append(f"<li>{esc(str(item))}</li>")
+            else:
+                inner.append(f"<li>{esc(str(evidence))}</li>")
+            inner.append("</ul></div>")
+        flags = getattr(s, "fabricated_claim_flags", None) or []
+        if flags:
+            inner.append(
+                "<div class='flags'><b>Fabricated-claim flags</b>: "
+                + ", ".join(esc(str(f)) for f in flags)
+                + "</div>"
+            )
+        parts.append(
+            f"<details class='card' id='{anchor_prefix}{s.ranked_position}'><summary>"
+            f"<b>{s.ranked_position}.</b>&nbsp;{esc(lst.title)}"
+            + (f"&nbsp;·&nbsp;{esc(lst.company)}" if lst.company else "")
+            + f"<span class='score-pill'>{s.final_score:.1f}</span></summary>"
+            + "".join(inner)
+            + "</details>"
+        )
+    return "\n".join(parts)
+
+
+_DUAL_STYLES_EXTRA = """
+  .cohort-h2 { display: flex; align-items: baseline; gap: 12px; margin-top: 40px; }
+  .cohort-badge {
+    display: inline-block; font-size: 13px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px; letter-spacing: .02em;
+  }
+  .badge-marketing { background: #fdf2f8; color: #9d174d; }
+  .badge-history   { background: #ecfeff; color: #155e75; }
+  .cohort-intro { color: var(--muted); margin: 4px 0 18px; }
+  .toc { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin: 16px 0 28px; }
+  .toc h3 { margin: 0 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .toc ul { margin: 0; padding-left: 20px; }
+  .toc li { margin: 3px 0; }
+"""
+
+
 def _cmd_ingest(args: argparse.Namespace) -> int:
     try:
         cfg = load_search_config(args.search_config)
@@ -321,12 +524,13 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
 
     if args.json:
         out_path = args.json.strip()
-        out_dir = Path(out_path).parent
-        if out_dir and not out_dir.exists():
-            out_dir.mkdir(parents=True, exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            json.dump([l.to_dict() for l in listings], f, indent=2, ensure_ascii=False)
-        print(f"Wrote JSON       : {out_path}")
+        stamped, latest = _write_with_timestamp(
+            out_path,
+            lambda p: _atomic_json_dump([l.to_dict() for l in listings], p),
+        )
+        print(f"Wrote JSON       : {stamped}")
+        if stamped.resolve() != latest.resolve():
+            print(f"  (also copied to latest alias : {latest})")
 
     return 0
 
@@ -686,6 +890,403 @@ def _write_shortlist_html(
     return p
 
 
+def _write_dual_shortlist_html(
+    marketing_scored: list[Any],
+    history_scored: list[Any],
+    out_path: str | Path,
+    *,
+    candidate_name: str,
+    search_terms: str = "",
+    location: str = "",
+    open_in_browser: bool = False,
+) -> Path:
+    """Write TWO independent ranked cohorts into a single self-contained HTML.
+
+    Section A = Marketing & Communications cohort (preserves today's top-25
+    ordering exactly as it was when run with marketing-only scoring).
+    Section B = Historian / Research-Academic cohort (creative, broad — uses
+    the HISTORY_COHORT weighted bonus so Kiera can see roles that fit her
+    History BA + Research & Analysis skill + 3yr academic-support CV track).
+
+    Both tables + accordion detail sections are present; a table-of-contents
+    at the top lets her jump between sections.
+    """
+    from datetime import datetime
+    from html import escape as _h
+    import os
+    import shutil
+    import subprocess
+    import sys
+
+    p = Path(out_path).expanduser()
+    if str(p.parent).strip():
+        p.parent.mkdir(parents=True, exist_ok=True)
+
+    def esc(x: str | None) -> str:
+        return "" if x is None else _h(str(x))
+
+    meta_bits: list[str] = [f"Generated: {esc(datetime.now().strftime('%A %d %B %Y, %H:%M'))}"]
+    if search_terms:
+        meta_bits.append(f"Search:&nbsp;<code>{esc(search_terms)}</code>")
+    if location:
+        meta_bits.append(f"Location:&nbsp;<code>{esc(location)}</code>")
+    meta_html = " · ".join(meta_bits)
+
+    mk_rows = _render_table_rows(marketing_scored)
+    mk_details = _render_detail_cards(marketing_scored, anchor_prefix="m_")
+    hi_rows = _render_table_rows(history_scored)
+    hi_details = _render_detail_cards(history_scored, anchor_prefix="h_")
+
+    title_parts = [f"Job Shortlist — {esc(candidate_name)}"]
+    if location:
+        title_parts.append(esc(location))
+    if search_terms:
+        title_parts.append(esc(search_terms))
+    html_title = " · ".join(title_parts)
+
+    styles = f"""
+<style>
+  :root {{
+    --bg: #fafbfc;
+    --fg: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #1d4ed8;
+    --accent-2: #0f766e;
+    --zebra: #f3f4f6;
+    --pill: #eef2ff;
+    --pill-green: #dcfce7;
+    --pill-grey: #f3f4f6;
+  }}
+  * {{ box-sizing: border-box; }}
+  body {{
+    margin: 0 auto; max-width: 1180px; padding: 32px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg); font-size: 15px; line-height: 1.45;
+  }}
+  h1 {{ margin: 0 0 6px; font-size: 28px; }}
+  .meta {{ color: var(--muted); margin-bottom: 8px; }}
+  code {{ background: #eef0f3; padding: 1px 6px; border-radius: 4px; font-size: 13px; }}
+  a {{ color: var(--accent); text-decoration: none; }}
+  a:hover {{ text-decoration: underline; }}
+  .apply {{ word-break: break-all; font-size: 13px; }}
+  table {{ width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 10px 0 20px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }}
+  th, td {{ padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }}
+  th {{ background: #111827; color: #f9fafb; font-weight: 600; font-size: 13px; letter-spacing: .01em; }}
+  tbody tr:nth-child(even) td {{ background: var(--zebra); }}
+  td.pos, td.score, td.src, td.dt, td.sal {{ white-space: nowrap; }}
+  td.score, td.sal {{ font-variant-numeric: tabular-nums; text-align: right; }}
+  td.pos {{ text-align: right; font-weight: 600; }}
+  .pill {{ display: inline-block; background: var(--pill); color: #3730a3; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin: 2px 4px 2px 0; }}
+  .pill-green {{ background: var(--pill-green); color: #166534; }}
+  .pill-grey  {{ background: var(--pill-grey);  color: #374151; }}
+  .score-pill {{ float: right; display: inline-block; background: var(--accent); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }}
+  .score-line {{ margin: 4px 0 8px; }}
+  .rationale {{ margin: 8px 0; padding: 8px 12px; background: #ecfeff; color: #0c4a6e; border: 1px solid #a5f3fc; border-radius: 6px; }}
+  .card {{
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 12px; padding: 12px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03);
+  }}
+  .card summary {{ cursor: pointer; font-size: 16px; list-style: none; padding: 4px 0; }}
+  .card summary::-webkit-details-marker {{ display: none; }}
+  .card summary:hover {{ color: var(--accent); }}
+  .card > * + * {{ margin-top: 8px; }}
+  .ev ul {{ margin: 6px 0 0 0; padding-left: 20px; }}
+  .flags {{ color: #991b1b; background: #fef2f2; padding: 8px 12px; border-radius: 6px; border: 1px solid #fecaca; }}
+  h2 {{ font-size: 20px; }}
+  .footer {{ margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }}
+{_DUAL_STYLES_EXTRA}
+</style>
+"""
+
+    body = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html_title}</title>
+{styles}
+</head>
+<body>
+<h1>{esc(candidate_name)}&nbsp;· Job Shortlist</h1>
+<p class="meta">{meta_html}</p>
+
+<div class="toc">
+<h3>Contents — two cohorts</h3>
+<ul>
+  <li><a href="#cohort-marketing"><b>Section A.</b> Marketing &amp; Communications roles</a> — top {len(marketing_scored)} (preserves today's baseline ranking)</li>
+  <li><a href="#cohort-history"><b>Section B.</b> Historian, Research &amp; Academic roles</a> — top {len(history_scored)} (creative, fits History BA + R&amp;A skill + academic CV)</li>
+</ul>
+<p style="margin:10px 0 0;color:var(--muted);font-size:13px">
+  Each section is independently ranked against the same merged pool.
+  A role may appear in both sections if it scores well under both criteria. Click any role title in a table to open the apply page in a new tab; click rows in the <i>Score breakdown</i> section to see evidence.
+</p>
+</div>
+
+<a id="cohort-marketing"></a>
+<div class="cohort-h2">
+  <h2 style="margin:0">Section A — Marketing &amp; Communications roles</h2>
+  <span class="cohort-badge badge-marketing">COHORT 1 · TOP {len(marketing_scored)}</span>
+</div>
+<p class="cohort-intro">
+  Weighted toward marketing, content, comms, PR, brand, SEO, account, coordinator, executive roles.
+  Preserves the original top-25 ranking from today's baseline run.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%">#</th>
+      <th style="width:8%">Score</th>
+      <th style="width:9%">Source</th>
+      <th>Role</th>
+      <th style="width:18%">Company</th>
+      <th style="width:15%">Location</th>
+      <th style="width:12%">Salary</th>
+      <th style="width:11%">Posted</th>
+    </tr>
+  </thead>
+  <tbody>
+{mk_rows}
+  </tbody>
+</table>
+
+<h2 style="font-size:16px">A. Score breakdown — Marketing cohort</h2>
+<p style="color:var(--muted);margin-bottom:16px">Click each row to expand → see phase-1 evidence for that role.</p>
+{mk_details}
+
+<a id="cohort-history"></a>
+<div class="cohort-h2">
+  <h2 style="margin:0">Section B — Historian, Research &amp; Academic roles</h2>
+  <span class="cohort-badge badge-history">COHORT 2 · TOP {len(history_scored)}</span>
+</div>
+<p class="cohort-intro">
+  Weighted toward Kiera's explicit History BA + Research &amp; Analysis hard skill + 3+ years academic support / marking CV track.
+  Includes: research/insight/analyst, library/archive/records, heritage/museum/gallery/curatorial, policy/civil-service, bid/fundraising, editorial/journalism/writer, tutoring/education, legal-adjacent (paralegal/compliance/casework), and grad schemes.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%">#</th>
+      <th style="width:8%">Score</th>
+      <th style="width:9%">Source</th>
+      <th>Role</th>
+      <th style="width:18%">Company</th>
+      <th style="width:15%">Location</th>
+      <th style="width:12%">Salary</th>
+      <th style="width:11%">Posted</th>
+    </tr>
+  </thead>
+  <tbody>
+{hi_rows}
+  </tbody>
+</table>
+
+<h2 style="font-size:16px">B. Score breakdown — Historian &amp; Research cohort</h2>
+<p style="color:var(--muted);margin-bottom:16px">Click each row to expand → see the 3-band historian bonus (title / desc / strengths) + all other evidence.</p>
+{hi_details}
+
+<p class="footer">Generated by ai_job_seeker (Stage 3 Match · dual-cohort · agent mode) · {esc(datetime.now().isoformat(timespec='seconds'))}</p>
+</body>
+</html>
+"""
+
+    p.write_text(body, encoding="utf-8")
+
+    if open_in_browser:
+        opener = shutil.which("open")
+        if not opener:
+            opener = shutil.which("xdg-open") or shutil.which("x-www-browser")
+        if opener:
+            try:
+                subprocess.Popen([opener, str(p)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            except Exception:  # noqa: BLE001 — best-effort
+                pass
+    return p
+
+
+def _write_dual_shortlist_markdown(
+    marketing_scored: list[Any],
+    history_scored: list[Any],
+    out_path: str | Path,
+    *,
+    candidate_name: str,
+    search_terms: str = "",
+    location: str = "",
+) -> Path:
+    """Dual-cohort variant of the Markdown shortlist writer."""
+    from datetime import datetime
+
+    p = Path(out_path)
+    if str(p.parent).strip():
+        p.parent.mkdir(parents=True, exist_ok=True)
+
+    def _section_body(title: str, badge: str, intro: str, scored: list[Any]) -> list[str]:
+        lines: list[str] = []
+        lines.append(f"## {title}")
+        lines.append("")
+        lines.append(f"> **{badge}** — {intro}")
+        lines.append("")
+        lines.append(f"**{len(scored)}** roles, independently ranked.")
+        lines.append("")
+        lines.append("| # | Score | Source | Role | Company | Location | Salary | Posted |")
+        lines.append("|---|---:|---|---|---|---|---|---|")
+        for s in scored:
+            lst = s.listing
+            url = lst.url or ""
+            role = (lst.title[:80] + "…") if len(lst.title) > 80 else lst.title
+            role_md = f"[{role}]({url})" if url else role
+            salary = ""
+            if lst.salary_min and lst.salary_max:
+                salary = f"£{lst.salary_min:,}–£{lst.salary_max:,}"
+            elif lst.salary_min:
+                salary = f"£{lst.salary_min:,}+"
+            elif lst.salary_max:
+                salary = f"≤£{lst.salary_max:,}"
+            posted = lst.posted_at.strftime("%Y-%m-%d") if lst.posted_at else ""
+            remote_bit = f" ({lst.remote})" if lst.remote else ""
+            location_txt = f"{lst.location}{remote_bit}" if lst.location else remote_bit.strip()
+            lines.append(
+                f"| {s.ranked_position} "
+                f"| {s.final_score:.1f} "
+                f"| {lst.source.value} "
+                f"| {role_md} "
+                f"| {lst.company or ''} "
+                f"| {location_txt} "
+                f"| {salary} "
+                f"| {posted} |"
+            )
+        lines.append("")
+        lines.append("### Score breakdown")
+        lines.append("")
+        for s in scored:
+            lst = s.listing
+            lines.append(f"#### {s.ranked_position}. {lst.title} — {lst.company or ''}")
+            lines.append("")
+            lines.append(f"- **Final score:** {s.final_score:.1f}  ")
+            lines.append(f"  · Phase-1 (deterministic): {s.phase1_score:.1f}")
+            if s.phase2_score is not None:
+                lines.append(f"  · Phase-2 (LLM judge): {s.phase2_score:.1f}")
+                if s.phase2_rationale:
+                    lines.append(f"  · Phase-2 rationale: {s.phase2_rationale}")
+            else:
+                lines.append(f"  · Phase-2 (LLM judge): skipped (agent mode — default for 8GB M3 Air)")
+            lines.append(f"- **Source:** {lst.source.value} — `{lst.source_id}`")
+            if lst.url:
+                lines.append(f"- **Apply link:** {lst.url}")
+            evidence = getattr(s, "phase1_evidence", None)
+            if evidence:
+                lines.append("- **Phase-1 evidence:**")
+                if isinstance(evidence, dict):
+                    for k, v in evidence.items():
+                        if isinstance(v, float):
+                            lines.append(f"  - {k}: {v:.1f}")
+                        else:
+                            lines.append(f"  - {k}: {v}")
+                elif isinstance(evidence, list):
+                    for item in evidence:
+                        lines.append(f"  - {item}")
+                else:
+                    lines.append(f"  - {evidence}")
+            flags = getattr(s, "fabricated_claim_flags", None) or []
+            if flags:
+                lines.append(f"- **Fabricated-claim flags:** {flags}")
+            lines.append("")
+        return lines
+
+    lines: list[str] = []
+    lines.append(f"# Job Shortlist — {candidate_name} (Dual Cohort)")
+    lines.append("")
+    meta_bits = [f"Generated: {datetime.now().isoformat(timespec='seconds')}"]
+    if search_terms:
+        meta_bits.append(f"Search: `{search_terms}`")
+    if location:
+        meta_bits.append(f"Location: `{location}`")
+    lines.append(" · ".join(meta_bits))
+    lines.append("")
+    lines.append(
+        f"Two independently-ranked cohorts against the same merged pool. "
+        f"A role may appear in both sections."
+    )
+    lines.append("")
+    lines.append(f"- **Section A.** Marketing & Communications — top {len(marketing_scored)} (preserves today's baseline)")
+    lines.append(f"- **Section B.** Historian, Research & Academic — top {len(history_scored)} (creative History-BA fit)")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.extend(
+        _section_body(
+            "Section A — Marketing & Communications roles",
+            f"COHORT 1 · TOP {len(marketing_scored)}",
+            "Weighted toward marketing/content/comms/PR/brand/SEO/account/coordinator/executive. Preserves today's baseline ranking.",
+            marketing_scored,
+        )
+    )
+    lines.append("---")
+    lines.append("")
+    lines.extend(
+        _section_body(
+            "Section B — Historian, Research & Academic roles",
+            f"COHORT 2 · TOP {len(history_scored)}",
+            "Weighted toward History BA + Research & Analysis hard skill + 3yr academic support CV. Includes research/insight/analyst, library/archive, heritage/museum/curatorial, policy/civil service, bid/fundraising, editorial/writer, tutoring/education, legal-adjacent, grad schemes.",
+            history_scored,
+        )
+    )
+    p.write_text("\n".join(lines), encoding="utf-8")
+    return p
+
+
+def _print_cohort_summary(label: str, scored: list[Any], top: int) -> None:
+    """Print the compact CLI table for a single cohort."""
+    print()
+    print(f"=== {label} (top {top}) ===")
+    hdr = f"{'#':>3}  {'Final':>5}  {'P1':>5}  {'P2':>5}  {'Src':<7}  Title"
+    print(hdr)
+    print("-" * len(hdr))
+    for s in scored:
+        p2 = f"{s.phase2_score:5.1f}" if s.phase2_score is not None else "   -"
+        title = s.listing.title[:55]
+        print(
+            f"{s.ranked_position:3d}  {s.final_score:5.1f}  "
+            f"{s.phase1_score:5.1f}  {p2}  {s.listing.source.value:<7}  {title}"
+        )
+    fabricated_total = sum(len(s.fabricated_claim_flags) for s in scored) if scored else 0
+    if fabricated_total:
+        print(f"Fabricated-claim flags: {fabricated_total}")
+
+
+def _flatten_pool_args(raw: Any) -> list[str]:
+    """Flatten argparse action=append + comma-separated values into list of paths."""
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        return [p.strip() for p in raw.split(",") if p.strip()]
+    if isinstance(raw, list):
+        flat: list[str] = []
+        for item in raw:
+            parts = [p.strip() for p in (item or "").split(",")]
+            flat.extend([p for p in parts if p])
+        return [p for p in flat if p]
+    return []
+
+
+def _load_pools_merged(paths: list[str]) -> list[JobListing]:
+    """Load + dedupe-merge pools from paths, or return empty list if no paths."""
+    if not paths:
+        return []
+    pools = [_load_listings_from_json(p) for p in paths]
+    if len(pools) == 1:
+        print(f"Listings (from JSON): {len(pools[0])}")
+        return pools[0]
+    for i, (path, pool) in enumerate(zip(paths, pools)):
+        print(f"  Pool {i+1} ({path}): {len(pool)} listings")
+    merged = _merge_listings_pools(pools)
+    print(f"  Merged, deduped total: {len(merged)}")
+    return merged
+
+
 def _cmd_match(args: argparse.Namespace) -> int:
     try:
         profile = load_profile(args.candidate)
@@ -702,29 +1303,214 @@ def _cmd_match(args: argparse.Namespace) -> int:
     cfg, mode = _build_mode(args)
     print(f"Backend mode: {mode.value}")
 
-    ingest_json = (args.ingest_json or "").strip()
-    if ingest_json:
-        listings = _load_listings_from_json(ingest_json)
-        print(f"Listings (from --ingest-json): {len(listings)}")
-    else:
-        listings = run_ingest_dry(search_cfg)
-        print(f"Listings (ingest dry-run): {len(listings)}")
+    # ---------- Load listing pools ----------
+    ingest_jsons = _flatten_pool_args(getattr(args, "ingest_json", None) or [])
+    marketing_ingest = _flatten_pool_args(getattr(args, "marketing_ingest_json", None) or [])
+    history_ingest = _flatten_pool_args(getattr(args, "history_ingest_json", None) or [])
 
+    research_top = int(getattr(args, "research_top", 0) or 0)
+    use_dual_cohort = bool(research_top and research_top > 0)
+
+    # Single-cohort or dry-run: one listings set (merged from --ingest-json, or dry)
+    listings: list[JobListing] = []
+    # Dual-cohort: per-cohort independent pools
+    mk_listings: list[JobListing] = []
+    hi_listings: list[JobListing] = []
+
+    if ingest_jsons or marketing_ingest or history_ingest:
+        if use_dual_cohort:
+            # Per-cohort pools. Missing per-cohort -> fallback to shared merged pool, or dry.
+            print("[dual-cohort] Loading Section A (Marketing) pool:")
+            mk_paths = marketing_ingest or ingest_jsons
+            mk_listings = _load_pools_merged(mk_paths)
+            if marketing_ingest:
+                print(f"  (--marketing-ingest-json used; research pool entries excluded from Section A — preserves original top-25 ordering)")
+            print("[dual-cohort] Loading Section B (Historian) pool:")
+            hi_paths = history_ingest or ingest_jsons
+            hi_listings = _load_pools_merged(hi_paths)
+            if not mk_listings or not hi_listings:
+                # At least one cohort missing JSON pool -> use dry-run fallback for the missing one
+                dry = run_ingest_dry(search_cfg)
+                if not mk_listings:
+                    mk_listings = dry
+                    print(f"  Section A fallback: dry-run ingest, {len(dry)} listings")
+                if not hi_listings:
+                    hi_listings = dry
+                    print(f"  Section B fallback: dry-run ingest, {len(dry)} listings")
+        else:
+            if ingest_jsons:
+                print("Loading shared listings pool:")
+                listings = _load_pools_merged(ingest_jsons)
+            else:
+                listings = run_ingest_dry(search_cfg)
+                print(f"Listings (ingest dry-run): {len(listings)}")
+    else:
+        if use_dual_cohort:
+            dry = run_ingest_dry(search_cfg)
+            mk_listings = list(dry)
+            hi_listings = list(dry)
+            print(f"Listings (ingest dry-run, shared by both cohorts): {len(dry)}")
+        else:
+            listings = run_ingest_dry(search_cfg)
+            print(f"Listings (ingest dry-run): {len(listings)}")
+
+    AgentHandoffRequired = _require_ai_agent_core(
+        "match phase-2 AgentHandoffRequired handling"
+    ).AgentHandoffRequired
+    mk_cfg_kw = {"cfg": cfg if mode.value != "agent" else None, "mode": mode if mode.value != "agent" else None}
+
+    # ---------- Run ranking ----------
     try:
-        scored = rank_listings(
-            profile,
-            listings,
-            cfg=cfg if mode.value != "agent" else None,
-            mode=mode if mode.value != "agent" else None,
-            top_n=args.top,
-            max_age_days=search_cfg.max_age_days,
-        )
-    except _require_ai_agent_core("match phase-2 AgentHandoffRequired handling").AgentHandoffRequired:
+        if use_dual_cohort:
+            # Section A preservation rule: if the user passed an explicit
+            # --marketing-ingest-json (i.e. separated pool) they almost
+            # certainly want the original marketing-cohort shortlist
+            # preserved byte-for-byte the same way it would appear in a
+            # single-cohort "vanilla" run (cohort=None).  The tiny
+            # cohort="marketing" stabilisation bonus can push 2-3 roles
+            # out of the top 25 vs the user's 15:00 baseline, so skip it
+            # whenever the marketing pool is isolated.
+            section_a_cohort: str | None = "marketing" if not marketing_ingest else None
+            print()
+            print(f"[dual-cohort] Section A marketing: cohort={section_a_cohort or 'vanilla'}, top={args.top}, pool size={len(mk_listings)}")
+            if marketing_ingest:
+                print(f"  (explicit --marketing-ingest-json detected → using vanilla cohort=None to preserve the original top-25 set and order exactly)")
+            marketing_scored = rank_listings(
+                profile, mk_listings,
+                **mk_cfg_kw,
+                top_n=args.top,
+                max_age_days=search_cfg.max_age_days,
+                cohort=section_a_cohort,
+            )
+            print(f"[dual-cohort] Section B historian: cohort=history, top={research_top}, pool size={len(hi_listings)}")
+            history_scored = rank_listings(
+                profile, hi_listings,
+                **mk_cfg_kw,
+                top_n=research_top,
+                max_age_days=search_cfg.max_age_days,
+                cohort="history",
+            )
+        else:
+            scored = rank_listings(
+                profile, listings,
+                **mk_cfg_kw,
+                top_n=args.top,
+                max_age_days=search_cfg.max_age_days,
+            )
+    except AgentHandoffRequired:
         return 2
+    except Exception as _e:  # noqa: BLE001
+        print(f"error: ranking failed: {_e}", file=sys.stderr)
+        return 1
 
     if mode.value == "agent":
         print("Note: phase-2 LLM judge skipped — AGENT mode. Phase-1 scores only.")
 
+    # ---------- CLI summary output ----------
+    search_terms_val = (args.search or "") if hasattr(args, "search") else ""
+    location_val = (args.location or "") if hasattr(args, "location") else ""
+    candidate_name = (profile.get("identity") or {}).get("name") or "Candidate"
+
+    # Single shared timestamp for ALL output files in this run.
+    # This ensures the 5 shortlist artefacts share the same YYYYMMDD_HHMM suffix.
+    ts_run, _ = _stamp_for_output()
+
+    def _print_wrote(label: str, stamped: Path, latest: Path) -> None:
+        print(f"Wrote {label:<14}: {stamped}")
+        if stamped.resolve() != latest.resolve():
+            print(f"  {' ':<16}  latest alias copy: {latest}")
+
+    if use_dual_cohort:
+        _print_cohort_summary("Section A — Marketing & Communications cohort", marketing_scored, args.top)
+        _print_cohort_summary("Section B — Historian & Research-Academic cohort", history_scored, research_top)
+
+        json_mk_path = (getattr(args, "json_marketing", "") or "").strip()
+        json_hi_path = (getattr(args, "json_history", "") or "").strip()
+        json_combined_path = (args.json or "").strip()
+
+        if json_mk_path:
+            s, l = _write_with_timestamp(
+                json_mk_path,
+                lambda p: _atomic_json_dump([sc.to_dict() for sc in marketing_scored], p),
+                ts=ts_run,
+            )
+            _print_wrote("marketing JSON", s, l)
+        if json_hi_path:
+            s, l = _write_with_timestamp(
+                json_hi_path,
+                lambda p: _atomic_json_dump([sc.to_dict() for sc in history_scored], p),
+                ts=ts_run,
+            )
+            _print_wrote("history JSON", s, l)
+        if json_combined_path:
+            combined_payload = {
+                "marketing": [sc.to_dict() for sc in marketing_scored],
+                "history": [sc.to_dict() for sc in history_scored],
+                "generated_at": ts_run.isoformat(timespec="seconds"),
+            }
+            s, l = _write_with_timestamp(
+                json_combined_path,
+                lambda p, payload=combined_payload: _atomic_json_dump(payload, p),
+                ts=ts_run,
+            )
+            _print_wrote("combined JSON", s, l)
+
+        md_path = (args.md or "").strip()
+        if md_path:
+            s, l = _write_with_timestamp(
+                md_path,
+                lambda p, mk=marketing_scored, hi=history_scored, cn=candidate_name, st=search_terms_val, loc=location_val:
+                    _write_dual_shortlist_markdown(
+                        mk, hi, p,
+                        candidate_name=cn, search_terms=st, location=loc,
+                    ),
+                ts=ts_run,
+            )
+            _print_wrote("shortlist MD", s, l)
+
+        html_path = (args.html or "").strip()
+        if html_path:
+            def _html_writer(p):
+                return _write_dual_shortlist_html(
+                    marketing_scored, history_scored, p,
+                    candidate_name=candidate_name,
+                    search_terms=search_terms_val,
+                    location=location_val,
+                    open_in_browser=False,
+                )
+            s, l = _write_with_timestamp(html_path, _html_writer, ts=ts_run)
+            _print_wrote("shortlist HTML", s, l)
+            # Open BOTH in browser if requested (latest alias is fine since it equals stamped)
+            if getattr(args, "open_in_browser", False):
+                html_abs = str(Path(l).expanduser().resolve())
+                try:
+                    opener = shutil.which("open") or shutil.which("xdg-open")
+                    if opener:
+                        __import__("subprocess").Popen(
+                            [opener, html_abs],
+                            stdout=__import__("subprocess").DEVNULL,
+                            stderr=__import__("subprocess").DEVNULL,
+                            start_new_session=True,
+                        )
+                except Exception:  # noqa: BLE001
+                    pass
+
+        if getattr(args, "open_in_browser", False) and md_path and not html_path:
+            md_abs = str(Path(md_path).expanduser().resolve())
+            try:
+                opener = shutil.which("open") or shutil.which("xdg-open")
+                if opener:
+                    __import__("subprocess").Popen(
+                        [opener, md_abs],
+                        stdout=__import__("subprocess").DEVNULL,
+                        stderr=__import__("subprocess").DEVNULL,
+                        start_new_session=True,
+                    )
+            except Exception:  # noqa: BLE001
+                pass
+        return 0
+
+    # ---------- Single-cohort (backwards compat) ----------
     print()
     hdr = f"{'#':>3}  {'Final':>5}  {'P1':>5}  {'P2':>5}  {'Src':<7}  Title"
     print(hdr)
@@ -736,59 +1522,69 @@ def _cmd_match(args: argparse.Namespace) -> int:
             f"{s.ranked_position:3d}  {s.final_score:5.1f}  "
             f"{s.phase1_score:5.1f}  {p2}  {s.listing.source.value:<7}  {title}"
         )
-
     print()
     print(f"Shortlisted: {len(scored)} (--top {args.top})")
-    if scored:
-        fabricated_total = sum(len(s.fabricated_claim_flags) for s in scored)
-        if fabricated_total:
-            print(f"Fabricated-claim flags: {fabricated_total}")
+    fabricated_total = sum(len(s.fabricated_claim_flags) for s in scored)
+    if fabricated_total:
+        print(f"Fabricated-claim flags: {fabricated_total}")
 
     json_path = (args.json or "").strip()
     if json_path:
-        out_dir = Path(json_path).parent
-        if out_dir and not out_dir.exists():
-            out_dir.mkdir(parents=True, exist_ok=True)
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump([s.to_dict() for s in scored], f, indent=2, ensure_ascii=False)
-        print(f"Wrote ranked JSON: {json_path}")
+        s, l = _write_with_timestamp(
+            json_path,
+            lambda p: _atomic_json_dump([sc.to_dict() for sc in scored], p),
+            ts=ts_run,
+        )
+        _print_wrote("ranked JSON", s, l)
 
     md_path = (args.md or "").strip()
     if md_path:
-        name = (profile.get("identity") or {}).get("name") or "Candidate"
-        # If --ingest-json came from ingest --search X --location Y we won't
-        # have those strings here; leave them blank and the md just omits them.
-        _write_shortlist_markdown(
-            scored,
+        s, l = _write_with_timestamp(
             md_path,
-            candidate_name=name,
-            search_terms=(args.search or "") if hasattr(args, "search") else "",
-            location=(args.location or "") if hasattr(args, "location") else "",
+            lambda p, sc=scored, cn=candidate_name, st=search_terms_val, loc=location_val:
+                _write_shortlist_markdown(sc, p, candidate_name=cn, search_terms=st, location=loc),
+            ts=ts_run,
         )
-        print(f"Wrote shortlist MD : {md_path}")
+        _print_wrote("shortlist MD", s, l)
 
     html_path = (args.html or "").strip()
     if html_path:
-        name = (profile.get("identity") or {}).get("name") or "Candidate"
-        _write_shortlist_html(
-            scored,
-            html_path,
-            candidate_name=name,
-            search_terms=args.search if hasattr(args, "search") else "",
-            location=args.location if hasattr(args, "location") else "",
-            open_in_browser=bool(getattr(args, "open_in_browser", False)),
-        )
-        print(f"Wrote shortlist HTML: {html_path}")
+        def _single_html_writer(p):
+            return _write_shortlist_html(
+                scored, p,
+                candidate_name=candidate_name,
+                search_terms=search_terms_val,
+                location=location_val,
+                open_in_browser=False,
+            )
+        s, l = _write_with_timestamp(html_path, _single_html_writer, ts=ts_run)
+        _print_wrote("shortlist HTML", s, l)
+        if getattr(args, "open_in_browser", False):
+            html_abs = str(Path(l).expanduser().resolve())
+            try:
+                opener = shutil.which("open") or shutil.which("xdg-open")
+                if opener:
+                    __import__("subprocess").Popen(
+                        [opener, html_abs],
+                        stdout=__import__("subprocess").DEVNULL,
+                        stderr=__import__("subprocess").DEVNULL,
+                        start_new_session=True,
+                    )
+            except Exception:  # noqa: BLE001
+                pass
 
-    # Best-effort browser open for md too, if --open was passed and --html wasn't.
     if getattr(args, "open_in_browser", False) and md_path and not html_path:
         md_abs = str(Path(md_path).expanduser().resolve())
         try:
-            import shutil as _sh, subprocess as _sp
-            opener = _sh.which("open") or _sh.which("xdg-open")
+            opener = shutil.which("open") or shutil.which("xdg-open")
             if opener:
-                _sp.Popen([opener, md_abs], stdout=_sp.DEVNULL, stderr=_sp.DEVNULL, start_new_session=True)
-        except Exception:  # noqa: BLE001 — best-effort
+                __import__("subprocess").Popen(
+                    [opener, md_abs],
+                    stdout=__import__("subprocess").DEVNULL,
+                    stderr=__import__("subprocess").DEVNULL,
+                    start_new_session=True,
+                )
+        except Exception:  # noqa: BLE001
             pass
 
     return 0
@@ -908,13 +1704,34 @@ def _build_base_parser(
         )
         p_match.add_argument(
             "--ingest-json",
-            default="",
-            help="Path to a listings JSON file written by `ingest --json` (bypasses dry-run)",
+            action="append",
+            default=[],
+            help="Path to a listings JSON file written by `ingest --json` (bypasses dry-run). Pass multiple times or use comma-separated values to merge+dedup multiple pools (e.g. marketing pool + research pool). In dual-cohort mode this merged pool is used by BOTH cohorts unless --marketing-ingest-json / --history-ingest-json override it per-cohort.",
         )
-        p_match.add_argument("--top", type=int, default=10, help="Cap ranked shortlist to N (default 10)")
-        p_match.add_argument("--json", default="", help="Write ranked ScoredListing dicts to this JSON path")
-        p_match.add_argument("--md", default="", help="Write a reviewable Markdown shortlist (clickable links) to this path")
-        p_match.add_argument("--html", default="", help="Write a self-contained HTML shortlist (styled, clickable links) to this path — recommended for non-technical review. Use ~/Downloads/... to put it in Downloads.")
+        p_match.add_argument(
+            "--marketing-ingest-json",
+            action="append",
+            default=[],
+            help="(dual-cohort only) Ingest JSON pool(s) used EXCLUSIVELY for Section A (Marketing cohort) ranking. Passing this keeps Section A independent from the research/history pool, so the original marketing top-25 set + order is preserved even when the research pool contains new interloping roles. If omitted, falls back to the merged --ingest-json pool.",
+        )
+        p_match.add_argument(
+            "--history-ingest-json",
+            action="append",
+            default=[],
+            help="(dual-cohort only) Ingest JSON pool(s) used EXCLUSIVELY for Section B (Historian & Research-Academic cohort) ranking. Pass marketing+research merged here so Section B can surface creative roles that the marketing pool alone misses. If omitted, falls back to the merged --ingest-json pool.",
+        )
+        p_match.add_argument("--top", type=int, default=25, help="Cap Section A (Marketing cohort) ranked shortlist to N (default 25). Single-cohort mode also uses this cap.")
+        p_match.add_argument(
+            "--research-top",
+            type=int,
+            default=0,
+            help="If >0, enable DUAL-COHORT mode: also rank Section B (Historian & Research-Academic cohort) with this independent top-N cap (recommended 25). Both cohorts are written to the same --html / --md output, as two separate sections. Section A is preserved identically to the marketing-cohort run.",
+        )
+        p_match.add_argument("--json", default="", help="In dual-cohort mode: write combined {marketing:[...], history:[...]} JSON to this path. In single-cohort mode: write ranked ScoredListing dicts to this JSON path.")
+        p_match.add_argument("--json-marketing", default="", help="(dual-cohort only) Write only the Section A marketing-cohort ScoredListing dicts to this JSON path")
+        p_match.add_argument("--json-history", default="", help="(dual-cohort only) Write only the Section B historian-cohort ScoredListing dicts to this JSON path")
+        p_match.add_argument("--md", default="", help="Write a reviewable Markdown shortlist (clickable links) to this path. Dual-cohort = two sections.")
+        p_match.add_argument("--html", default="", help="Write a self-contained HTML shortlist (styled, clickable links, accordion score breakdown) to this path — recommended for non-technical review. Dual-cohort = two sections with badges + a table-of-contents at the top. Use ~/Downloads/... to put it in Downloads.")
         p_match.add_argument("--open", dest="open_in_browser", action="store_true", help="After writing --html (or --md), open the result in the default browser.")
         p_match.add_argument("--search", default="", help="Informational only — written into Markdown/HTML shortlist header")
         p_match.add_argument("--location", default="", help="Informational only — written into Markdown/HTML shortlist header")

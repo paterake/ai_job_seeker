@@ -13,7 +13,11 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 from ai_job_seeker.ingest.schema import JobListing
-from ai_job_seeker.match.deterministic import score_deterministic
+from ai_job_seeker.match.deterministic import (
+    HISTORY_COHORT_KEYWORDS,
+    MARKETING_COHORT_KEYWORDS,
+    score_deterministic,
+)
 from ai_job_seeker.match.llm_judge import score_with_llm
 from ai_job_seeker.match.schema import ScoredListing
 
@@ -25,6 +29,8 @@ __all__ = [
     "rank_listings",
     "score_deterministic",
     "score_with_llm",
+    "MARKETING_COHORT_KEYWORDS",
+    "HISTORY_COHORT_KEYWORDS",
 ]
 
 _DEFAULT_W1 = 0.4
@@ -64,16 +70,22 @@ def rank_listings(
     w1: float = _DEFAULT_W1,
     w2: float = _DEFAULT_W2,
     max_age_days: int = 21,
+    cohort: str | None = None,
 ) -> list[ScoredListing]:
     """Score listings, optionally run LLM judge, sort, and assign rank.
 
     Phase weights: final = phase1*w1 + (phase2 or phase1)*w2 (so phase-2
     absent collapses to phase-1 only). Sort is (final_score desc, source_id
     asc) for stable ties.
+
+    ``cohort`` is passed straight through to score_deterministic:
+    ``None`` / ``"marketing"`` / ``"history"``.
     """
     scored: list[ScoredListing] = []
     for lst in listings:
-        p1, evidence = score_deterministic(profile, lst, max_age_days=max_age_days)
+        p1, evidence = score_deterministic(
+            profile, lst, max_age_days=max_age_days, cohort=cohort
+        )
         scored.append(
             ScoredListing(
                 listing=lst,
