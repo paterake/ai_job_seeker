@@ -111,25 +111,38 @@ cd /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker
 uv run ai-job-seeker match \
   --ingest-json implementation/job_seeker/config/output/latest_listings.json \
   --top <TOP N> \
-  --search "<TERMS>" \
-  --location "<LOCATION>" \
+  --search "<board search terms>" \
+  --location "<LOCATION_OVERRIDE_or_London>" \
   --json implementation/job_seeker/config/output/latest_shortlist.json \
-  --md   implementation/job_seeker/config/output/latest_shortlist.md
+  --md   implementation/job_seeker/config/output/latest_shortlist.md \
+  --html implementation/job_seeker/config/output/latest_shortlist.html
 ```
-`<TOP N>` defaults to 25. Match prints the ranked table; phase-2 is skipped in agent mode per the hardware constraint.
+`<TOP N>` defaults to 25. Match prints the ranked table; phase-2 is skipped in agent mode per the hardware constraint. The `--html` flag writes a fully self-contained, styled HTML file with clickable apply links + per-role expandable phase-1 evidence cards (accordion style), suitable for non-technical review.
 
-**Step 5 — Report the output paths to the user.**
-After Step 4 completes successfully (exit 0), print a clear, human-readable summary with absolute file-system links (clickable in the IDE):
+**Step 5 — Copy the HTML shortlist to `~/Downloads/` for Kiera to open.**
+This step MUST be run from the user's own terminal (NOT from inside the Trae tool sandbox), because the sandbox prevents writes outside `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker`. After Step 4 completes successfully, print a *copy-pasteable command block* for the user to run:
+
+```bash
+# ─── COPY-PASTE THIS INTO A LOCAL TERMINAL (outside Trae) ────────────
+DATE=$(date +%Y-%m-%d) ; SRC=/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.html ; DST=/Users/kierapatel/Downloads/Kiera-Job-Shortlist-${DATE}.html ; cp "$SRC" "$DST" && ls -lh "$DST" && open "$DST"
+```
+
+This copies today's `latest_shortlist.html` into `/Users/kierapatel/Downloads/Kiera-Job-Shortlist-YYYY-MM-DD.html`, prints the file size, and auto-opens it in the default browser (Safari/Chrome). Kiera clicks a role title in the table and is taken directly to the apply page.
+
+If the user requests a different destination folder (e.g. Desktop instead of Downloads), substitute the path — the `cp` + `open` pattern stays identical.
+
+**Step 6 — Report the output paths to the user.**
+After Steps 4+5 complete successfully (exit 0), print a clear, human-readable summary with absolute file-system links (clickable in the IDE):
 
 ```
 ✅ Kiera Patel job search complete.
 
 Inputs:
-  · API search terms : <TERMS sent to boards — default marketing,content,communications,research>
+  · API search terms : <board search terms — default marketing>
   · Location         : <LOCATION>
   · Shortlist cap    : <TOP N>
   · Backend mode     : agent (phase-1 deterministic only — no Ollama/LLM, 8GB safe)
-  · Scorer role list : 34 keywords (the full marketing/content/comm/PR/research/insight/graduate set)
+  · Scorer role list : 34 keywords (marketing + research/insight/editorial/graduate spread)
 
 Ingest pulled <COUNT> live listings from Adzuna + Reed + The Muse.
 Ranked shortlist (top <COUNT>) written to:
@@ -137,11 +150,19 @@ Ranked shortlist (top <COUNT>) written to:
   · Reviewable Markdown (clickable apply links, for Kiera to read):
     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.md
 
+  · Styled HTML for non-technical review (copy this → ~/Downloads):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.html
+
   · Machine-readable shortlist JSON (for Stage 4 Draft later):
     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.json
 
   · Full unranked listings JSON (all sources, filtered + deduped):
     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_listings.json
+
+📥 To open in Kiera's default browser from a LOCAL terminal (outside Trae sandbox):
+   DATE=$(date +%Y-%m-%d) ; cp \
+     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.html \
+     ~/Downloads/Kiera-Job-Shortlist-${DATE}.html && open ~/Downloads/Kiera-Job-Shortlist-${DATE}.html
 ```
 
 If any step fails (non-zero exit), stop and print the error + remediation to the user — don't press on with partial outputs.

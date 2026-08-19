@@ -1,6 +1,6 @@
 # Job Shortlist — Kiera Patel
 
-Generated: 2026-08-19T15:26:12 · Search: `marketing` · Location: `London`
+Generated: 2026-08-19T15:33:22 · Search: `marketing` · Location: `London`
 
 **25** shortlisted roles (sorted by final score, descending).
 

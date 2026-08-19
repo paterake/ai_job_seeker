@@ -437,6 +437,255 @@ def _write_shortlist_markdown(
     return p
 
 
+def _write_shortlist_html(
+    scored: list[Any],
+    out_path: str | Path,
+    *,
+    candidate_name: str,
+    search_terms: str = "",
+    location: str = "",
+    open_in_browser: bool = False,
+) -> Path:
+    """Write a ranked shortlist as self-contained HTML with inline CSS.
+
+    - No external resources (fonts, CSS, JS) — renders fully offline.
+    - Clickable apply links — targets open in a new browser tab.
+    - Designed for non-technical readers: generous spacing, zebra rows,
+      salary/location/posted columns, per-role accordion-like details that
+      show score breakdown + phase-1 evidence.
+    """
+    from datetime import datetime
+    from html import escape as _h
+    import os
+    import shutil
+    import subprocess
+    import sys
+
+    p = Path(out_path).expanduser()
+    if str(p.parent).strip():
+        p.parent.mkdir(parents=True, exist_ok=True)
+
+    def esc(x: str | None) -> str:
+        return "" if x is None else _h(str(x))
+
+    meta_bits: list[str] = [f"Generated: {esc(datetime.now().strftime('%A %d %B %Y, %H:%M'))}"]
+    if search_terms:
+        meta_bits.append(f"Search:&nbsp;<code>{esc(search_terms)}</code>")
+    if location:
+        meta_bits.append(f"Location:&nbsp;<code>{esc(location)}</code>")
+    meta_html = " · ".join(meta_bits)
+
+    # Build table rows first
+    rows_html_parts: list[str] = []
+    for s in scored:
+        lst = s.listing
+        url = lst.url or ""
+        role = (lst.title[:90] + "…") if len(lst.title) > 90 else lst.title
+        if url:
+            role_html = f'<a href="{esc(url)}" target="_blank" rel="noopener nofollow">{esc(role)}</a>'
+        else:
+            role_html = esc(role)
+        salary = ""
+        if lst.salary_min and lst.salary_max:
+            salary = f"£{lst.salary_min:,}–£{lst.salary_max:,}"
+        elif lst.salary_min:
+            salary = f"£{lst.salary_min:,}+"
+        elif lst.salary_max:
+            salary = f"≤£{lst.salary_max:,}"
+        posted = lst.posted_at.strftime("%Y-%m-%d") if lst.posted_at else ""
+        remote_bit = f"&nbsp;<small>({esc(lst.remote)})</small>" if lst.remote else ""
+        location_txt = (
+            f"{esc(lst.location)}{remote_bit}" if lst.location else remote_bit.strip()
+        )
+        rows_html_parts.append(
+            f"<tr>"
+            f"<td class='pos'>{s.ranked_position}</td>"
+            f"<td class='score'>{s.final_score:.1f}</td>"
+            f"<td class='src'>{esc(lst.source.value)}</td>"
+            f"<td class='role'>{role_html}</td>"
+            f"<td>{esc(lst.company or '')}</td>"
+            f"<td>{location_txt}</td>"
+            f"<td class='sal'>{esc(salary)}</td>"
+            f"<td class='dt'>{esc(posted)}</td>"
+            f"</tr>"
+        )
+    rows_html = "\n".join(rows_html_parts)
+
+    # Build per-role detail cards
+    detail_parts: list[str] = []
+    for s in scored:
+        lst = s.listing
+        pieces: list[str] = []
+        pieces.append(f"<div class='score-line'>Final score:&nbsp;<b>{s.final_score:.1f}</b>")
+        pieces.append(f"<span class='pill'>Phase-1 (deterministic): {s.phase1_score:.1f}</span>")
+        if s.phase2_score is not None:
+            pieces.append(
+                f"<span class='pill pill-green'>Phase-2 (LLM judge): {s.phase2_score:.1f}</span>"
+            )
+            if s.phase2_rationale:
+                pieces.append(f"<div class='rationale'>{esc(s.phase2_rationale)}</div>")
+        else:
+            pieces.append(
+                f"<span class='pill pill-grey'>Phase-2 (LLM judge): skipped — agent mode (default for 8GB M3 Air)</span>"
+            )
+        pieces.append("</div>")
+        pieces.append(f"<div>Source:&nbsp;<code>{esc(lst.source.value)}</code>&nbsp;·&nbsp;ID:&nbsp;<code>{esc(lst.source_id)}</code></div>")
+        if lst.url:
+            pieces.append(
+                f"<div>Apply link:&nbsp;<a class='apply' href='{esc(lst.url)}' target='_blank' rel='noopener nofollow'>{esc(lst.url)}</a></div>"
+            )
+        evidence = getattr(s, "phase1_evidence", None)
+        if evidence:
+            pieces.append("<div class='ev'><b>Phase-1 evidence</b><ul>")
+            if isinstance(evidence, dict):
+                for k, v in evidence.items():
+                    val = f"{v:.1f}" if isinstance(v, float) else str(v)
+                    pieces.append(f"<li>{esc(k)}:&nbsp;{esc(val)}</li>")
+            elif isinstance(evidence, list):
+                for item in evidence:
+                    pieces.append(f"<li>{esc(str(item))}</li>")
+            else:
+                pieces.append(f"<li>{esc(str(evidence))}</li>")
+            pieces.append("</ul></div>")
+        flags = getattr(s, "fabricated_claim_flags", None) or []
+        if flags:
+            pieces.append(
+                "<div class='flags'><b>Fabricated-claim flags</b>: "
+                + ", ".join(esc(str(f)) for f in flags)
+                + "</div>"
+            )
+        detail_parts.append(
+            f"<details class='card'><summary>"
+            f"<b>{s.ranked_position}.</b>&nbsp;{esc(lst.title)}"
+            + (f"&nbsp;·&nbsp;{esc(lst.company)}" if lst.company else "")
+            + f"<span class='score-pill'>{s.final_score:.1f}</span></summary>"
+            + "".join(pieces)
+            + "</details>"
+        )
+    details_html = "\n".join(detail_parts)
+
+    title_parts = [f"Job Shortlist — {esc(candidate_name)}"]
+    if location:
+        title_parts.append(esc(location))
+    if search_terms:
+        title_parts.append(esc(search_terms))
+    html_title = " · ".join(title_parts)
+
+    styles = """
+<style>
+  :root {
+    --bg: #fafbfc;
+    --fg: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #1d4ed8;
+    --accent-2: #0f766e;
+    --zebra: #f3f4f6;
+    --pill: #eef2ff;
+    --pill-green: #dcfce7;
+    --pill-grey: #f3f4f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; max-width: 1180px; padding: 32px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg); font-size: 15px; line-height: 1.45;
+  }
+  h1 { margin: 0 0 6px; font-size: 28px; }
+  .meta { color: var(--muted); margin-bottom: 8px; }
+  code { background: #eef0f3; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .apply { word-break: break-all; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 20px 0 32px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+  th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: #111827; color: #f9fafb; font-weight: 600; font-size: 13px; letter-spacing: .01em; }
+  tbody tr:nth-child(even) td { background: var(--zebra); }
+  td.pos, td.score, td.src, td.dt, td.sal { white-space: nowrap; }
+  td.score, td.sal { font-variant-numeric: tabular-nums; text-align: right; }
+  td.pos { text-align: right; font-weight: 600; }
+  .pill { display: inline-block; background: var(--pill); color: #3730a3; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin: 2px 4px 2px 0; }
+  .pill-green { background: var(--pill-green); color: #166534; }
+  .pill-grey  { background: var(--pill-grey);  color: #374151; }
+  .score-pill { float: right; display: inline-block; background: var(--accent); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .score-line { margin: 4px 0 8px; }
+  .rationale { margin: 8px 0; padding: 8px 12px; background: #ecfeff; color: #0c4a6e; border: 1px solid #a5f3fc; border-radius: 6px; }
+  .card {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 12px; padding: 12px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03);
+  }
+  .card summary { cursor: pointer; font-size: 16px; list-style: none; padding: 4px 0; }
+  .card summary::-webkit-details-marker { display: none; }
+  .card summary:hover { color: var(--accent); }
+  .card > * + * { margin-top: 8px; }
+  .ev ul { margin: 6px 0 0 0; padding-left: 20px; }
+  .flags { color: #991b1b; background: #fef2f2; padding: 8px 12px; border-radius: 6px; border: 1px solid #fecaca; }
+  h2 { margin-top: 48px; font-size: 20px; }
+  .footer { margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+"""
+
+    body = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html_title}</title>
+{styles}
+</head>
+<body>
+<h1>{esc(candidate_name)}&nbsp;· Job Shortlist</h1>
+<p class="meta">{meta_html}</p>
+<p><b>{len(scored)}</b> shortlisted roles, sorted by final score (descending). Click any job title in the table to apply.
+   Click any row in the <i>Score breakdown</i> section below to see phase-1 evidence for that role.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%">#</th>
+      <th style="width:8%">Score</th>
+      <th style="width:9%">Source</th>
+      <th>Role</th>
+      <th style="width:18%">Company</th>
+      <th style="width:15%">Location</th>
+      <th style="width:12%">Salary</th>
+      <th style="width:11%">Posted</th>
+    </tr>
+  </thead>
+  <tbody>
+{rows_html}
+  </tbody>
+</table>
+
+<h2>Score breakdown per role</h2>
+<p style="color:var(--muted);margin-bottom:20px">
+  Click each row to expand → see phase-1 evidence (role keywords matched, salary/location fit, recency).
+  Phase-2 LLM judge is skipped by default on this machine (8GB M3 Air · agent-only mode).
+</p>
+
+{details_html}
+
+<p class="footer">Generated by ai_job_seeker (Stage 3 Match · agent mode) · {esc(datetime.now().isoformat(timespec='seconds'))}</p>
+</body>
+</html>
+"""
+
+    p.write_text(body, encoding="utf-8")
+
+    if open_in_browser:
+        # macOS `open` handles arbitrary file URLs correctly.
+        opener = shutil.which("open")
+        if not opener:
+            opener = shutil.which("xdg-open") or shutil.which("x-www-browser")
+        if opener:
+            try:
+                subprocess.Popen([opener, str(p)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            except Exception:  # noqa: BLE001 — best-effort
+                pass
+    return p
+
+
 def _cmd_match(args: argparse.Namespace) -> int:
     try:
         profile = load_profile(args.candidate)
@@ -517,6 +766,30 @@ def _cmd_match(args: argparse.Namespace) -> int:
             location=(args.location or "") if hasattr(args, "location") else "",
         )
         print(f"Wrote shortlist MD : {md_path}")
+
+    html_path = (args.html or "").strip()
+    if html_path:
+        name = (profile.get("identity") or {}).get("name") or "Candidate"
+        _write_shortlist_html(
+            scored,
+            html_path,
+            candidate_name=name,
+            search_terms=args.search if hasattr(args, "search") else "",
+            location=args.location if hasattr(args, "location") else "",
+            open_in_browser=bool(getattr(args, "open_in_browser", False)),
+        )
+        print(f"Wrote shortlist HTML: {html_path}")
+
+    # Best-effort browser open for md too, if --open was passed and --html wasn't.
+    if getattr(args, "open_in_browser", False) and md_path and not html_path:
+        md_abs = str(Path(md_path).expanduser().resolve())
+        try:
+            import shutil as _sh, subprocess as _sp
+            opener = _sh.which("open") or _sh.which("xdg-open")
+            if opener:
+                _sp.Popen([opener, md_abs], stdout=_sp.DEVNULL, stderr=_sp.DEVNULL, start_new_session=True)
+        except Exception:  # noqa: BLE001 — best-effort
+            pass
 
     return 0
 
@@ -641,8 +914,10 @@ def _build_base_parser(
         p_match.add_argument("--top", type=int, default=10, help="Cap ranked shortlist to N (default 10)")
         p_match.add_argument("--json", default="", help="Write ranked ScoredListing dicts to this JSON path")
         p_match.add_argument("--md", default="", help="Write a reviewable Markdown shortlist (clickable links) to this path")
-        p_match.add_argument("--search", default="", help="Informational only — written into Markdown shortlist header")
-        p_match.add_argument("--location", default="", help="Informational only — written into Markdown shortlist header")
+        p_match.add_argument("--html", default="", help="Write a self-contained HTML shortlist (styled, clickable links) to this path — recommended for non-technical review. Use ~/Downloads/... to put it in Downloads.")
+        p_match.add_argument("--open", dest="open_in_browser", action="store_true", help="After writing --html (or --md), open the result in the default browser.")
+        p_match.add_argument("--search", default="", help="Informational only — written into Markdown/HTML shortlist header")
+        p_match.add_argument("--location", default="", help="Informational only — written into Markdown/HTML shortlist header")
         p_match.set_defaults(func=_cmd_match)
     elif argv0 == "draft":
         p_draft = sub.add_parser(
