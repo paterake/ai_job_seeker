@@ -161,32 +161,21 @@ What each flag does (internal behaviour):
 
 Phase-2 is skipped in agent mode per the hardware constraint.
 
-**Step 5 — Copy the HTML shortlist to `~/Downloads/` for Kiera to open.**
+**Step 5 — Auto-open Finder (output folder) + the shortlist HTML in the default browser.**
 
-Every rerun now creates a brand-new timestamped HTML file (suffix `_YYYYMMDD_HHMM`) so prior shortlists are never destroyed. There is ALSO a stable `latest_shortlist.html` alias (always a byte-copy of the most recent timestamped file). The copy-to-Downloads step copies the timestamped one so Downloads never clobbers either.
-
-This step MUST be run from the user's own terminal (NOT from inside the Trae tool sandbox), because the sandbox prevents writes outside `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker`. After Step 4 completes successfully (exit 0), print a *copy-pasteable command block* for the user to run:
+Kiera already has a Finder shortcut to the output folder pinned. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside the Trae sandbox (they only call macOS `open`, no sandbox writes outside the repo):
 
 ```bash
-# ─── COPY-PASTE THIS INTO A LOCAL TERMINAL (outside Trae) ────────────
-DATE=$(date +%Y-%m-%d_%H%M)
-OUT=/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output
-# Find the most recent timestamped shortlist HTML (avoids overwriting old ones in Downloads)
-NEWEST=$(ls -t $OUT/latest_shortlist_*.html 2>/dev/null | head -n 1)
-if [ -z "$NEWEST" ]; then
-  echo "ERROR: no timestamped shortlist in $OUT (did you run Step 4?)" >&2
-else
-  SUFFIX=$(basename "$NEWEST" .html | sed 's/^latest_shortlist_//')
-  DST=/Users/kierapatel/Downloads/Kiera-Job-Shortlist-${SUFFIX}.html
-  cp -a "$NEWEST" "$DST" && ls -lh "$DST" && open "$DST"
-fi
+# 1) Open a Finder window to the output folder (user can click "Date Modified" column header to sort newest-first)
+open /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output
+
+# 2) Open the latest dual-cohort shortlist HTML directly in Kiera's default browser (Safari / Chrome / whatever)
+open /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.html
 ```
 
-This copies the *newest timestamped* `latest_shortlist_YYYYMMDD_HHMM.html` into `/Users/kierapatel/Downloads/Kiera-Job-Shortlist-YYYYMMDD_HHMM.html` (every rerun produces a brand-new file — nothing gets overwritten in Downloads either), prints the file size, and auto-opens it in the default browser.
+Both return instantly (exit 0, non-blocking). If Kiera says she prefers `~/Downloads/` copy or a different destination, fall back to the old cp-then-open block (preserved above the skill's hard-rules section for reference), but the default is now direct-open via `open` because it's simpler and works from the sandbox.
 
-If the user requests a different destination folder (e.g. Desktop instead of Downloads), substitute the path — the `cp -a` + `open` pattern stays identical.
-
-**Step 6 — Report the output paths to the user.**
+**Step 6 — Report the output paths to the user, in NON-TECHNICAL language.**
 After Steps 4+5 complete successfully (exit 0), print a clear, human-readable summary with absolute file-system links (clickable in the IDE):
 
 ```
@@ -226,13 +215,7 @@ Dual-cohort ranked shortlist written:
   · Pool 2 raw (research/grad ingest JSON):
     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/pool_research.json
 
-📥 To open in Kiera's default browser from a LOCAL terminal (outside Trae sandbox):
-   OUT=/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output
-   NEWEST=$(ls -t $OUT/latest_shortlist_*.html 2>/dev/null | head -n 1)
-   SUFFIX=$(basename "$NEWEST" .html | sed 's/^latest_shortlist_//')
-   cp -a "$NEWEST" ~/Downloads/Kiera-Job-Shortlist-${SUFFIX}.html && open ~/Downloads/Kiera-Job-Shortlist-${SUFFIX}.html
-
-💡 Tip for Kiera: a role can appear in BOTH sections if it fits both criteria (e.g. Content Executive suits marketing AND uses the strong written-communication skills History graduates build via essays/dissertations).
+💡 Tip: a role can appear in BOTH sections if it fits both criteria (e.g. Content Executive suits marketing AND uses the strong written-communication skills History graduates build via essays/dissertations). Both the Finder window and the shortlist in your browser should already be open on your Mac.
 ```
 
 If any step fails (non-zero exit), stop and print the error + remediation to the user — don't press on with partial outputs.
