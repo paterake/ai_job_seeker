@@ -27,9 +27,12 @@ venv/
 .claude/current_run_id
 .claude/tool_call_count
 
-# PII — candidate profiles and generated application packets never enter git
+# PII & generated outputs — never enter git
+#   - candidate profiles (PII: contact, CV data)
+#   - job ingest pools + ranked shortlists (per-run generated artefacts;
+#     also timestamped * YYYYMMDD_HHMM files accumulate forever)
 implementation/job_seeker/config/profile/
-implementation/job_seeker/outputs/
+implementation/job_seeker/config/output/
 
 # Local scratch / credential install staging — may hold secrets before copy-out.
 # Never commit anything under .ignore/.
