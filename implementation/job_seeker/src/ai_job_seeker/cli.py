@@ -1019,8 +1019,8 @@ def _write_dual_shortlist_html(
   <li><a href="#cohort-history"><b>Section B.</b> Historian, Research &amp; Academic roles</a> — top {len(history_scored)} (creative, fits History BA + R&amp;A skill + academic CV)</li>
 </ul>
 <p style="margin:10px 0 0;color:var(--muted);font-size:13px">
-  Each section is independently ranked against the same merged pool.
-  A role may appear in both sections if it scores well under both criteria. Click any role title in a table to open the apply page in a new tab; click rows in the <i>Score breakdown</i> section to see evidence.
+  Each section is independently ranked. Sections are fully unique — no role appears in both Section A and Section B.
+  Click any role title in a table to open the apply page in a new tab; click rows in the <i>Score breakdown</i> section to see evidence.
 </p>
 </div>
 
@@ -1207,8 +1207,7 @@ def _write_dual_shortlist_markdown(
     lines.append(" · ".join(meta_bits))
     lines.append("")
     lines.append(
-        f"Two independently-ranked cohorts against the same merged pool. "
-        f"A role may appear in both sections."
+        "Two independently-ranked cohorts. Sections are fully unique — no role appears in both Section A and Section B."
     )
     lines.append("")
     lines.append(f"- **Section A.** Marketing & Communications — top {len(marketing_scored)} (preserves today's baseline)")
@@ -1383,13 +1382,40 @@ def _cmd_match(args: argparse.Namespace) -> int:
                 cohort=section_a_cohort,
             )
             print(f"[dual-cohort] Section B historian: cohort=history, top={research_top}, pool size={len(hi_listings)}")
-            history_scored = rank_listings(
+            history_scored_all = rank_listings(
                 profile, hi_listings,
                 **mk_cfg_kw,
-                top_n=research_top,
+                top_n=0,
                 max_age_days=search_cfg.max_age_days,
                 cohort="history",
             )
+            # Section B dedup against Section A: any role already shown in
+            # Section A is removed, and the next-best History-fit candidates
+            # are promoted in their place. This keeps Section B at exactly
+            # `research_top` roles but GUARANTEES both sections are fully
+            # unique — Kiera sees 25+25 truly distinct roles, no repeats.
+            mk_keys: set[tuple[str, str]] = {
+                (s.listing.title or "", s.listing.company or "")
+                for s in marketing_scored
+            }
+            history_filtered = [
+                s for s in history_scored_all
+                if (s.listing.title or "", s.listing.company or "") not in mk_keys
+            ]
+            overlap_dropped = max(0, len(history_scored_all) - len(history_filtered))
+            history_scored = history_filtered[: (research_top or 25)]
+            promoted = max(0, len(history_scored) - (len(history_scored_all) - overlap_dropped))
+            # Re-number rank so Section B's filtered list runs 1..N cleanly
+            for i, s in enumerate(history_scored, start=1):
+                s.ranked_position = i
+            if overlap_dropped:
+                print(
+                    f"[dual-cohort] Section B dedup: {overlap_dropped} role(s) "
+                    f"already in Section A removed; next-best "
+                    f"{min(overlap_dropped, len(history_scored))} "
+                    f"History-fit candidate(s) promoted so both sections are "
+                    f"fully unique (25 + 25 distinct)."
+                )
         else:
             scored = rank_listings(
                 profile, listings,
