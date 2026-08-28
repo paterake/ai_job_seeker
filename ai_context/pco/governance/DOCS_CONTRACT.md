@@ -25,8 +25,15 @@ Missing any of these is a blocker, not a backlog item.
 | `docs/ARCHITECTURE.md` | Components, data flow, design decisions, responsibility boundaries | Agent cannot rebuild functionality without reading source; boundaries become implicit |
 | `docs/RUNBOOK.md` | Installation, commands, diagnosis, recovery | Operator cannot run or recover the module without reading code |
 | `docs/CONFIGURATION.md` | Config keys, defaults, rationale — [code-blind](#configurationmd-code-blind-definition) | Domain values leak into code; reuse across datasets requires code changes |
-| `docs/TODO.md` | Project backlog index — open initiatives with pointers to anchor docs, completed section | Backlog continuity breaks; completed items re-enter scope; sessions re-derive state |
-| `docs/ops/CLI.md` | Operational command reference — install, run, diagnose, utility commands | No canonical command surface; humans and assistants derive commands from code or scattered notes, producing drift and support burden |
+| `docs/TODO.md` † | Project backlog index — open initiatives with pointers to anchor docs, completed section | Backlog continuity breaks; completed items re-enter scope; sessions re-derive state |
+| `docs/RUNNERS.md` | Operational command reference — install, run, diagnose, utility commands (accepts `docs/ops/CLI.md` as a legacy alias) | No canonical command surface; humans and assistants derive commands from code or scattered notes, producing drift and support burden |
+
+† **`docs/TODO.md` is required only while the module (or repo) has open backlog.** Once
+`retire-backlog` has closed the backlog and removed the file, its absence is permitted and must not
+be treated as a blocker. A missing `docs/TODO.md` is a violation only when the module still has open
+backlog items (e.g. an Alpha module with open maturity gaps). This reconciles the contract with the
+`retire-backlog` skill, which deletes `docs/TODO.md` on completion — an intentional retirement and a
+drift defect are otherwise indistinguishable to `docs-alignment`.
 
 ### Conditional Required
 
@@ -85,7 +92,7 @@ implementation? If yes, it has become a duplicate, not a routing surface.
 Hard boundaries. Content in the wrong doc forces readers to search multiple files for a single answer
 and produces invisible duplication that drifts independently.
 
-- **Operational commands** (install, run, diagnose, utility) → `docs/ops/CLI.md` only. Never inline in README or ARCHITECTURE.
+- **Operational commands** (install, run, diagnose, utility) → `docs/RUNNERS.md` only (`docs/ops/CLI.md` accepted as a legacy alias). Never inline in README or ARCHITECTURE.
 - **Run and recovery** → `docs/RUNBOOK.md` only. Never in README or ARCHITECTURE.
 - **Config keys and their rationale** → `docs/CONFIGURATION.md` only. Never inline in code comments or ARCHITECTURE.
 - **Technical design and module boundaries** → `docs/ARCHITECTURE.md` only. Never in README or RUNBOOK.
@@ -136,7 +143,7 @@ inline variations accumulate inconsistency.
 `CONFIGURATION.md` may reference config/data file paths (YAML, XLSX, config directories) and the
 config keys themselves. It must not reference source-code file paths, script names,
 function/method/macro names, or CLI flags — those belong in `ARCHITECTURE.md`, `RUNBOOK.md`, or
-`ops/CLI.md` respectively.
+`RUNNERS.md` respectively.
 
 **Consequence if violated**: implementation detail embedded in the config doc drifts independently
 of the code it names, and the same detail duplicates across `CONFIGURATION.md` and its actual

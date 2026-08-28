@@ -6,6 +6,7 @@ globs:
   - "ai_context/**/*.json"
   - "scripts/**/*.py"
   - "scripts/**/*.md"
+basis: operational-experience
 ---
 
 # Publishing Rules
@@ -23,6 +24,20 @@ A rule without a stated consequence is routinely overridden under pressure.
 - Do not add absolute file paths or internal tooling paths to publishable content.
 - Do not name the client/company or internal programme names in publishable content.
 - Keep use-case-specific material in use-case-specific areas; keep framework-level context generic.
+
+## Claim Scoping (No Overclaiming Coverage)
+
+- A publishable governance claim must be scoped to the axis actually evidenced. "This model
+  covers / answers for X" is permitted only where runtime or documented evidence for X exists.
+- Where an obligation class is not yet covered, name it explicitly as a known gap or workstream.
+  Do not let coverage be inferred by omission — silence that reads as completeness is an overclaim.
+- **Consequence:** an artefact that implies coverage it cannot evidence falsifies the governance
+  posture. One uncovered obligation found by a reviewer discredits the whole stance. Naming the
+  uncovered axis is required, not optional — it converts a hidden overclaim into a credible boundary.
+
+Downstream framework layers (e.g. a federated governance model) inherit this rule; their scope-of-claim
+statements are applications of it, not independent authoring. This keeps the source, not the reflection,
+as the owner of claim discipline.
 
 ## Workflow Gates
 

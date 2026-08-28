@@ -117,6 +117,10 @@ Canonical enforcement: [retrieval.md](../ai_harness/rules/retrieval.md)
 
 Covers: chunking parameters in config (not code), hybrid search as a first-class contract (sparse + dense legs, merged and reranked), quality gate (results carry provenance; no silent empty returns), and unit test isolation (no live vector DBs or model servers).
 
+Output ownership & source licensing: every solution declares ownership of its generated output and
+the license posture of the sources feeding generation; a source whose license forbids the intended
+use is non-conformant ([compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md)).
+
 ## Enforcement Points (where the control plane enforces)
 
 ### Pre-run

@@ -81,6 +81,8 @@ Canonical enforcement:
 - Config drives code; no domain context in code; Python tooling uses `uv`: [governance.md](../ai_harness/rules/governance.md)
 - Context minimisation, session boundaries, anchor doc pattern: [context-economy.md](../ai_harness/rules/context-economy.md)
 - Guidance vs enforcement; edit-tool compatibility; approval gates: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
+- Automated-decision safeguards (High/Critical decisions affecting individuals): how a decision is explained, contested, reviewed by a human, and how DSARs over prompt/output logs are served: [compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md)
+- Scope-of-validation declaration and rule evidence-basis (`basis:`) provenance; assistant-research-derived governance is advisory until validated by a non-shared-path source: [governance-provenance.md](../ai_harness/rules/governance-provenance.md) and [agent-behavior.md](../ai_harness/rules/agent-behavior.md)
 
 ## Enforcement Points (where the control plane enforces)
 

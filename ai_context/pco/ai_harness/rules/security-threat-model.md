@@ -5,6 +5,7 @@ globs:
   - "**/*.yaml"
   - "**/*.yml"
   - "**/*.md"
+basis: research-derived
 ---
 
 > Governance narrative: [security spoke](../../security/README.md)

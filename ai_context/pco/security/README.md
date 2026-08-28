@@ -101,6 +101,12 @@ named attack patterns (AgentFlayer, image exfiltration, MCP supply chain), six r
 allowlisting, tool/MCP trust assessment, non-impersonation, epistemic honesty), the agent
 behaviour failure taxonomy, and multi-agent trust boundaries.
 
+Data-handling & access lifecycle: every data source and model endpoint declares its processing
+region and permitted transfer scope, and a source or model whose region is undeclared or outside
+policy is non-conformant ([compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md));
+access is provisioned by named identity and recertified on a schedule
+([governance.md](../ai_harness/rules/governance.md)).
+
 ## Common Failure Modes
 
 - Convenience shortcuts: secrets passed through prompts or stored in logs

@@ -5,6 +5,7 @@ globs:
   - ".qwen/**"
   - ".trae/**"
   - "ai_context/**"
+basis: operational-experience
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)
@@ -58,6 +59,13 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 - Approval gates are named and must present explicit options and consequences.
 - Proceeding past an approval gate without an approval record is prohibited.
 - The approval record must have a stable identifier and be bound to `run_id` (and referenced in run lineage when used).
+- **Effective oversight (not nominal).** For a gate on a High/Critical solution, the named overseer
+  must be competent for that risk tier and the gate must be designed to resist automation bias — the
+  approval record captures a substantive decision, not a rubber-stamp. **Consequence:** a signature
+  box is not oversight; nominal sign-off fails the AI Act's effectiveness bar while appearing compliant.
+- **Segregation of duties at go-live.** At the go-live gate, the approver must not be the author of
+  the change; author ≠ approver is enforced, not advisory. **Consequence:** self-approval at go-live
+  defeats the conformance gate — the one control the gate exists to provide is bypassed by one person.
 
 ## Hooks: Guidance vs Enforcement
 

@@ -2,6 +2,7 @@
 description: Agent coding behavior — pre-implementation posture, simplicity, surgical changes, and verification. Loaded for all code changes.
 globs:
   - "**/*"
+basis: research-derived
 ---
 
 > Governance narrative: [behaviour spoke](../../behaviour/README.md)
@@ -69,6 +70,18 @@ If credible, authoritative information is missing from the repo, external resear
 - Record sources as evidence: URL + retrieval date + a short claim summary in your own words.
 - Do not paste large excerpts into the repo; distill into the minimum decision-relevant claims.
 - If research informs a governance or rule change, pair it with a local verification plan (test/eval/sensor) rather than relying on authority alone.
+
+### Independent Validation (of assistant-derived governance)
+
+Governance content derived from LLM/assistant research is **advisory until validated by a source
+that does not share the assistant's synthesis path** — a human domain expert or a primary standard —
+before it is treated as authoritative. Tag such content `basis: research-derived` (see
+`governance-provenance.md`) and record the validation when it lands.
+
+**Consequence:** an assistant stress-testing its own prior output shares that output's blind spots;
+treating the result as an independent audit re-imports the same bias through every future
+assistant-assisted governance change. This generalises the Legal/DPO sign-off gate on
+`compliance-lifecycle.md` into a standing principle.
 
 ## Failure Harvest
 

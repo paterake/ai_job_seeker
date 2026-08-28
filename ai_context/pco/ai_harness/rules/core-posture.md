@@ -2,6 +2,7 @@
 description: Core posture — non-negotiable architectural pillars, PCO read-only rule, human approval requirement for governance changes, and memory file discipline. Loaded for all tasks.
 globs:
   - "**/*"
+basis: operational-experience
 ---
 
 # Core Posture

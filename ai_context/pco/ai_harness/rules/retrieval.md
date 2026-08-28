@@ -4,6 +4,7 @@ globs:
   - "**/retriev*/**"
   - "**/ingest*/**"
   - "**/query*/**"
+basis: operational-experience
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

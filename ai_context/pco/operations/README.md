@@ -73,6 +73,10 @@ Canonical enforcement: [operations.md](../ai_harness/rules/operations.md)
 
 Covers: bounded execution (timeouts, token/cost budgets), structured observability (run_id, latency, token counts), defined evaluation path, degrade mode on failure, run_id propagation through every call chain, spans closing in finally blocks, telemetry to structured sink, lineage manifest requirements, append-only evidence, kill-switch scoping, and post-run review artefact.
 
+Regulatory notification: an incident crossing an external-notification threshold records who notifies
+which authority, by when (the applicable statutory clock), and the notification sent — as run evidence,
+extending the Incident Capture rule in [assurance.md](../ai_harness/rules/assurance.md).
+
 ## Enforcement Points (where the control plane enforces)
 
 Canonical enforcement anchors: [operations.md](../ai_harness/rules/operations.md) and [CONTRACT.md](../governance/CONTRACT.md).

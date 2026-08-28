@@ -1,8 +1,10 @@
 # AI Assistant Guide — Platform (PCO)
 
-**Shared context for all coding assistants (Claude, Qwen, Trae).**
+**Shared context for all coding assistants (Claude, Qwen, Trae, GitHub Copilot).**
 
 **Read this BEFORE starting any work.**
+
+> **Copilot note**: Copilot has no hook-execution lifecycle equivalent to Claude Code's `settings.json` `PreToolUse`/`Stop` hooks. Rules and skills are enforced the same way as the other three (auto-discovered from `.claude/rules/` and `.claude/skills/`), but the git-push gate, exception-expiry check, and execution-limits check in `.claude/hooks/` are not enforced for Copilot sessions. Treat this as a known limitation, not a silent gap — see `harness-tool-contract.md`.
 
 ## Platform Pillars (Non-Negotiable — Apply to All Work)
 
@@ -40,6 +42,8 @@ Rule files under `.claude/rules/` are **already in your context** via auto-loade
 | Harness switch / model upgrade / edit-tool format | `harness-tool-contract.md` |
 | Security / sensitive tooling | `security-threat-model.md` |
 | Evaluations / assurance changes | `assurance.md` |
+| Authoring/changing governance rules; scope-of-validation or rule provenance | `governance-provenance.md` |
+| Data residency, data-subject rights, IP/output ownership, retention/legal hold | `compliance-lifecycle.md` |
 
 ### Governance docs — read explicitly (not auto-loaded)
 

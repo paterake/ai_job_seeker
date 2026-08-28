@@ -27,8 +27,8 @@ Confirm each required doc exists. Missing = blocker.
 - [ ] `docs/ARCHITECTURE.md`
 - [ ] `docs/RUNBOOK.md`
 - [ ] `docs/CONFIGURATION.md`
-- [ ] `docs/TODO.md`
-- [ ] `docs/ops/CLI.md`
+- [ ] `docs/TODO.md` — required only while the module/repo has **open backlog**; permitted absent once `retire-backlog` has closed it (do not flag as a blocker in that case)
+- [ ] `docs/RUNNERS.md` (accepts `docs/ops/CLI.md` as a legacy alias)
 
 ### 2) Conditional Required
 
@@ -48,7 +48,7 @@ Check each trigger. If trigger is true and doc is absent = blocker.
 
 For each doc, verify content is in the right place:
 
-- [ ] Operational commands only in `docs/ops/CLI.md` (not inline in README or ARCHITECTURE)
+- [ ] Operational commands only in `docs/RUNNERS.md` (`docs/ops/CLI.md` accepted as a legacy alias; not inline in README or ARCHITECTURE)
 - [ ] Run/recovery steps only in `docs/RUNBOOK.md` (not in README or ARCHITECTURE)
 - [ ] Config keys only in `docs/CONFIGURATION.md` (not inline in code comments or ARCHITECTURE)
 - [ ] Design and boundaries only in `docs/ARCHITECTURE.md`
@@ -103,7 +103,7 @@ For each failing check:
 7. **Extension doc undiscoverable** — add a link from `ARCHITECTURE.md` or `README.md`; do not move the doc.
 
 8. **Multi-implementation repo — root RUNBOOK/CONFIGURATION too detailed** — convert to routing surfaces: strip implementation-specific content from root docs; confirm that content exists in (or move it to) each implementation's own `docs/RUNBOOK.md` and `docs/CONFIGURATION.md`. Root docs may only contain pointers and brief routing context.
-9. **CONFIGURATION.md references script paths, function/method/macro names, or CLI flags** — distill the violating reference to a behavioural description, or replace it with a pointer to the doc that already owns that implementation detail (`ARCHITECTURE.md` for code structure, `RUNBOOK.md` for run/recovery steps, `ops/CLI.md` for CLI flags). Never delete the detail if it exists nowhere else — move it to its owning doc first, then distill the CONFIGURATION.md reference.
+9. **CONFIGURATION.md references script paths, function/method/macro names, or CLI flags** — distill the violating reference to a behavioural description, or replace it with a pointer to the doc that already owns that implementation detail (`ARCHITECTURE.md` for code structure, `RUNBOOK.md` for run/recovery steps, `RUNNERS.md` for CLI flags). Never delete the detail if it exists nowhere else — move it to its owning doc first, then distill the CONFIGURATION.md reference.
 10. **Doc copies a config-owned list instead of linking it** — replace the enumerated list (ingest tabs/sheets, per-stage source-table lists, thresholds) with a one-line relative link to its owning file (ingest JSON / `*_base.sql`); keep only the stable model description inline. Leave stable contract identifiers and dated point-in-time snapshots (paired with their regeneration command) as-is.
 
 **Surface to human (do not resolve unilaterally):**

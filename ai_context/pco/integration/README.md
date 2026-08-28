@@ -96,8 +96,9 @@ Governance defines:
 ## Enforcement Rules
 
 Canonical enforcement:
-- Edit-tool contract, approval gates, hooks vs guidance: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
+- Edit-tool contract, approval gates (effective oversight — competent overseer, no rubber-stamp — and segregation of duties at go-live, author ≠ approver), hooks vs guidance: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
 - Tool selection discipline, MCP supply-chain risk, OSS preference: [governance.md](../ai_harness/rules/governance.md)
+- Vendor procurement / TPRM (completed third-party risk assessment before adoption) and access recertification: [governance.md](../ai_harness/rules/governance.md)
 - Telemetry contract for tool calls, tool registry requirements: [operations.md](../ai_harness/rules/operations.md)
 
 ## Enforcement Points (where the control plane enforces)

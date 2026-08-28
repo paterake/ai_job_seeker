@@ -15,7 +15,7 @@ members = [
 
 [[package]]
 name = "ai-agent-core"
-version = "0.5.0"
+version = "0.6.0"
 source = { directory = "../ai_agent_core/implementation/ai_agent_core" }
 dependencies = [
     { name = "chromadb" },

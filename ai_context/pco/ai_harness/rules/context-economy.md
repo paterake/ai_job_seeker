@@ -4,6 +4,7 @@ globs:
   - "**/*.md"
   - "**/*.py"
   - "**/*.yaml"
+basis: operational-experience
 ---
 
 > Governance narrative: [behaviour spoke](../../behaviour/README.md)

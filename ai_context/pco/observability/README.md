@@ -77,6 +77,10 @@ Canonical enforcement: [operations.md](../ai_harness/rules/operations.md)
 
 Covers: structured telemetry event contract (run_id, model identifier, input/output sizes/hashes, latency, token counts), tool call telemetry, privacy-safe defaults (no raw prompts/payloads/retrieved content in logs), and tracing invariants.
 
+FinOps accountability: beyond per-run cost, each solution/pod declares budget ownership, chargeback
+attribution, and a cost-dispute path — cost with no named owner is cost nobody controls
+([operations.md](../ai_harness/rules/operations.md)).
+
 ## Enforcement Points (where the control plane enforces)
 
 ### Pre-run

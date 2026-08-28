@@ -2,6 +2,7 @@
 description: Sync trigger fired when any ai_context/ file is edited. Ensures prescriptive AI-facing changes propagate to human-facing documentation.
 globs:
   - "ai_context/**"
+basis: operational-experience
 ---
 
 # ai_context → Human Docs Sync

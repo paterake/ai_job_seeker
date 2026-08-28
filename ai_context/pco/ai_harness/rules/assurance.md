@@ -4,6 +4,7 @@ globs:
   - "**/*.py"
   - "**/*.yaml"
   - "**/*.yml"
+basis: operational-experience
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)
