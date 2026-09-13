@@ -1154,7 +1154,8 @@ def _write_dual_shortlist_html(
     the HISTORY_COHORT weighted bonus so Kiera can see roles that fit her
     History BA + Research & Analysis skill + 3yr academic-support CV track).
 
-    Both tables + accordion detail sections are present; a table-of-contents
+    Both cohorts use a merged 2-row-band table format (one table per section,
+    no separate accordion/breakdown sections anymore); a table-of-contents
     at the top lets her jump between sections.
     """
     from datetime import datetime
@@ -2284,7 +2285,7 @@ def _build_base_parser(
         p_match.add_argument("--json-marketing", default="", help="(dual-cohort only) Write only the Section A marketing-cohort ScoredListing dicts to this JSON path")
         p_match.add_argument("--json-history", default="", help="(dual-cohort only) Write only the Section B historian-cohort ScoredListing dicts to this JSON path")
         p_match.add_argument("--md", default="", help="Write a reviewable Markdown shortlist (clickable links) to this path. Dual-cohort = two sections.")
-        p_match.add_argument("--html", default="", help="Write a self-contained HTML shortlist (styled, clickable links, accordion score breakdown) to this path — recommended for non-technical review. Dual-cohort = two sections with badges + a table-of-contents at the top. Use ~/Downloads/... to put it in Downloads.")
+        p_match.add_argument("--html", default="", help="Write a self-contained HTML shortlist (styled, clickable links, merged inline score evidence per role — no accordions). Recommended for non-technical review. Dual-cohort = two sections with badges + a table-of-contents at the top. Use ~/Downloads/... to put it in Downloads.")
         p_match.add_argument("--open", dest="open_in_browser", action="store_true", help="After writing --html (or --md), open the result in the default browser.")
         p_match.add_argument("--search", default="", help="Informational only — written into Markdown/HTML shortlist header")
         p_match.add_argument("--location", default="", help="Informational only — written into Markdown/HTML shortlist header")

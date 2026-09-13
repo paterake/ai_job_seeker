@@ -30,7 +30,7 @@ venv/
 # PII & generated outputs — never enter git
 #   - candidate profiles (PII: contact, CV data)
 #   - job ingest pools + ranked shortlists (per-run generated artefacts;
-#     also timestamped * YYYYMMDD_HHMM files accumulate forever)
+#     timestamped copies kept on a 7-day rolling window in output/_archive/)
 implementation/job_seeker/config/profile/
 implementation/job_seeker/config/output/
 

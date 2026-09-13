@@ -159,18 +159,18 @@ What each flag does (internal behaviour):
 
 `--json` writes a combined `{marketing, history, generated_at}` dict. `--html` writes the single self-contained dual-section HTML with:
 - A table-of-contents at the top (jump to either section)
-- Section A table + score-breakdown accordion cards (marketing cohort — preserved original set)
-- Section B table + score-breakdown accordion cards (historian cohort — creative CV-strength additions) with the 3-band bonus evidence visible per role
+- Section A — ONE merged info-dense table per cohort (marketing cohort — preserved original set). Role key columns on row 1 of each 2-row band; Phase-1 evidence, Phase-2 LLM rationale (if any), flags, and the Apply button all live on row 2 directly under each role (clickable, inline — no separate accordion cards).
+- Section B — Same ONE merged-table format (historian cohort — creative CV-strength additions) with the 3-band bonus evidence visible inline per role.
 - Fully offline renderable, inline CSS, clickable apply links that open new tabs.
 
 Phase-2 is skipped in agent mode per the hardware constraint.
 
 **Step 5 — Auto-open Finder (output folder) + the shortlist HTML in the default browser.**
 
-Kiera already has a Finder shortcut to the output folder pinned. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside the Trae sandbox (they only call macOS `open`, no sandbox writes outside the repo):
+Kiera already has a Finder shortcut to the output folder pinned. The output folder is intentionally kept noise-free: only `latest_*` aliases, `pool_*` aliases, and `applied_jobs.json` are visible at the top level; timestamped historical copies live in the hidden `output/_archive/` subfolder and are auto-deleted after 7 days. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside the Trae sandbox (they only call macOS `open`, no sandbox writes outside the repo):
 
 ```bash
-# 1) Open a Finder window to the output folder (user can click "Date Modified" column header to sort newest-first)
+# 1) Open a Finder window to the output folder (only the 9-10 useful files are visible at top level — history is in _archive/)
 open /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output
 
 # 2) Open the latest dual-cohort shortlist HTML directly in Kiera's default browser (Safari / Chrome / whatever)
