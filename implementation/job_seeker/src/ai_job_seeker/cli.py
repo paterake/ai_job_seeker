@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from datetime import datetime
@@ -240,17 +241,107 @@ def _timestamped_output_paths(
 ) -> tuple[Path, Path]:
     """Given a `latest_shortlist.<ext>` path → return (stamped, latest).
 
-    stamped = <parent>/<stem>_YYYYMMDD_HHMM<suffix>  — unique per rerun, never replaced
-    latest  = <parent>/<stem><suffix>                 — stable alias (copy of stamped),
-                                                         kept for IDE shortcuts and skill paths
+    stamped = <parent>/_archive/<stem>_YYYYMMDD_HHMM<suffix>  — unique per rerun,
+                                                               rotated out after 7 days
+    latest  = <parent>/<stem><suffix>                          — stable alias (copy of stamped),
+                                                               kept for IDE shortcuts and skill paths
     """
     _, stamp = _stamp_for_output(ts)
     latest = Path(latest_path)
     if str(latest.parent).strip():
         latest.parent.mkdir(parents=True, exist_ok=True)
     stem, suffix = latest.stem, latest.suffix
-    stamped = latest.with_name(f"{stem}_{stamp}{suffix}") if suffix else latest.with_name(f"{stem}_{stamp}")
+    archive_dir = latest.parent / "_archive"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    name = f"{stem}_{stamp}{suffix}" if suffix else f"{stem}_{stamp}"
+    stamped = archive_dir / name
     return stamped, latest
+
+
+_TIMESTAMP_RE = re.compile(r"_\d{8}_\d{4}(\..+)?$")
+
+
+def _prune_archive(
+    parent_dir: str | Path,
+    *,
+    days: int = 7,
+    now: datetime | None = None,
+) -> tuple[int, int]:
+    """Delete files in `<parent_dir>/_archive/` whose mtime is older than `days`.
+
+    Returns (deleted_count, remaining_count). Never touches anything outside the
+    `_archive/` subfolder. Safe to call on dirs that have no `_archive/`.
+    """
+    archive = Path(parent_dir) / "_archive"
+    if not archive.is_dir():
+        return 0, 0
+    now = now or datetime.now()
+    cutoff = now.timestamp() - days * 24 * 60 * 60
+    deleted = 0
+    remaining = 0
+    for entry in sorted(archive.iterdir()):
+        if not entry.is_file():
+            continue
+        try:
+            mtime = entry.stat().st_mtime
+        except OSError:
+            remaining += 1
+            continue
+        if mtime < cutoff:
+            try:
+                entry.unlink()
+                deleted += 1
+            except OSError:
+                remaining += 1
+        else:
+            remaining += 1
+    return deleted, remaining
+
+
+def _sweep_timestamped_to_archive(parent_dir: str | Path) -> int:
+    """Move any top-level `<parent_dir>/*_YYYYMMDD_HHMM.*` files into `_archive/`.
+
+    Returns the count of files moved. Idempotent: already-in-archive files are
+    not duplicated (in case a file with the same name already lives in
+    `_archive/`, we skip the source instead of overwriting).
+
+    This helper is a one-time tidy-up utility for switching the output folder
+    to the Option-1 clean-top-level layout. Future runs already write
+    timestamped copies straight to _archive via _timestamped_output_paths.
+    """
+    top = Path(parent_dir)
+    if not top.is_dir():
+        return 0
+    archive = top / "_archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    moved = 0
+    for entry in sorted(top.iterdir()):
+        if not entry.is_file():
+            continue
+        if not _TIMESTAMP_RE.search(entry.name):
+            continue
+        dest = archive / entry.name
+        if dest.exists():
+            # Already archived from a prior run — leave in place,
+            # drop the noisy top-level copy anyway.
+            try:
+                entry.unlink()
+                moved += 1
+            except OSError:
+                pass
+            continue
+        try:
+            entry.rename(dest)
+            moved += 1
+        except OSError:
+            # Fallback: copy+unlink (covers cross-filesystem moves if any).
+            try:
+                shutil.copy2(entry, dest)
+                entry.unlink()
+                moved += 1
+            except OSError:
+                pass
+    return moved
 
 
 def _write_with_timestamp(
@@ -264,14 +355,16 @@ def _write_with_timestamp(
     write_func(stamped_path) must write the content to stamped_path and
     return the path actually written.  After writing we shutil.copy2
     stamped → latest (overwriting latest is fine — latest is the *stable
-    alias*, stamped copies accumulate forever).
+    alias*, stamped copies live in _archive/ and are rotated after 7 days).
 
-    Wraps ALL shortlist writers so a rerun never destroys prior HTML/MD/JSON.
+    Wraps ALL shortlist writers so a rerun never destroys the prior HTML/MD/JSON
+    during its 7-day retention window, but the top-level folder stays clean.
     """
     stamped, latest = _timestamped_output_paths(latest_path, ts=ts)
     written = Path(write_func(stamped))
     src = written if written.exists() else stamped
     shutil.copy2(src, latest)
+    _prune_archive(latest.parent)
     return written, latest
 
 
@@ -488,15 +581,20 @@ def _merge_listings_pools(pools: list[list[JobListing]]) -> list[JobListing]:
     return merged
 
 
-def _render_table_rows(scored: list[Any]) -> str:
-    """Render <tr>…</tr> blocks for a scored cohort (shared by single + dual HTML)."""
+def _render_merged_table(scored: list[Any]) -> str:
+    """ONE compact info-dense table per cohort.
+
+    Each role = a 2-row band (no separate score-breakdown section anymore):
+      Row 1: classic role columns  # | Score | Source | Role | Company | Location | Salary | Posted
+      Row 2: single merged colspan=8 cell with all score evidence + apply link inline
+    """
     from html import escape as _h
 
     def esc(x: str | None) -> str:
         return "" if x is None else _h(str(x))
 
-    parts: list[str] = []
-    for s in scored:
+    body: list[str] = []
+    for idx, s in enumerate(scored):
         lst = s.listing
         url = lst.url or ""
         role = (lst.title[:90] + "…") if len(lst.title) > 90 else lst.title
@@ -513,13 +611,95 @@ def _render_table_rows(scored: list[Any]) -> str:
             salary = f"≤£{lst.salary_max:,}"
         posted = lst.posted_at.strftime("%Y-%m-%d") if lst.posted_at else ""
         remote_bit = f"&nbsp;<small>({esc(lst.remote)})</small>" if lst.remote else ""
-        location_txt = (
-            f"{esc(lst.location)}{remote_bit}" if lst.location else remote_bit.strip()
+        location_txt = f"{esc(lst.location)}{remote_bit}" if lst.location else remote_bit.strip()
+
+        # Score-band small pills (always visible in row-1 score cell too)
+        score_block = (
+            f"<b style='font-size:16px'>{s.final_score:.1f}</b><br>"
+            f"<span class='pill'>P1 {s.phase1_score:.1f}</span>"
         )
-        parts.append(
-            f"<tr>"
+        if s.phase2_score is not None:
+            score_block += f"<span class='pill pill-green'>P2 {s.phase2_score:.1f}</span>"
+        else:
+            score_block += f"<span class='pill pill-grey'>P2 off</span>"
+
+        apply_btn = ""
+        if url:
+            apply_btn = (
+                f"<a class='apply-btn' href='{esc(url)}' target='_blank' rel='noopener nofollow'>"
+                f"Apply →</a>"
+            )
+
+        # Evidence row content (2nd row below main role row):
+        ev_bits: list[str] = []
+        # Score line
+        ev_bits.append(
+            f"<span class='pill score-block-pill' title='Final score'>Final:&nbsp;{s.final_score:.1f}</span>"
+            f"<span class='pill' title='Phase-1 deterministic score'>Phase-1:&nbsp;{s.phase1_score:.1f}</span>"
+        )
+        if s.phase2_score is not None:
+            ev_bits.append(
+                f"<span class='pill pill-green' title='Phase-2 LLM judge score'>Phase-2:&nbsp;{s.phase2_score:.1f}</span>"
+            )
+        else:
+            ev_bits.append(
+                f"<span class='pill pill-grey' title='Phase-2 LLM judge skipped (agent-only mode)'>Phase-2:&nbsp;skipped</span>"
+            )
+
+        ev_bits.append(f"<small style='color:var(--muted)'>Source:&nbsp;<code>{esc(lst.source.value)}</code>&nbsp;·&nbsp;ID:&nbsp;<code>{esc(lst.source_id)}</code></small>")
+
+        # Phase-1 evidence
+        evidence = getattr(s, "phase1_evidence", None)
+        if evidence:
+            ev_parts: list[str] = []
+            if isinstance(evidence, list):
+                ev_parts = [esc(str(x)) for x in evidence if str(x).strip()]
+            elif isinstance(evidence, dict):
+                for k, v in evidence.items():
+                    val = f"{v:.1f}" if isinstance(v, float) else str(v)
+                    ev_parts.append(f"{esc(k)}:&nbsp;{esc(val)}")
+            else:
+                ev_parts = [esc(str(evidence))]
+            if ev_parts:
+                ev_bits.append(
+                    "<div class='ev-inline'><b style='font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em'>Evidence</b><br>"
+                    + ("<span class='ev-pill'>" + "</span><span class='ev-pill'>".join(ev_parts) + "</span>")
+                    + "</div>"
+                )
+
+        # Phase-2 rationale
+        if s.phase2_rationale:
+            rtext = s.phase2_rationale
+            if isinstance(rtext, list):
+                rtext = " · ".join(str(x) for x in rtext if str(x).strip())
+            ev_bits.append(
+                f"<div class='rationale-mini'><b style='font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em'>LLM rationale</b><br>"
+                f"{esc(str(rtext))}</div>"
+            )
+
+        # Flags
+        flags = getattr(s, "fabricated_claim_flags", None) or []
+        if flags:
+            ev_bits.append(
+                "<div class='flags-mini'>⚠&nbsp;"
+                + "<b>Flags:</b>&nbsp;"
+                + ", ".join(esc(str(f)) for f in flags)
+                + "</div>"
+            )
+
+        # Apply button floated right in evidence row
+        if apply_btn:
+            ev_bits.append(f"<div class='apply-btn-wrap'>{apply_btn}</div>")
+
+        evidence_row = f"<td class='evidence-row' colspan=8><div class='evidence-inner'>" + "".join(ev_bits) + "</div></td>"
+
+        # Zebra stripe on a PER-BAND basis (stripes every 2 rows)
+        band_class = "" if idx % 2 == 0 else " alt-band"
+
+        body.append(
+            f"<tr class='role-row{band_class}'>"
             f"<td class='pos'>{s.ranked_position}</td>"
-            f"<td class='score'>{s.final_score:.1f}</td>"
+            f"<td class='score'>{score_block}</td>"
             f"<td class='src'>{esc(lst.source.value)}</td>"
             f"<td class='role'>{role_html}</td>"
             f"<td>{esc(lst.company or '')}</td>"
@@ -528,67 +708,28 @@ def _render_table_rows(scored: list[Any]) -> str:
             f"<td class='dt'>{esc(posted)}</td>"
             f"</tr>"
         )
-    return "\n".join(parts)
+        body.append(f"<tr class='detail-row{band_class}'>{evidence_row}</tr>")
 
-
-def _render_detail_cards(scored: list[Any], *, anchor_prefix: str = "") -> str:
-    """Render accordion <details class='card'>…</details> blocks for a cohort."""
-    from html import escape as _h
-
-    def esc(x: str | None) -> str:
-        return "" if x is None else _h(str(x))
-
-    parts: list[str] = []
-    for s in scored:
-        lst = s.listing
-        inner: list[str] = []
-        inner.append(f"<div class='score-line'>Final score:&nbsp;<b>{s.final_score:.1f}</b>")
-        inner.append(f"<span class='pill'>Phase-1 (deterministic): {s.phase1_score:.1f}</span>")
-        if s.phase2_score is not None:
-            inner.append(
-                f"<span class='pill pill-green'>Phase-2 (LLM judge): {s.phase2_score:.1f}</span>"
-            )
-            if s.phase2_rationale:
-                inner.append(f"<div class='rationale'>{esc(s.phase2_rationale)}</div>")
-        else:
-            inner.append(
-                f"<span class='pill pill-grey'>Phase-2 (LLM judge): skipped — agent mode (default for 8GB M3 Air)</span>"
-            )
-        inner.append("</div>")
-        inner.append(f"<div>Source:&nbsp;<code>{esc(lst.source.value)}</code>&nbsp;·&nbsp;ID:&nbsp;<code>{esc(lst.source_id)}</code></div>")
-        if lst.url:
-            inner.append(
-                f"<div>Apply link:&nbsp;<a class='apply' href='{esc(lst.url)}' target='_blank' rel='noopener nofollow'>{esc(lst.url)}</a></div>"
-            )
-        evidence = getattr(s, "phase1_evidence", None)
-        if evidence:
-            inner.append("<div class='ev'><b>Phase-1 evidence</b><ul>")
-            if isinstance(evidence, dict):
-                for k, v in evidence.items():
-                    val = f"{v:.1f}" if isinstance(v, float) else str(v)
-                    inner.append(f"<li>{esc(k)}:&nbsp;{esc(val)}</li>")
-            elif isinstance(evidence, list):
-                for item in evidence:
-                    inner.append(f"<li>{esc(str(item))}</li>")
-            else:
-                inner.append(f"<li>{esc(str(evidence))}</li>")
-            inner.append("</ul></div>")
-        flags = getattr(s, "fabricated_claim_flags", None) or []
-        if flags:
-            inner.append(
-                "<div class='flags'><b>Fabricated-claim flags</b>: "
-                + ", ".join(esc(str(f)) for f in flags)
-                + "</div>"
-            )
-        parts.append(
-            f"<details class='card' id='{anchor_prefix}{s.ranked_position}'><summary>"
-            f"<b>{s.ranked_position}.</b>&nbsp;{esc(lst.title)}"
-            + (f"&nbsp;·&nbsp;{esc(lst.company)}" if lst.company else "")
-            + f"<span class='score-pill'>{s.final_score:.1f}</span></summary>"
-            + "".join(inner)
-            + "</details>"
-        )
-    return "\n".join(parts)
+    table = f"""
+<table class="merged-table">
+  <thead>
+    <tr>
+      <th style="width:5%">#</th>
+      <th style="width:11%">Score</th>
+      <th style="width:9%">Source</th>
+      <th>Role</th>
+      <th style="width:18%">Company</th>
+      <th style="width:14%">Location</th>
+      <th style="width:12%">Salary</th>
+      <th style="width:10%">Posted</th>
+    </tr>
+  </thead>
+  <tbody>
+{chr(10).join(body)}
+  </tbody>
+</table>
+"""
+    return table
 
 
 _DUAL_STYLES_EXTRA = """
@@ -604,6 +745,96 @@ _DUAL_STYLES_EXTRA = """
   .toc h3 { margin: 0 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
   .toc ul { margin: 0; padding-left: 20px; }
   .toc li { margin: 3px 0; }
+
+  /* === Merged one-table format (shared by single + dual shortlist) === */
+  table.merged-table { margin: 8px 0 32px; }
+  table.merged-table tbody tr.role-row td,
+  table.merged-table tbody tr.detail-row td {
+    border-bottom: none;
+  }
+  table.merged-table tbody tr.detail-row {
+    border-bottom: 1px solid var(--border);
+  }
+  table.merged-table tbody tr.detail-row.alt-band td.evidence-row,
+  table.merged-table tbody tr.role-row.alt-band td {
+    background: var(--zebra);
+  }
+  table.merged-table tbody tr.role-row td {
+    border-bottom: 1px solid #f3f4f6;
+  }
+  table.merged-table td.score span.pill {
+    display: inline-block;
+    margin: 2px 2px 0 0;
+    font-size: 11px;
+    padding: 1px 6px;
+    line-height: 1.4;
+  }
+  .evidence-row {
+    background: #fbfdff;
+    padding: 10px 14px 14px !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .evidence-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: flex-start;
+    position: relative;
+  }
+  .evidence-inner > * {
+    flex: 0 0 auto;
+  }
+  .evidence-inner .ev-inline,
+  .evidence-inner .rationale-mini,
+  .evidence-inner .flags-mini {
+    flex-basis: 100%;
+  }
+  .apply-btn-wrap {
+    margin-left: auto;
+    align-self: flex-start;
+  }
+  .apply-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff !important;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none !important;
+  }
+  .apply-btn:hover { background: #1e40af; }
+  .ev-pill {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #14532d;
+    padding: 2px 8px;
+    margin: 3px 6px 3px 0;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid #bbf7d0;
+    line-height: 1.5;
+  }
+  .rationale-mini {
+    margin-top: 2px;
+    padding: 6px 10px;
+    background: #ecfeff;
+    color: #0c4a6e;
+    border: 1px solid #a5f3fc;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .flags-mini {
+    margin-top: 2px;
+    padding: 6px 10px;
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .ev-inline { margin-top: 2px; }
 """
 
 
@@ -775,13 +1006,13 @@ def _write_shortlist_html(
     location: str = "",
     open_in_browser: bool = False,
 ) -> Path:
-    """Write a ranked shortlist as self-contained HTML with inline CSS.
+    """Write a ranked shortlist as a SINGLE self-contained info-dense HTML table.
 
-    - No external resources (fonts, CSS, JS) — renders fully offline.
-    - Clickable apply links — targets open in a new browser tab.
-    - Designed for non-technical readers: generous spacing, zebra rows,
-      salary/location/posted columns, per-role accordion-like details that
-      show score breakdown + phase-1 evidence.
+    - One merged table per cohort (no separate "score breakdown" section): every
+      role uses a 2-row band — top row is the role's key data, bottom row is
+      inline score evidence + LLM rationale + Apply button.
+    - No external resources — renders fully offline.
+    - Clickable apply links (role title + Apply button).
     """
     from datetime import datetime
     from html import escape as _h
@@ -804,94 +1035,7 @@ def _write_shortlist_html(
         meta_bits.append(f"Location:&nbsp;<code>{esc(location)}</code>")
     meta_html = " · ".join(meta_bits)
 
-    # Build table rows first
-    rows_html_parts: list[str] = []
-    for s in scored:
-        lst = s.listing
-        url = lst.url or ""
-        role = (lst.title[:90] + "…") if len(lst.title) > 90 else lst.title
-        if url:
-            role_html = f'<a href="{esc(url)}" target="_blank" rel="noopener nofollow">{esc(role)}</a>'
-        else:
-            role_html = esc(role)
-        salary = ""
-        if lst.salary_min and lst.salary_max:
-            salary = f"£{lst.salary_min:,}–£{lst.salary_max:,}"
-        elif lst.salary_min:
-            salary = f"£{lst.salary_min:,}+"
-        elif lst.salary_max:
-            salary = f"≤£{lst.salary_max:,}"
-        posted = lst.posted_at.strftime("%Y-%m-%d") if lst.posted_at else ""
-        remote_bit = f"&nbsp;<small>({esc(lst.remote)})</small>" if lst.remote else ""
-        location_txt = (
-            f"{esc(lst.location)}{remote_bit}" if lst.location else remote_bit.strip()
-        )
-        rows_html_parts.append(
-            f"<tr>"
-            f"<td class='pos'>{s.ranked_position}</td>"
-            f"<td class='score'>{s.final_score:.1f}</td>"
-            f"<td class='src'>{esc(lst.source.value)}</td>"
-            f"<td class='role'>{role_html}</td>"
-            f"<td>{esc(lst.company or '')}</td>"
-            f"<td>{location_txt}</td>"
-            f"<td class='sal'>{esc(salary)}</td>"
-            f"<td class='dt'>{esc(posted)}</td>"
-            f"</tr>"
-        )
-    rows_html = "\n".join(rows_html_parts)
-
-    # Build per-role detail cards
-    detail_parts: list[str] = []
-    for s in scored:
-        lst = s.listing
-        pieces: list[str] = []
-        pieces.append(f"<div class='score-line'>Final score:&nbsp;<b>{s.final_score:.1f}</b>")
-        pieces.append(f"<span class='pill'>Phase-1 (deterministic): {s.phase1_score:.1f}</span>")
-        if s.phase2_score is not None:
-            pieces.append(
-                f"<span class='pill pill-green'>Phase-2 (LLM judge): {s.phase2_score:.1f}</span>"
-            )
-            if s.phase2_rationale:
-                pieces.append(f"<div class='rationale'>{esc(s.phase2_rationale)}</div>")
-        else:
-            pieces.append(
-                f"<span class='pill pill-grey'>Phase-2 (LLM judge): skipped — agent mode (default for 8GB M3 Air)</span>"
-            )
-        pieces.append("</div>")
-        pieces.append(f"<div>Source:&nbsp;<code>{esc(lst.source.value)}</code>&nbsp;·&nbsp;ID:&nbsp;<code>{esc(lst.source_id)}</code></div>")
-        if lst.url:
-            pieces.append(
-                f"<div>Apply link:&nbsp;<a class='apply' href='{esc(lst.url)}' target='_blank' rel='noopener nofollow'>{esc(lst.url)}</a></div>"
-            )
-        evidence = getattr(s, "phase1_evidence", None)
-        if evidence:
-            pieces.append("<div class='ev'><b>Phase-1 evidence</b><ul>")
-            if isinstance(evidence, dict):
-                for k, v in evidence.items():
-                    val = f"{v:.1f}" if isinstance(v, float) else str(v)
-                    pieces.append(f"<li>{esc(k)}:&nbsp;{esc(val)}</li>")
-            elif isinstance(evidence, list):
-                for item in evidence:
-                    pieces.append(f"<li>{esc(str(item))}</li>")
-            else:
-                pieces.append(f"<li>{esc(str(evidence))}</li>")
-            pieces.append("</ul></div>")
-        flags = getattr(s, "fabricated_claim_flags", None) or []
-        if flags:
-            pieces.append(
-                "<div class='flags'><b>Fabricated-claim flags</b>: "
-                + ", ".join(esc(str(f)) for f in flags)
-                + "</div>"
-            )
-        detail_parts.append(
-            f"<details class='card'><summary>"
-            f"<b>{s.ranked_position}.</b>&nbsp;{esc(lst.title)}"
-            + (f"&nbsp;·&nbsp;{esc(lst.company)}" if lst.company else "")
-            + f"<span class='score-pill'>{s.final_score:.1f}</span></summary>"
-            + "".join(pieces)
-            + "</details>"
-        )
-    details_html = "\n".join(detail_parts)
+    table_html = _render_merged_table(scored)
 
     title_parts = [f"Job Shortlist — {esc(candidate_name)}"]
     if location:
@@ -900,9 +1044,9 @@ def _write_shortlist_html(
         title_parts.append(esc(search_terms))
     html_title = " · ".join(title_parts)
 
-    styles = """
+    styles = f"""
 <style>
-  :root {
+  :root {{
     --bg: #fafbfc;
     --fg: #1f2937;
     --muted: #6b7280;
@@ -913,44 +1057,46 @@ def _write_shortlist_html(
     --pill: #eef2ff;
     --pill-green: #dcfce7;
     --pill-grey: #f3f4f6;
-  }
-  * { box-sizing: border-box; }
-  body {
+  }}
+  * {{ box-sizing: border-box; }}
+  body {{
     margin: 0 auto; max-width: 1180px; padding: 32px 24px 80px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background: var(--bg); color: var(--fg); font-size: 15px; line-height: 1.45;
-  }
-  h1 { margin: 0 0 6px; font-size: 28px; }
-  .meta { color: var(--muted); margin-bottom: 8px; }
-  code { background: #eef0f3; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .apply { word-break: break-all; font-size: 13px; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 20px 0 32px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
-  th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th { background: #111827; color: #f9fafb; font-weight: 600; font-size: 13px; letter-spacing: .01em; }
-  tbody tr:nth-child(even) td { background: var(--zebra); }
-  td.pos, td.score, td.src, td.dt, td.sal { white-space: nowrap; }
-  td.score, td.sal { font-variant-numeric: tabular-nums; text-align: right; }
-  td.pos { text-align: right; font-weight: 600; }
-  .pill { display: inline-block; background: var(--pill); color: #3730a3; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin: 2px 4px 2px 0; }
-  .pill-green { background: var(--pill-green); color: #166534; }
-  .pill-grey  { background: var(--pill-grey);  color: #374151; }
-  .score-pill { float: right; display: inline-block; background: var(--accent); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
-  .score-line { margin: 4px 0 8px; }
-  .rationale { margin: 8px 0; padding: 8px 12px; background: #ecfeff; color: #0c4a6e; border: 1px solid #a5f3fc; border-radius: 6px; }
-  .card {
+  }}
+  h1 {{ margin: 0 0 6px; font-size: 28px; }}
+  .meta {{ color: var(--muted); margin-bottom: 8px; }}
+  code {{ background: #eef0f3; padding: 1px 6px; border-radius: 4px; font-size: 13px; }}
+  a {{ color: var(--accent); text-decoration: none; }}
+  a:hover {{ text-decoration: underline; }}
+  .apply {{ word-break: break-all; font-size: 13px; }}
+  table {{ width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 20px 0 32px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }}
+  th, td {{ padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }}
+  th {{ background: #111827; color: #f9fafb; font-weight: 600; font-size: 13px; letter-spacing: .01em; }}
+  tbody tr:nth-child(even) td {{ background: var(--zebra); }}
+  td.pos, td.score, td.src, td.dt, td.sal {{ white-space: nowrap; }}
+  td.score, td.sal {{ font-variant-numeric: tabular-nums; }}
+  td.pos {{ text-align: right; font-weight: 600; }}
+  td.role a {{ font-weight: 600; }}
+  .pill {{ display: inline-block; background: var(--pill); color: #3730a3; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin: 2px 4px 2px 0; }}
+  .pill-green {{ background: var(--pill-green); color: #166534; }}
+  .pill-grey  {{ background: var(--pill-grey);  color: #374151; }}
+  .score-pill {{ float: right; display: inline-block; background: var(--accent); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }}
+  .score-line {{ margin: 4px 0 8px; }}
+  .rationale {{ margin: 8px 0; padding: 8px 12px; background: #ecfeff; color: #0c4a6e; border: 1px solid #a5f3fc; border-radius: 6px; }}
+  .card {{
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
     margin-bottom: 12px; padding: 12px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03);
-  }
-  .card summary { cursor: pointer; font-size: 16px; list-style: none; padding: 4px 0; }
-  .card summary::-webkit-details-marker { display: none; }
-  .card summary:hover { color: var(--accent); }
-  .card > * + * { margin-top: 8px; }
-  .ev ul { margin: 6px 0 0 0; padding-left: 20px; }
-  .flags { color: #991b1b; background: #fef2f2; padding: 8px 12px; border-radius: 6px; border: 1px solid #fecaca; }
-  h2 { margin-top: 48px; font-size: 20px; }
-  .footer { margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }
+  }}
+  .card summary {{ cursor: pointer; font-size: 16px; list-style: none; padding: 4px 0; }}
+  .card summary::-webkit-details-marker {{ display: none; }}
+  .card summary:hover {{ color: var(--accent); }}
+  .card > * + * {{ margin-top: 8px; }}
+  .ev ul {{ margin: 6px 0 0 0; padding-left: 20px; }}
+  .flags {{ color: #991b1b; background: #fef2f2; padding: 8px 12px; border-radius: 6px; border: 1px solid #fecaca; }}
+  h2 {{ margin-top: 24px; font-size: 20px; }}
+  .footer {{ margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }}
+{_DUAL_STYLES_EXTRA}
 </style>
 """
 
@@ -966,34 +1112,10 @@ def _write_shortlist_html(
 <body>
 <h1>{esc(candidate_name)}&nbsp;· Job Shortlist</h1>
 <p class="meta">{meta_html}</p>
-<p><b>{len(scored)}</b> shortlisted roles, sorted by final score (descending). Click any job title in the table to apply.
-   Click any row in the <i>Score breakdown</i> section below to see phase-1 evidence for that role.</p>
+<p><b>{len(scored)}</b> shortlisted roles, sorted by final score (descending).
+   Role details, score evidence and Apply buttons are all inline below each role row.</p>
 
-<table>
-  <thead>
-    <tr>
-      <th style="width:5%">#</th>
-      <th style="width:8%">Score</th>
-      <th style="width:9%">Source</th>
-      <th>Role</th>
-      <th style="width:18%">Company</th>
-      <th style="width:15%">Location</th>
-      <th style="width:12%">Salary</th>
-      <th style="width:11%">Posted</th>
-    </tr>
-  </thead>
-  <tbody>
-{rows_html}
-  </tbody>
-</table>
-
-<h2>Score breakdown per role</h2>
-<p style="color:var(--muted);margin-bottom:20px">
-  Click each row to expand → see phase-1 evidence (role keywords matched, salary/location fit, recency).
-  Phase-2 LLM judge is skipped by default on this machine (8GB M3 Air · agent-only mode).
-</p>
-
-{details_html}
+{table_html}
 
 <p class="footer">Generated by ai_job_seeker (Stage 3 Match · agent mode) · {esc(datetime.now().isoformat(timespec='seconds'))}</p>
 </body>
@@ -1003,7 +1125,6 @@ def _write_shortlist_html(
     p.write_text(body, encoding="utf-8")
 
     if open_in_browser:
-        # macOS `open` handles arbitrary file URLs correctly.
         opener = shutil.which("open")
         if not opener:
             opener = shutil.which("xdg-open") or shutil.which("x-www-browser")
@@ -1057,10 +1178,8 @@ def _write_dual_shortlist_html(
         meta_bits.append(f"Location:&nbsp;<code>{esc(location)}</code>")
     meta_html = " · ".join(meta_bits)
 
-    mk_rows = _render_table_rows(marketing_scored)
-    mk_details = _render_detail_cards(marketing_scored, anchor_prefix="m_")
-    hi_rows = _render_table_rows(history_scored)
-    hi_details = _render_detail_cards(history_scored, anchor_prefix="h_")
+    mk_table = _render_merged_table(marketing_scored)
+    hi_table = _render_merged_table(history_scored)
 
     title_parts = [f"Job Shortlist — {esc(candidate_name)}"]
     if location:
@@ -1100,8 +1219,9 @@ def _write_dual_shortlist_html(
   th {{ background: #111827; color: #f9fafb; font-weight: 600; font-size: 13px; letter-spacing: .01em; }}
   tbody tr:nth-child(even) td {{ background: var(--zebra); }}
   td.pos, td.score, td.src, td.dt, td.sal {{ white-space: nowrap; }}
-  td.score, td.sal {{ font-variant-numeric: tabular-nums; text-align: right; }}
+  td.score, td.sal {{ font-variant-numeric: tabular-nums; }}
   td.pos {{ text-align: right; font-weight: 600; }}
+  td.role a {{ font-weight: 600; }}
   .pill {{ display: inline-block; background: var(--pill); color: #3730a3; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin: 2px 4px 2px 0; }}
   .pill-green {{ background: var(--pill-green); color: #166534; }}
   .pill-grey  {{ background: var(--pill-grey);  color: #374151; }}
@@ -1145,7 +1265,7 @@ def _write_dual_shortlist_html(
 </ul>
 <p style="margin:10px 0 0;color:var(--muted);font-size:13px">
   Each section is independently ranked. Sections are fully unique — no role appears in both Section A and Section B.
-  Click any role title in a table to open the apply page in a new tab; click rows in the <i>Score breakdown</i> section to see evidence.
+  Role details, score evidence and Apply buttons are merged inline per role (no separate breakdown sections).
 </p>
 </div>
 
@@ -1159,27 +1279,7 @@ def _write_dual_shortlist_html(
   Preserves the original top-25 ranking from today's baseline run.
 </p>
 
-<table>
-  <thead>
-    <tr>
-      <th style="width:5%">#</th>
-      <th style="width:8%">Score</th>
-      <th style="width:9%">Source</th>
-      <th>Role</th>
-      <th style="width:18%">Company</th>
-      <th style="width:15%">Location</th>
-      <th style="width:12%">Salary</th>
-      <th style="width:11%">Posted</th>
-    </tr>
-  </thead>
-  <tbody>
-{mk_rows}
-  </tbody>
-</table>
-
-<h2 style="font-size:16px">A. Score breakdown — Marketing cohort</h2>
-<p style="color:var(--muted);margin-bottom:16px">Click each row to expand → see phase-1 evidence for that role.</p>
-{mk_details}
+{mk_table}
 
 <a id="cohort-history"></a>
 <div class="cohort-h2">
@@ -1191,27 +1291,7 @@ def _write_dual_shortlist_html(
   Includes: research/insight/analyst, library/archive/records, heritage/museum/gallery/curatorial, policy/civil-service, bid/fundraising, editorial/journalism/writer, tutoring/education, legal-adjacent (paralegal/compliance/casework), and grad schemes.
 </p>
 
-<table>
-  <thead>
-    <tr>
-      <th style="width:5%">#</th>
-      <th style="width:8%">Score</th>
-      <th style="width:9%">Source</th>
-      <th>Role</th>
-      <th style="width:18%">Company</th>
-      <th style="width:15%">Location</th>
-      <th style="width:12%">Salary</th>
-      <th style="width:11%">Posted</th>
-    </tr>
-  </thead>
-  <tbody>
-{hi_rows}
-  </tbody>
-</table>
-
-<h2 style="font-size:16px">B. Score breakdown — Historian &amp; Research cohort</h2>
-<p style="color:var(--muted);margin-bottom:16px">Click each row to expand → see the 3-band historian bonus (title / desc / strengths) + all other evidence.</p>
-{hi_details}
+{hi_table}
 
 <p class="footer">Generated by ai_job_seeker (Stage 3 Match · dual-cohort · agent mode) · {esc(datetime.now().isoformat(timespec='seconds'))}</p>
 </body>
