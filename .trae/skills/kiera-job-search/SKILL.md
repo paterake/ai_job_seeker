@@ -129,7 +129,7 @@ If any source prints `SKIP` (because a secret is missing), surface that to the u
 
 CRITICAL PRESERVATION RULE (from user, do not deviate): **`--top` for Section A is ALWAYS 25. Never reduce below 25.** Kiera explicitly asked to keep the original marketing top-25 shown at 15:00 today, because she had suitable roles in it. The only way to guarantee this (without research pool interlopers jumping into Section A) is to rank Section A **exclusively against the original marketing-ingest pool** (or the prior `latest_listings.json` single-pool from today's first run), and rank Section B **against the merged pool** so it can draw on creative research/historian roles.
 
-Use the **per-cohort ingest flags** (`--marketing-ingest-json` for Section A only; `--history-ingest-json` repeated for Section B only):
+Use the **per-cohort ingest flags** (`--marketing-ingest-json` for Section A only; `--history-ingest-json` repeated for Section B only). Pass `--applied-json` explicitly so any roles Kiera has already applied to (logged via the `log-applied-jobs` skill) are removed from both pools BEFORE ranking runs:
 
 ```bash
 cd /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker
@@ -139,6 +139,7 @@ uv run ai-job-seeker match \
   --history-ingest-json   implementation/job_seeker/config/output/pool_research.json \
   --top 25 \
   --research-top 25 \
+  --applied-json         implementation/job_seeker/config/output/applied_jobs.json \
   --search "marketing + graduate research" \
   --location "<LOCATION_OVERRIDE_or_London>" \
   --json-marketing implementation/job_seeker/config/output/latest_shortlist_marketing.json \
@@ -152,6 +153,9 @@ What each flag does (internal behaviour):
 - `--marketing-ingest-json latest_listings.json` → Section A ranks ONLY against the original single-pool (155 listings, the same pool Kiera saw at 15:00 today). The CLI also automatically drops the tiny marketing-cohort bonus and uses vanilla `cohort=None` scoring when this flag is set, so the scores and order match the original single-cohort run byte-for-byte as closely as possible.
 - `--history-ingest-json pool_marketing.json --history-ingest-json pool_research.json` → Section B ranks against the dedup-merged pool (191 listings, marketing 153 + research 38 unique) with the full historian 3-band bonus (max +22) + role-overlap keyword augmentation, so research/insight/heritage/policy/editorial roles surface correctly.
 - `--top 25` (never reduce) + `--research-top 25` enable the dual-cohort writer that renders both sections into ONE HTML/markdown file.
+- `--applied-json applied_jobs.json` → immediately before ranking, any listing whose (title, company) matches a record in the applied-store is silently removed from both Section A and Section B pools. The filter also supports **title-only matches** (records with empty company): if any applied record has (title_norm, ""), it matches any listing with that title, regardless of company — this lets the historical import from Kiera's Google Sheet (which only tracked roles by title only) work straight away. The match stdout prints a clear `[applied-filter]` summary line showing how many were removed per cohort (or "nothing to filter" if the store is empty).
+
+**Canonical tracker:** Kiera maintains her applied roles tracker in Google Drive, not in the repo. The canonical primary source is the .gsheet stub at `/Users/kierapatel/Library/CloudStorage/GoogleDrive-patelkiera@gmail.com/My Drive/personal/job_seeker/actions.gsheet`. The local `applied_jobs.json` is an automation cache for the filter; whenever she edits the sheet directly, re-import its rows to keep the cache fresh. The `log-applied-jobs` skill keeps both in sync automatically whenever Kiera tells us which shortlist positions she's applied to.
 
 `--json` writes a combined `{marketing, history, generated_at}` dict. `--html` writes the single self-contained dual-section HTML with:
 - A table-of-contents at the top (jump to either section)

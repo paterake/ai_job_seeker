@@ -94,6 +94,131 @@ def _resolve_workspace_relative_dir(rel_dir: str) -> str:
     return str(Path(sentinel).parent)
 DEFAULT_OUTPUT_DIR = _resolve_workspace_relative_dir("implementation/job_seeker/config/output")
 DOTENV_PATH = ".env"
+_DEFAULT_APPLIED_REL = "implementation/job_seeker/config/output/applied_jobs.json"
+DEFAULT_APPLIED_JSON = _resolve_workspace_relative(_DEFAULT_APPLIED_REL)
+
+
+# ---------------------------------------------------------------------------
+# Applied-jobs tracking — local JSON store, used by match (filter) + applied
+# subcommand (add/list/remove).  Sharing one module-level set of helpers keeps
+# the filter behaviour consistent between the two entry points.
+# ---------------------------------------------------------------------------
+
+def _default_applied_json_path() -> str:
+    """Fallback absolute path if DEFAULT_APPLIED_JSON resolves to a missing dir."""
+    out_dir = Path(DEFAULT_OUTPUT_DIR)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return str(out_dir / "applied_jobs.json")
+
+
+def _applied_key(title: str, company: str) -> tuple[str, str]:
+    """Normalised dedupe key for a job (case + whitespace insensitive)."""
+    return ((title or "").strip().lower(), (company or "").strip().lower())
+
+
+def load_applied_jobs(path: str | None = None) -> list[dict]:
+    """Load applied-jobs records from JSON, or return [] if missing/empty.
+
+    Each record is a dict with at least: title, company, applied_on (ISO date
+    string). Optional: source, url, status, notes, cohort, rank_in_section.
+    """
+    resolved = path or DEFAULT_APPLIED_JSON
+    p = Path(resolved)
+    if not p.is_file():
+        # Try the default fallback directory path too (in case the workspace
+        # resolver picked a path to a directory that doesn't exist yet).
+        fallback = Path(_default_applied_json_path())
+        if fallback.is_file():
+            p = fallback
+        else:
+            return []
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    if not isinstance(raw, list):
+        return []
+    out: list[dict] = []
+    for rec in raw:
+        if isinstance(rec, dict) and rec.get("title"):
+            out.append(rec)
+    return out
+
+
+def save_applied_jobs(records: list[dict], path: str | None = None) -> str:
+    """Atomically write applied-jobs records as indented JSON. Returns path written."""
+    resolved = path or DEFAULT_APPLIED_JSON
+    p = Path(resolved)
+    if str(p.parent).strip():
+        p.parent.mkdir(parents=True, exist_ok=True)
+    clean = sorted(
+        [r for r in records if isinstance(r, dict) and r.get("title")],
+        key=lambda r: (
+            str(r.get("applied_on") or ""),
+            str(r.get("company") or "").lower(),
+            str(r.get("title") or "").lower(),
+        ),
+    )
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(clean, f, indent=2, ensure_ascii=False)
+    return str(p)
+
+
+def add_applied_jobs(new_records: list[dict], path: str | None = None) -> tuple[int, str]:
+    """Add new applied-job records, deduped on (title, company). Returns (added_count, path).
+
+    Existing records with the same key are untouched (so notes/status history
+    is preserved); only genuinely-new records are appended.
+    """
+    existing = load_applied_jobs(path)
+    seen: set[tuple[str, str]] = {_applied_key(r["title"], r.get("company") or "") for r in existing}
+    added = 0
+    for rec in new_records:
+        key = _applied_key(str(rec.get("title") or ""), str(rec.get("company") or ""))
+        if key[0] == "" or key in seen:
+            continue
+        seen.add(key)
+        existing.append(rec)
+        added += 1
+    written = save_applied_jobs(existing, path)
+    return added, written
+
+
+def applied_job_keys(path: str | None = None) -> set[tuple[str, str]]:
+    """Return the set of (title_norm, company_norm) keys currently tracked as applied."""
+    return {_applied_key(r["title"], r.get("company") or "") for r in load_applied_jobs(path)}
+
+
+def filter_out_applied(
+    listings: list[JobListing],
+    applied_keys: set[tuple[str, str]],
+) -> tuple[list[JobListing], int]:
+    """Remove any listing whose key matches an applied record.
+
+    Matching rules:
+      - Exact (title, company) match always wins.
+      - Title-only match: if any applied record has (title_norm, "") then
+        EVERY listing with that same title_norm is filtered, regardless of
+        company. This supports historical imports (e.g. from a tracker sheet)
+        where only the job title is known.
+
+    Returns (filtered_list, removed_count).
+    """
+    if not applied_keys:
+        return list(listings), 0
+    title_only: set[str] = {t for t, c in applied_keys if not c}
+    kept: list[JobListing] = []
+    removed = 0
+    for lst in listings:
+        t_norm, c_norm = _applied_key(lst.title or "", lst.company or "")
+        if (t_norm, c_norm) in applied_keys:
+            removed += 1
+            continue
+        if title_only and t_norm in title_only:
+            removed += 1
+            continue
+        kept.append(lst)
+    return kept, removed
 
 
 def _stamp_for_output(ts: datetime | None = None) -> tuple[datetime, str]:
@@ -1353,6 +1478,40 @@ def _cmd_match(args: argparse.Namespace) -> int:
             listings = run_ingest_dry(search_cfg)
             print(f"Listings (ingest dry-run): {len(listings)}")
 
+    # ---------- Filter: remove any listings already tracked as applied ----------
+    applied_json_override: str = (getattr(args, "applied_json", "") or "").strip()
+    applied_path = applied_json_override or None
+    applied_keys = applied_job_keys(applied_path)
+    applied_count = len(applied_keys)
+    if applied_count:
+        print()
+        print(f"[applied-filter] {applied_count} role(s) tracked as already-applied "
+              f"(source: {applied_path or DEFAULT_APPLIED_JSON})")
+        if use_dual_cohort:
+            mk_listings, mk_removed = filter_out_applied(mk_listings, applied_keys)
+            hi_listings, hi_removed = filter_out_applied(hi_listings, applied_keys)
+            total_filtered = mk_removed + hi_removed
+            if total_filtered:
+                print(f"[applied-filter] Section A: {mk_removed} removed "
+                      f"(pool now {len(mk_listings)}), "
+                      f"Section B: {hi_removed} removed (pool now {len(hi_listings)})")
+            else:
+                print("[applied-filter] No overlap between this run's ingest pools "
+                      "and the already-applied set — nothing removed.")
+        else:
+            listings, s_removed = filter_out_applied(listings, applied_keys)
+            if s_removed:
+                print(f"[applied-filter] {s_removed} listing(s) removed "
+                      f"(shared pool now {len(listings)})")
+            else:
+                print("[applied-filter] No overlap with already-applied set — nothing removed.")
+    else:
+        print()
+        print(f"[applied-filter] applied-jobs store empty "
+              f"({applied_path or DEFAULT_APPLIED_JSON}) — nothing to filter. "
+              "Log applied roles via `ai-job-seeker applied add ...` or the "
+              "`log-applied-jobs` skill to enable filtering on the next run.")
+
     AgentHandoffRequired = _require_ai_agent_core(
         "match phase-2 AgentHandoffRequired handling"
     ).AgentHandoffRequired
@@ -1616,6 +1775,229 @@ def _cmd_match(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_applied(args: argparse.Namespace) -> int:
+    """Dispatch applied subcommand → registered applied_func."""
+    func = getattr(args, "applied_func", None)
+    if func is None:
+        print("error: no applied subcommand given (use add/list/remove/sync-from-sheet)", file=sys.stderr)
+        return 2
+    return func(args)
+
+
+def _resolve_applied_path_from_args(args: argparse.Namespace) -> str | None:
+    raw = (getattr(args, "applied_json", "") or "").strip()
+    return raw or None
+
+
+def _today_iso() -> str:
+    from datetime import date
+    return date.today().isoformat()
+
+
+def _pick_scored_cohort_from_shortlist_json(
+    shortlist_path: str, cohort: str
+) -> list[dict]:
+    """Given a latest_shortlist.json path + cohort, return its list of ScoredListing dicts.
+
+    Accepts:
+      - combined dual-cohort JSON {"marketing": [...], "history": [...]}
+      - single-cohort JSON: plain list [...]
+      - or a per-cohort JSON directly (list)
+    """
+    p = Path(shortlist_path)
+    if not p.is_file():
+        return []
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    if isinstance(raw, list):
+        # Single-cohort list or per-cohort file
+        return raw
+    if isinstance(raw, dict):
+        # Combined dual-cohort: {"marketing": [...], "history": [...]}
+        if cohort:
+            key = cohort.lower().strip()
+            if key in {"marketing", "a", "sectiona", "section a", "sec a", "mkt"}:
+                return list(raw.get("marketing") or [])
+            if key in {"history", "research", "academic", "b", "sectionb", "section b", "sec b", "hist"}:
+                return list(raw.get("history") or [])
+        # User didn't specify cohort → prefer marketing, else history, else any list value
+        for fallback_key in ("marketing", "history"):
+            if isinstance(raw.get(fallback_key), list):
+                return list(raw[fallback_key])
+        for val in raw.values():
+            if isinstance(val, list):
+                return list(val)
+    return []
+
+
+def _cmd_applied_add(args: argparse.Namespace) -> int:
+    applied_path = _resolve_applied_path_from_args(args)
+    applied_on = (getattr(args, "applied_on", "") or "").strip() or _today_iso()
+    status = (getattr(args, "status", "") or "applied").strip() or "applied"
+    notes = (getattr(args, "notes", "") or "").strip()
+
+    shortlist_json = (getattr(args, "from_shortlist_json", "") or "").strip()
+    cohort = (getattr(args, "cohort", "") or "").strip()
+    positions: list[int] = list(getattr(args, "position", None) or [])
+
+    new_records: list[dict] = []
+
+    if shortlist_json and positions:
+        scored = _pick_scored_cohort_from_shortlist_json(shortlist_json, cohort)
+        if not scored:
+            print(
+                f"error: could not read ScoredListing list from {shortlist_json} "
+                f"(cohort={cohort!r}). Is the path correct?",
+                file=sys.stderr,
+            )
+            return 1
+        by_position: dict[int, dict] = {}
+        for s in scored:
+            pos = s.get("ranked_position") if isinstance(s, dict) else None
+            if isinstance(pos, int):
+                by_position[pos] = s
+        for pos in positions:
+            sc = by_position.get(pos)
+            if sc is None:
+                print(
+                    f"warning: position {pos} not found in shortlist cohort "
+                    f"{cohort or '(unspecified)'} (positions found: "
+                    f"{sorted(by_position.keys())[:20]}) — skipping",
+                    file=sys.stderr,
+                )
+                continue
+            lst = sc.get("listing") if isinstance(sc, dict) else None
+            if not isinstance(lst, dict):
+                print(f"warning: position {pos} missing listing dict — skipping", file=sys.stderr)
+                continue
+            rec = {
+                "title": str(lst.get("title") or "").strip(),
+                "company": str(lst.get("company") or "").strip(),
+                "url": str(lst.get("url") or "").strip(),
+                "source": str(lst.get("source") or "").strip(),
+                "applied_on": applied_on,
+                "status": status,
+                "notes": notes,
+                "cohort": cohort or ("marketing" if "marketing" in str(Path(shortlist_json).name).lower() else ""),
+                "rank_in_section": pos,
+                "final_score": sc.get("final_score"),
+            }
+            if rec["title"]:
+                new_records.append(rec)
+    else:
+        title = (getattr(args, "title", "") or "").strip()
+        company = (getattr(args, "company", "") or "").strip()
+        if not title:
+            print(
+                "error: add needs either (--from-shortlist-json + --position) OR (--title, optionally with --company)",
+                file=sys.stderr,
+            )
+            return 2
+        rec = {
+            "title": title,
+            "company": company,
+            "url": (getattr(args, "url", "") or "").strip(),
+            "source": (getattr(args, "source", "") or "").strip(),
+            "applied_on": applied_on,
+            "status": status,
+            "notes": notes,
+        }
+        new_records.append(rec)
+
+    if not new_records:
+        print("Nothing to add.")
+        return 0
+
+    added, written = add_applied_jobs(new_records, applied_path)
+    for rec in new_records:
+        print(f"  · {rec['title']} — {rec['company']} (applied {rec['applied_on']})")
+    print(f"Added: {added}/{len(new_records)} new records ({len(new_records) - added} already existed)")
+    print(f"Wrote store : {written}")
+    print("Tip: the next `ai-job-seeker match` run will automatically filter these out.")
+    return 0
+
+
+def _cmd_applied_list(args: argparse.Namespace) -> int:
+    applied_path = _resolve_applied_path_from_args(args)
+    records = load_applied_jobs(applied_path)
+    if not records:
+        print(f"No applied-job records yet. Store path: {applied_path or DEFAULT_APPLIED_JSON}")
+        print("Add some via `ai-job-seeker applied add --from-shortlist-json <shortlist.json> --position N`")
+        return 0
+    if getattr(args, "as_json", False):
+        json.dump(records, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return 0
+    hdr = f"{'Applied':<12}  {'Status':<12}  {'Company':<24}  Title"
+    print(hdr)
+    print("-" * len(hdr))
+    for r in records:
+        d = str(r.get("applied_on") or "")[:12]
+        st = (str(r.get("status") or "-")[:11].ljust(12))
+        co = (str(r.get("company") or "")[:22].ljust(24))
+        title = str(r.get("title") or "")
+        print(f"{d:<12}  {st}  {co}  {title}")
+    print("-" * len(hdr))
+    print(f"Total tracked: {len(records)}")
+    print(f"Store path   : {applied_path or DEFAULT_APPLIED_JSON}")
+    return 0
+
+
+def _cmd_applied_remove(args: argparse.Namespace) -> int:
+    applied_path = _resolve_applied_path_from_args(args)
+    records = load_applied_jobs(applied_path)
+    if getattr(args, "remove_all", False):
+        if not records:
+            print("Store already empty.")
+            return 0
+        written = save_applied_jobs([], applied_path)
+        print(f"Removed all {len(records)} records. Store cleared: {written}")
+        return 0
+    title = (getattr(args, "title", "") or "").strip()
+    company = (getattr(args, "company", "") or "").strip()
+    if not title and not company:
+        print("error: remove needs (--title + --company) OR --all", file=sys.stderr)
+        return 2
+    target_key = _applied_key(title, company)
+    kept: list[dict] = []
+    removed: list[dict] = []
+    for r in records:
+        if _applied_key(r["title"], r["company"]) == target_key:
+            removed.append(r)
+        else:
+            kept.append(r)
+    if not removed:
+        print(f"No record matched title={title!r} company={company!r}. Nothing removed.")
+        return 0
+    written = save_applied_jobs(kept, applied_path)
+    for r in removed:
+        print(f"Removed: {r['title']} — {r['company']}")
+    print(f"Store updated: {written}")
+    return 0
+
+
+def _cmd_applied_sync_sheet(args: argparse.Namespace) -> int:
+    """Placeholder. Sheet sync lives in the `log-applied-jobs` skill (browser layer)."""
+    applied_path = _resolve_applied_path_from_args(args) or DEFAULT_APPLIED_JSON
+    print("Google Sheet sync is handled by the `log-applied-jobs` skill (interactive-browser layer),")
+    print("not this CLI subcommand. Usage (say this to me in a chat prompt):")
+    print()
+    print("  e.g. 'Log that I applied to Section A #3, #7, and Section B #5 from today's shortlist'")
+    print()
+    print("What the skill does (under the hood):")
+    print("  1. Resolves those section/position IDs → role details from latest_shortlist.json")
+    print("  2. Writes the records to the local JSON store here:")
+    print(f"       {applied_path}")
+    print("  3. Opens your Google Sheet 'jobs' tab in the interactive browser and appends")
+    print("     the new rows (Applied date, Title, Company, Source, Apply link, Status).")
+    print()
+    print("To seed the JSON store with rows you've already entered manually in the Sheet,")
+    print("just tell me the contents, or export as CSV and tell me the path — I'll bulk-import.")
+    return 0
+
+
 def _cmd_draft(args: argparse.Namespace) -> int:
     mod = _require_ai_agent_core("draft LLM backend resolution")
     cfg, mode = _build_mode(args)
@@ -1713,6 +2095,71 @@ def _build_base_parser(
     )
     p_ingest.set_defaults(func=_cmd_ingest)
 
+    # ------------------------------ applied subcommand --------------------------
+    # Local CRUD for the applied-jobs JSON store.  The log-applied-jobs skill
+    # calls this subcommand (via `uv run`) after it has resolved shortlist IDs
+    # into concrete ScoredListing dicts.  Google Sheet sync happens at the
+    # skill layer (browser tools), not inside the CLI — CLI is the durable
+    # JSON source of truth.
+    if argv0 == "applied":
+        p_applied = sub.add_parser(
+            "applied",
+            help="Stage 3+ — track applied-for jobs so the match filter removes them from future shortlists",
+        )
+        p_applied.set_defaults(func=_cmd_applied)
+        applied_sub = p_applied.add_subparsers(dest="applied_action", required=True)
+
+        p_add = applied_sub.add_parser("add", help="Add one or more applied-job records. Pass at minimum --title + --company; use --from-shortlist to pull all fields directly from a latest_shortlist.json {cohort,position} tuple.")
+        p_add.add_argument("--applied-json", default="", help=f"Path to applied-jobs store (default: {DEFAULT_APPLIED_JSON})")
+        p_add.add_argument(
+            "--from-shortlist-json",
+            default="",
+            help="Path to a shortlist JSON (combined {marketing,history} or single cohort list). When combined with --cohort and --position, copies title/company/url/source directly from that ScoredListing so you don't have to type them manually.",
+        )
+        p_add.add_argument(
+            "--cohort",
+            default="",
+            help="(with --from-shortlist-json) One of: 'marketing' (=Section A), 'history' (=Section B), or '' for a single-cohort shortlist JSON.",
+        )
+        p_add.add_argument(
+            "--position",
+            type=int,
+            action="append",
+            default=None,
+            help="(with --from-shortlist-json) The ranked_position integer(s) to pull from the shortlist. Pass multiple times to pull several in one go, e.g. --position 3 --position 7 --position 12.",
+        )
+        p_add.add_argument("--title", default="", help="Job title (manual fallback when not using --from-shortlist-json)")
+        p_add.add_argument("--company", default="", help="Company name (manual fallback when not using --from-shortlist-json)")
+        p_add.add_argument("--url", default="", help="Apply link (optional when using --from-shortlist-json)")
+        p_add.add_argument("--source", default="", help="Board source, e.g. adzuna/reed/themuse (optional)")
+        p_add.add_argument(
+            "--applied-on",
+            default="",
+            help="ISO date applied on, e.g. 2026-09-02. Defaults to today if omitted.",
+        )
+        p_add.add_argument("--status", default="applied", help="Status tag: applied / interviewed / rejected / offer / closed. Defaults to 'applied'.")
+        p_add.add_argument("--notes", default="", help="Optional free-text notes")
+        p_add.set_defaults(applied_func=_cmd_applied_add)
+
+        p_list = applied_sub.add_parser("list", help="Print all applied-job records as a compact table (applied_on, company, title, status)")
+        p_list.add_argument("--applied-json", default="", help=f"Path to applied-jobs store (default: {DEFAULT_APPLIED_JSON})")
+        p_list.add_argument("--as-json", action="store_true", help="Emit the raw JSON list instead of a human-readable table")
+        p_list.set_defaults(applied_func=_cmd_applied_list)
+
+        p_remove = applied_sub.add_parser("remove", help="Remove a specific record by (--title + --company) key, or --all to wipe the store clean.")
+        p_remove.add_argument("--applied-json", default="", help=f"Path to applied-jobs store (default: {DEFAULT_APPLIED_JSON})")
+        p_remove.add_argument("--title", default="", help="Exact job title to remove (case/space insensitive match)")
+        p_remove.add_argument("--company", default="", help="Exact company name to remove (case/space insensitive match)")
+        p_remove.add_argument("--all", dest="remove_all", action="store_true", help="Remove every record from the store (irreversible)")
+        p_remove.set_defaults(applied_func=_cmd_applied_remove)
+
+        p_sync_sheet = applied_sub.add_parser(
+            "sync-from-sheet",
+            help="EXPERIMENTAL — placeholder for future browser-layer sync. Currently prints instructions; the log-applied-jobs skill handles sheet writes via interactive-browser tools when you prompt with section IDs.",
+        )
+        p_sync_sheet.add_argument("--applied-json", default="", help=f"Path to applied-jobs store (default: {DEFAULT_APPLIED_JSON})")
+        p_sync_sheet.set_defaults(applied_func=_cmd_applied_sync_sheet)
+
     # Even for match/draft we add a stub parser *without* the LLM flags first,
     # so --help and unknown-arg errors stay clean when ai_agent_core is
     # missing. The real flags (--ollama-model etc.) are layered on top below
@@ -1761,6 +2208,11 @@ def _build_base_parser(
         p_match.add_argument("--open", dest="open_in_browser", action="store_true", help="After writing --html (or --md), open the result in the default browser.")
         p_match.add_argument("--search", default="", help="Informational only — written into Markdown/HTML shortlist header")
         p_match.add_argument("--location", default="", help="Informational only — written into Markdown/HTML shortlist header")
+        p_match.add_argument(
+            "--applied-json",
+            default="",
+            help=f"Path to applied-jobs JSON store. Roles whose (title, company) matches a record in this file are filtered out of both cohorts BEFORE the top-N cut. Default: {DEFAULT_APPLIED_JSON}. Use the `applied` subcommand (or the log-applied-jobs skill) to populate this file.",
+        )
         p_match.set_defaults(func=_cmd_match)
     elif argv0 == "draft":
         p_draft = sub.add_parser(
