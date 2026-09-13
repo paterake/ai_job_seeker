@@ -109,13 +109,13 @@ cd /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker
 uv run ai-job-seeker ingest \
   --search "marketing" \
   --location "<LOCATION_OVERRIDE_or_London>" \
-  --json implementation/job_seeker/config/output/pool_marketing.json
+  --json implementation/job_seeker/config/output/_pools/pool_marketing.json
 
-# Pool 2 — Research, Insight, Graduate, Analyst, Policy (fills in historian-fit roles that Pool 1 under-samples)
+# Pool 2 — Research, Insight, Graduate, Analyst, Policy (fills in historian-fit roles that Pool 1 misses)
 uv run ai-job-seeker ingest \
   --search "graduate research" \
   --location "<LOCATION_OVERRIDE_or_London>" \
-  --json implementation/job_seeker/config/output/pool_research.json
+  --json implementation/job_seeker/config/output/_pools/pool_research.json
 ```
 
 Rules for the `--search` param per board API:
@@ -134,18 +134,18 @@ Use the **per-cohort ingest flags** (`--marketing-ingest-json` for Section A onl
 ```bash
 cd /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker
 uv run ai-job-seeker match \
-  --marketing-ingest-json implementation/job_seeker/config/output/latest_listings.json \
-  --history-ingest-json   implementation/job_seeker/config/output/pool_marketing.json \
-  --history-ingest-json   implementation/job_seeker/config/output/pool_research.json \
+  --marketing-ingest-json implementation/job_seeker/config/output/_pipeline/latest_listings.json \
+  --history-ingest-json   implementation/job_seeker/config/output/_pools/pool_marketing.json \
+  --history-ingest-json   implementation/job_seeker/config/output/_pools/pool_research.json \
   --top 25 \
   --research-top 25 \
-  --applied-json         implementation/job_seeker/config/output/applied_jobs.json \
+  --applied-json         implementation/job_seeker/config/output/_pipeline/applied_jobs.json \
   --search "marketing + graduate research" \
   --location "<LOCATION_OVERRIDE_or_London>" \
-  --json-marketing implementation/job_seeker/config/output/latest_shortlist_marketing.json \
-  --json-history   implementation/job_seeker/config/output/latest_shortlist_history.json \
-  --json           implementation/job_seeker/config/output/latest_shortlist.json \
-  --md             implementation/job_seeker/config/output/latest_shortlist.md \
+  --json-marketing implementation/job_seeker/config/output/_pipeline/latest_shortlist_marketing.json \
+  --json-history   implementation/job_seeker/config/output/_pipeline/latest_shortlist_history.json \
+  --json           implementation/job_seeker/config/output/_pipeline/latest_shortlist.json \
+  --md             implementation/job_seeker/config/output/_pipeline/latest_shortlist.md \
   --html           implementation/job_seeker/config/output/latest_shortlist.html
 ```
 
@@ -167,10 +167,10 @@ Phase-2 is skipped in agent mode per the hardware constraint.
 
 **Step 5 — Auto-open Finder (output folder) + the shortlist HTML in the default browser.**
 
-Kiera already has a Finder shortcut to the output folder pinned. The output folder is intentionally kept noise-free: only `latest_*` aliases, `pool_*` aliases, and `applied_jobs.json` are visible at the top level; timestamped historical copies live in the hidden `output/_archive/` subfolder and are auto-deleted after 7 days. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside the Trae sandbox (they only call macOS `open`, no sandbox writes outside the repo):
+Kiera already has a Finder shortcut to the output folder pinned. The output folder is intentionally kept CLEAN FOR KIERA — **only human-readable .html deliverables live at the top level** (e.g. `latest_shortlist.html`, one-off analysis `.html` files, that's it). Pipeline-internal JSON/MD cache artefacts live in `output/_pipeline/`; raw ingest pool JSONs live in `output/_pools/`; timestamped historical copies live in the hidden `output/_archive/` and are auto-deleted after 7 days. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside the Trae sandbox (they only call macOS `open`, no sandbox writes outside the repo):
 
 ```bash
-# 1) Open a Finder window to the output folder (only the 9-10 useful files are visible at top level — history is in _archive/)
+# 1) Open a Finder window to the output folder (Kiera sees only .html files — clean, no noise)
 open /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output
 
 # 2) Open the latest dual-cohort shortlist HTML directly in Kiera's default browser (Safari / Chrome / whatever)
@@ -197,27 +197,27 @@ Inputs:
 Ingest pulled <POOL1_COUNT> + <POOL2_COUNT> listings (merged deduped = <MERGED_COUNT>) from Adzuna + Reed + The Muse.
 Dual-cohort ranked shortlist written:
 
-  · Single HTML with TWO SECTIONS (copy this → ~/Downloads for Kiera):
+  · Single HTML with TWO SECTIONS (this is the file Kiera opens in the browser — copy this → ~/Downloads if sharing):
     /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.html
       — Section A: Marketing & Communications top 25 (original ranking preserved)
       — Section B: Historian, Research & Academic top 25 (creative History-BA fit)
 
-  · Reviewable Markdown (two sections, clickable apply links):
-    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.md
+  · Reviewable Markdown (two sections, clickable apply links — ENGINEERING ONLY, not Kiera-facing):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pipeline/latest_shortlist.md
 
-  · Combined machine-readable shortlist JSON {marketing, history}:
-    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.json
+  · Combined machine-readable shortlist JSON {marketing, history} (pipeline-only):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pipeline/latest_shortlist.json
 
-  · Section A only (marketing) JSON:
-    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist_marketing.json
+  · Section A only (marketing) JSON (pipeline-only):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pipeline/latest_shortlist_marketing.json
 
-  · Section B only (historian/research) JSON:
-    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist_history.json
+  · Section B only (historian/research) JSON (pipeline-only):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pipeline/latest_shortlist_history.json
 
-  · Pool 1 raw (marketing ingest JSON):
-    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/pool_marketing.json
-  · Pool 2 raw (research/grad ingest JSON):
-    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/pool_research.json
+  · Pool 1 raw (marketing ingest JSON — pipeline-only):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pools/pool_marketing.json
+  · Pool 2 raw (research/grad ingest JSON — pipeline-only):
+    /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pools/pool_research.json
 
 💡 Tip: a role can appear in BOTH sections if it fits both criteria (e.g. Content Executive suits marketing AND uses the strong written-communication skills History graduates build via essays/dissertations). Both the Finder window and the shortlist in your browser should already be open on your Mac.
 ```

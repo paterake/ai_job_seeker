@@ -95,8 +95,21 @@ def _resolve_workspace_relative_dir(rel_dir: str) -> str:
     return str(Path(sentinel).parent)
 DEFAULT_OUTPUT_DIR = _resolve_workspace_relative_dir("implementation/job_seeker/config/output")
 DOTENV_PATH = ".env"
-_DEFAULT_APPLIED_REL = "implementation/job_seeker/config/output/applied_jobs.json"
-DEFAULT_APPLIED_JSON = _resolve_workspace_relative(_DEFAULT_APPLIED_REL)
+
+def _pipeline_path(stem: str) -> Path:
+    """Absolute path for a non-user-facing pipeline artefact (JSON/MD caches).
+
+    The top-level output folder is kept intentionally clean — only human
+    deliverables (.html) live there. Pipeline data (applied_jobs,
+    latest_shortlist.json/md, latest_listings, shortlist sub-cohort JSONs,
+    etc.) lives in `output/_pipeline/`; raw/exploratory ingest pools live in
+    `output/_pools/`.
+    """
+    d = Path(DEFAULT_OUTPUT_DIR) / "_pipeline"
+    d.mkdir(parents=True, exist_ok=True)
+    return d / stem
+
+DEFAULT_APPLIED_JSON = str(_pipeline_path("applied_jobs.json"))
 
 
 # ---------------------------------------------------------------------------
@@ -107,9 +120,7 @@ DEFAULT_APPLIED_JSON = _resolve_workspace_relative(_DEFAULT_APPLIED_REL)
 
 def _default_applied_json_path() -> str:
     """Fallback absolute path if DEFAULT_APPLIED_JSON resolves to a missing dir."""
-    out_dir = Path(DEFAULT_OUTPUT_DIR)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    return str(out_dir / "applied_jobs.json")
+    return str(_pipeline_path("applied_jobs.json"))
 
 
 def _applied_key(title: str, company: str) -> tuple[str, str]:

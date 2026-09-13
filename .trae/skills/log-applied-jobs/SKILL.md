@@ -23,9 +23,9 @@ When Kiera tells us which roles she's applied to, we do three things in order:
 
 | Parameter | Value |
 |---|---|
-| Shortlist JSON (combined dual-cohort) | `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/latest_shortlist.json` |
-| Per-cohort JSON fallbacks | `latest_shortlist_marketing.json`, `latest_shortlist_history.json` in the same dir |
-| Local applied store | `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/applied_jobs.json` |
+| Shortlist JSON (combined dual-cohort) | `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pipeline/latest_shortlist.json` |
+| Per-cohort JSON fallbacks | `latest_shortlist_marketing.json`, `latest_shortlist_history.json` in `output/_pipeline/` (same directory as shortlist JSON) |
+| Local applied store (pipeline cache) | `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker/implementation/job_seeker/config/output/_pipeline/applied_jobs.json` |
 | **Canonical tracker (primary):** Google Drive `.gsheet` local path | `/Users/kierapatel/Library/CloudStorage/GoogleDrive-patelkiera@gmail.com/My Drive/personal/job_seeker/actions.gsheet` |
 | Google Drive `.gsheet` doc_id (read from the stub file) | `1vVxOnjUM7T9PRvd7tpNw0Q8mzvajSKQ75euH6pHSFjA` |
 | Google Sheet URL (derived from doc_id) | `https://docs.google.com/spreadsheets/d/1vVxOnjUM7T9PRvd7tpNw0Q8mzvajSKQ75euH6pHSFjA/edit?gid=499941486#gid=499941486` |
@@ -87,7 +87,7 @@ For each (cohort, positions[]) group, run:
 cd /Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker
 # For each cohort group; --position can be passed multiple times or comma separated via shell expansion
 uv run ai-job-seeker applied add \
-  --from-shortlist-json implementation/job_seeker/config/output/latest_shortlist.json \
+  --from-shortlist-json implementation/job_seeker/config/output/_pipeline/latest_shortlist.json \
   --cohort marketing \
   --position 3 --position 7 --position 12
 ```
@@ -161,5 +161,5 @@ Quick access:
 - **Sheet edits are always additive-only.** Never delete or overwrite existing rows in the "jobs" tab. Always append at the first empty row.
 - **Local JSON and sheet must stay consistent.** Only declare success when BOTH (a) `ai-job-seeker applied list` shows the new records, AND (b) the browser snapshot confirms the new rows are visible in the sheet.
 - **Sheet login requirement:** if Google redirects to `accounts.google.com/v3/signin`, tell Kiera: "I hit the Google login wall again. Could you quickly log in inside this browser tab, then say 'continue' and I'll finish writing the rows." Don't try to re-auth on her behalf.
-- **No PII in git:** applied_jobs.json is under `output/` which is already gitignored; Google Sheet URL references are never committed to the repo.
+- **No PII in git:** applied_jobs.json lives under `output/_pipeline/` which is under the gitignored `output/` directory tree; Google Sheet URL references are never committed to the repo.
 - **Report in plain language**, no terminal copy-paste blocks, per project_memory conventions.
