@@ -32,7 +32,7 @@ from ai_job_seeker.ingest import (
     run_ingest_dry,
 )
 from ai_job_seeker.ingest.config import SearchConfigError
-from ai_job_seeker.match import rank_listings
+from ai_job_seeker.match import rank_listings, hard_blocked
 from ai_job_seeker.profile.extractor import extract_profile_from_docx
 from ai_job_seeker.profile.loader import ProfileError, load_profile, save_profile
 
@@ -1603,6 +1603,34 @@ def _cmd_match(args: argparse.Namespace) -> int:
               f"({applied_path or DEFAULT_APPLIED_JSON}) — nothing to filter. "
               "Log applied roles via `ai-job-seeker applied add ...` or the "
               "`log-applied-jobs` skill to enable filtering on the next run.")
+
+    # ---------- Hard-block filter: inappropriate roles (user flagged) ----------
+    def _apply_hard_filter(listings_in, label: str) -> tuple[list[JobListing], dict[str, int]]:
+        kept: list[JobListing] = []
+        by_reason: dict[str, int] = {}
+        for lst in listings_in:
+            reason = hard_blocked(lst)
+            if reason is None:
+                kept.append(lst)
+            else:
+                by_reason[reason] = by_reason.get(reason, 0) + 1
+        removed = len(listings_in) - len(kept)
+        if removed:
+            pieces = [f"{n}× {r}" for r, n in sorted(by_reason.items(), key=lambda kv: -kv[1])]
+            print(
+                f"[hard-block] {label}: {removed} listing(s) removed "
+                f"(pool now {len(kept)}). Reasons: " + " | ".join(pieces)
+            )
+        else:
+            print(f"[hard-block] {label}: nothing to remove (pool {len(kept)} clean)")
+        return kept, by_reason
+
+    print()
+    if use_dual_cohort:
+        mk_listings, _ = _apply_hard_filter(mk_listings, "Section A (Marketing)")
+        hi_listings, _ = _apply_hard_filter(hi_listings, "Section B (Historian)")
+    else:
+        listings, _ = _apply_hard_filter(listings, "shared listings pool")
 
     AgentHandoffRequired = _require_ai_agent_core(
         "match phase-2 AgentHandoffRequired handling"

@@ -3,20 +3,210 @@
 Cheap rules applied per (profile, listing). Output is a normalised 0–100
 score plus short evidence bullets. Trifecta-safe: only data-vs-data,
 never assembles prompts or mixes untrusted posting text with instructions.
+
+All BLOCKED_* / GEO_* lists are loaded from `config/exclusions.yaml` at
+import time. Tweak the YAML, never the Python, when adding new exclusions.
 """
 
 from __future__ import annotations
 
 import re
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 from ai_job_seeker.ingest.schema import JobListing
 
 _WORD_RE = re.compile(r"[A-Za-z0-9]+")
 
-# Keyword sets used for cohort-specific ranking (see rank_listings docstring).
-# These are kept in the scorer module so the CLI can also use them to split
-# listings into two cohorts without duplicating the token lists.
+
+def _exclusions_yaml_path() -> Path:
+    here = Path(__file__).resolve()
+    for parent in [here, *here.parents][:7]:
+        cand = parent / "implementation" / "job_seeker" / "config" / "exclusions.yaml"
+        if cand.is_file():
+            return cand
+        cand2 = parent / "config" / "exclusions.yaml"
+        if cand2.is_file():
+            return cand2
+    # Fallback: relative to repo root (works from tests / unusual cwds)
+    return (
+        Path(__file__).resolve().parent.parent.parent.parent.parent.parent
+        / "implementation" / "job_seeker" / "config" / "exclusions.yaml"
+    )
+
+
+@lru_cache(maxsize=1)
+def _load_exclusions() -> dict:
+    p = _exclusions_yaml_path()
+    if not p.exists():
+        return {}
+    try:
+        with p.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return data
+
+
+def _excl_list(key: str) -> list[str]:
+    data = _load_exclusions()
+    v = data.get(key)
+    if isinstance(v, list):
+        return [str(x) for x in v if str(x).strip()]
+    return []
+
+
+def _excl_set(key: str) -> set[str]:
+    data = _load_exclusions()
+    v = data.get(key)
+    if isinstance(v, (list, set)):
+        return {str(x).lower() for x in v if str(x).strip()}
+    if isinstance(v, dict):
+        return {str(x).lower() for x in v if str(x).strip()}
+    return set()
+
+
+BLOCKED_LANGUAGES_PHRASES: list[str] = _excl_list("blocked_language_phrases")
+BLOCKED_LANGUAGE_TOKENS: set[str] = _excl_set("blocked_language_tokens")
+BLOCKED_ENGINEERING_PHRASES: list[str] = _excl_list("blocked_engineering_phrases")
+BLOCKED_SENIOR_PHRASES: list[str] = _excl_list("blocked_senior_phrases")
+BLOCKED_CONSTRUCTION_PHRASES: list[str] = _excl_list("blocked_construction_phrases")
+BLOCKED_TEACHING_SUBJECTS_PHRASES: list[str] = _excl_list("blocked_teaching_subjects_phrases")
+BLOCKED_GEO_TOKENS: set[str] = _excl_set("blocked_geo_tokens")
+BLOCKED_GEO_COUNTRIES: list[str] = _excl_list("blocked_geo_countries")
+GEO_ALLOW_PREFIXES: list[str] = [s.lower() for s in _excl_list("geo_allow_prefixes")]
+GEO_ALLOW_POSTCODE_PREFIXES: list[str] = [s.upper() for s in _excl_list("geo_allow_postcode_prefixes")]
+
+
+def _text_has_phrase(text: str, phrases: list[str]) -> bool:
+    t = " " + (text or "").lower().replace("\xa0", " ") + " "
+    t = re.sub(r"[^a-z0-9\s\-/&()]", " ", t)
+    t = re.sub(r"\s+", " ", t)
+    for p in phrases:
+        p_raw = p.lower().strip()
+        if not p_raw:
+            continue
+        # Multi-token phrase: require word boundaries around each token,
+        # allow the phrase to be split by hyphens, slashes, commas etc.
+        p_tokens = [tok for tok in _WORD_RE.findall(p_raw) if tok]
+        if len(p_tokens) >= 2:
+            pattern = r"\b" + r"[\s\-/&()]+" .join(re.escape(t) for t in p_tokens) + r"\b"
+            if re.search(pattern, t):
+                return True
+            # Also allow direct hyphen-joined variant (e.g. Japanese-speaking)
+            p_joined = "-".join(p_tokens)
+            if re.search(rf"\b{re.escape(p_joined)}\b", t):
+                return True
+            p_joined_nohyphen = "".join(p_tokens)
+            if len(p_joined_nohyphen) >= 5 and re.search(rf"\b{re.escape(p_joined_nohyphen)}\b", t):
+                return True
+        else:
+            # Single token (e.g. "developer", "ceo", "head of")
+            if re.search(rf"\b{re.escape(p_tokens[0])}\b", t):
+                return True
+    return False
+
+
+def _postcode_allowed(location: str) -> bool:
+    loc = (location or "").strip().upper()
+    if not loc:
+        return False
+    for prefix in GEO_ALLOW_POSTCODE_PREFIXES:
+        if loc.startswith(prefix + " ") or loc.startswith(prefix):
+            return True
+    return False
+
+
+def hard_blocked(listing: JobListing) -> str | None:
+    """Return a short reason string if the listing is definitively inappropriate,
+    or None if it passes the hard-block gates.
+
+    These rules are deliberately conservative: block only roles that the user
+    has explicitly flagged as silly / impossible for an English-only History
+    graduate with zero engineering background.
+    """
+    title = listing.title or ""
+    desc = listing.description or ""
+    title_desc = title + " " + desc
+
+    if _text_has_phrase(title, BLOCKED_LANGUAGES_PHRASES):
+        return "Non-English language requirement in title"
+    # Standalone language token guard: any non-English language token in the
+    # title is a hard signal that the role needs that language (Kiera = EN only).
+    # Exception: "english" explicitly in title (English Teacher / English TA)
+    # is allowed — she has Kumon English-marking experience on her CV.
+    title_tokens = _tokens(title)
+    if "english" not in title_tokens and (BLOCKED_LANGUAGE_TOKENS & title_tokens):
+        langs_found = sorted(BLOCKED_LANGUAGE_TOKENS & title_tokens)
+        return f"Non-English language token in title: {langs_found!r}"
+    if _text_has_phrase(desc[:1500], BLOCKED_LANGUAGES_PHRASES):
+        return "Non-English language requirement in description"
+
+    if _text_has_phrase(title, BLOCKED_ENGINEERING_PHRASES):
+        return "Engineering/developer role in title (no eng skills)"
+    # Catch-all: any title token == "engineer" / "engineering" / "architect" blocks
+    # even if the specific compound phrase isn't in the explicit list.
+    title_tokens_simple = _tokens(title)
+    ENG_TOKENS_STRICT = {"engineer", "engineering", "architect", "tester", "devops", "sre"}
+    eng_found = sorted(ENG_TOKENS_STRICT & title_tokens_simple)
+    if eng_found:
+        return f"Engineering/architect title token: {eng_found!r}"
+    if _text_has_phrase(title, BLOCKED_SENIOR_PHRASES):
+        return "Senior/exec-level title (graduate-inappropriate)"
+    if _text_has_phrase(title, BLOCKED_CONSTRUCTION_PHRASES):
+        return "Construction sector role in title"
+    if _text_has_phrase(title, BLOCKED_TEACHING_SUBJECTS_PHRASES):
+        return "Teaching role with specialised subject mismatch (psychology/STEM)"
+
+    loc = (listing.location or "").strip()
+    loc_lower = loc.lower()
+    if loc:
+        any_allow = False
+        for allowed in GEO_ALLOW_PREFIXES:
+            if allowed in loc_lower:
+                any_allow = True
+                break
+        if not any_allow:
+            any_allow = _postcode_allowed(loc)
+        if not any_allow:
+            # Secondary check: foreign cities/states clearly not UK
+            if _text_has_phrase(loc, list(BLOCKED_GEO_TOKENS)):
+                return f"Foreign location: {loc!r}"
+            # If location mentions a country that isn't UK / United Kingdom
+            if BLOCKED_GEO_COUNTRIES:
+                altern = "|".join(re.escape(c.lower()) for c in BLOCKED_GEO_COUNTRIES)
+                country_check = re.search(rf"\b({altern})\b", loc_lower)
+                if country_check:
+                    return f"International location: {country_check.group(1)}"
+
+    return None
+
+
+__all__ = [
+    "MARKETING_COHORT_KEYWORDS",
+    "HISTORY_COHORT_KEYWORDS",
+    "score_deterministic",
+    "hard_blocked",
+    "BLOCKED_LANGUAGES_PHRASES",
+    "BLOCKED_LANGUAGE_TOKENS",
+    "BLOCKED_ENGINEERING_PHRASES",
+    "BLOCKED_SENIOR_PHRASES",
+    "BLOCKED_CONSTRUCTION_PHRASES",
+    "BLOCKED_TEACHING_SUBJECTS_PHRASES",
+    "BLOCKED_GEO_TOKENS",
+    "BLOCKED_GEO_COUNTRIES",
+    "GEO_ALLOW_PREFIXES",
+    "GEO_ALLOW_POSTCODE_PREFIXES",
+    "_text_has_phrase",
+    "_postcode_allowed",
+    "_load_exclusions",
+]
+
 
 # Marketing / comms cohort — what Kiera broadly said she's targeting.
 MARKETING_COHORT_KEYWORDS = {

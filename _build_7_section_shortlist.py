@@ -23,6 +23,7 @@ from ai_job_seeker.cli import (  # noqa: E402
 )
 from ai_job_seeker.ingest.schema import JobListing, ListingSource, _parse_date  # noqa: E402
 from ai_job_seeker.match.schema import ScoredListing  # noqa: E402
+from ai_job_seeker.match.deterministic import hard_blocked  # noqa: E402
 
 
 def _rehydrate_listing(d: dict) -> JobListing:
@@ -372,15 +373,31 @@ def main() -> int:
     candidate_name = "Kiera Patel"
 
     loaded_sections: list[dict] = []
+    total_hard_blocked = 0
+    hard_blocked_reasons: dict[str, int] = {}
     for sec_def in SECTIONS:
         raw_list = load_section(sec_def)
+        filtered = []
+        for d in raw_list:
+            lst_obj = _rehydrate_listing(d.get("listing") or {})
+            reason = hard_blocked(lst_obj)
+            if reason is None:
+                filtered.append(d)
+            else:
+                total_hard_blocked += 1
+                hard_blocked_reasons[reason] = hard_blocked_reasons.get(reason, 0) + 1
         loaded_sections.append({
             "key": sec_def["key"],
             "title": sec_def["title"],
             "tagline": sec_def["tagline"],
             "badge_class": sec_def["badge_class"],
-            "raw": raw_list,
+            "raw": filtered,
         })
+    if total_hard_blocked:
+        print(f"[build hard-block] Defence-in-depth: {total_hard_blocked} role(s) "
+              f"dropped post-match (should already be filtered upstream).")
+        for r, n in sorted(hard_blocked_reasons.items(), key=lambda kv: -kv[1]):
+            print(f"  · {n}× {r}")
 
     applied_total_path = OUT_DIR / "_pipeline" / "applied_jobs.json"
     applied_total = 0

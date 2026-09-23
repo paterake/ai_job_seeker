@@ -17,6 +17,7 @@ from ai_job_seeker.match.deterministic import (
     HISTORY_COHORT_KEYWORDS,
     MARKETING_COHORT_KEYWORDS,
     score_deterministic,
+    hard_blocked,
 )
 from ai_job_seeker.match.llm_judge import score_with_llm
 from ai_job_seeker.match.schema import ScoredListing
@@ -31,6 +32,7 @@ __all__ = [
     "score_with_llm",
     "MARKETING_COHORT_KEYWORDS",
     "HISTORY_COHORT_KEYWORDS",
+    "hard_blocked",
 ]
 
 _DEFAULT_W1 = 0.4
