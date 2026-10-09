@@ -13,11 +13,11 @@ if [ ! -f "$validator" ]; then
     exit 0
 fi
 
-output="$(python3 "$validator" exception-registry-validate --repo "$repo_root" 2>&1)"
+output="$(cd "$repo_root" && uv run python3 "$validator" exception-registry-validate --repo "$repo_root" 2>&1)"
 exit_code=$?
 
 if [ "$exit_code" -ne 0 ]; then
-    reason="$(printf 'GOVERNANCE DENY\nrisk_tier: high\ndenial_reason: expired_exceptions\ndetail: one or more governance exceptions have expired and must be renewed or removed\npolicy_set: pco-core/v1\nnext_action: run "python3 scripts/distill_harness.py exception-registry-validate --repo ." then update or remove expired entries in exception_registry.yaml\nvalidator_output: %s' "$output")"
+    reason="$(printf 'GOVERNANCE DENY\nrisk_tier: high\ndenial_reason: expired_exceptions\ndetail: one or more governance exceptions have expired and must be renewed or removed\npolicy_set: pco-core/v1\nnext_action: run "uv run python3 scripts/distill_harness.py exception-registry-validate --repo ." then update or remove expired entries in exception_registry.yaml\nvalidator_output: %s' "$output")"
     jq -nc --arg reason "$reason" '{"permissionDecision": "defer", "reason": $reason}'
 else
     jq -nc '{"permissionDecision": "allow"}'

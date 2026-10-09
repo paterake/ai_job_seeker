@@ -26,7 +26,7 @@ cat >&2 <<EOF
    To close this run, invoke /evidence-package or copy the template:
      cp audit/templates/evidence_record.yaml audit/runs/${RUN_ID}.yaml
    Then populate all fields and validate:
-     python3 scripts/distill_harness.py evidence-validate --record audit/runs/${RUN_ID}.yaml
+     uv run python3 scripts/distill_harness.py evidence-validate --record audit/runs/${RUN_ID}.yaml
 EOF
 
 exit 0

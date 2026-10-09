@@ -47,7 +47,7 @@ governed session to produce an append-only audit artefact in `audit/runs/<run_id
    the operator can re-run it independently:
    ```yaml
    verification_commands:
-     - command: "python3 scripts/distill_harness.py governed-repo-validate --repo ."
+     - command: "uv run python3 scripts/distill_harness.py governed-repo-validate --repo ."
        output: |
          Repo: /path/to/repo
          ...
@@ -61,7 +61,7 @@ governed session to produce an append-only audit artefact in `audit/runs/<run_id
 
 7. **Validate the record**:
    ```
-   python3 scripts/distill_harness.py evidence-validate --record audit/runs/<run_id>.yaml
+   uv run python3 scripts/distill_harness.py evidence-validate --record audit/runs/<run_id>.yaml
    ```
    Fix any reported issues before declaring the run closed.
 

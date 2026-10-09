@@ -14,7 +14,7 @@ fi
 if command -v uuidgen &>/dev/null; then
     UUID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 else
-    UUID="$(python3 -c 'import uuid; print(uuid.uuid4())')"
+    UUID="$(cd "$REPO_ROOT" && uv run python3 -c 'import uuid; print(uuid.uuid4())')"
 fi
 
 TS="$(date +%Y%m%d-%H%M%S)"

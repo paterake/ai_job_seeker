@@ -45,8 +45,8 @@ Evaluation is governed at three distinct units. A mature programme uses all thre
 Governance recognises these patterns explicitly so projects do not invent inconsistent "testing" semantics.
 
 - **Human evaluation**: structured review against a rubric; used for ambiguous or high-impact judgement calls
-- **LLM-as-judge**: a separate model evaluates against explicit criteria; evaluator is treated as a governed component
-- **Self-evaluation** (high risk): the same model evaluates itself; allowed only as advisory and only with known failure modes documented
+- **LLM-as-judge**: a separate model evaluates against explicit criteria; evaluator is treated as a governed component and follows the canonical independence rule in [governance/HUB.md](../governance/HUB.md) "Independent review pattern" when used to satisfy an independent review requirement
+- **Self-evaluation** (high risk): the same model evaluates itself; allowed only as advisory and only with known failure modes documented; it does not satisfy an independent review requirement
 
 ## Governance Controls (hub decisions)
 
@@ -78,7 +78,7 @@ Evaluators are sensors. Sensor claims are validated.
 
 - **Sensor silence ambiguity**: a rarely-firing sensor is validated periodically; silence is not evidence of correctness
 - **Evaluator drift**: if the evaluator model or rubric changes, re-baseline and compare against pinned historical results
-- **Independence**: for adversarial review loops, evaluator context does not share the same synthesis path as the primary agent output
+- **Independence**: for adversarial review loops, evaluator context does not share the same synthesis path as the primary agent output; see the canonical rule in [governance/HUB.md](../governance/HUB.md) "Independent review pattern"
 
 ### Evidence standards
 

@@ -67,6 +67,26 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
   the change; author ≠ approver is enforced, not advisory. **Consequence:** self-approval at go-live
   defeats the conformance gate — the one control the gate exists to provide is bypassed by one person.
 
+## Capability-Decision Enforcement
+
+Prose guidance is not enough for recurring capability-fit failures. When a change introduces a new
+parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, the harness must
+enforce that a capability-decision artefact exists before commit / PR creation.
+
+Required record shape (minimum):
+- task type,
+- chosen driver (`config-driven` | `data-driven` | `AI-driven` | explicit hybrid),
+- why the other driver was not chosen,
+- whether a config/prompt solution was considered.
+
+Enforcement semantics:
+- The hook enforces that a decision record exists; it does **not** prove the decision is correct.
+- The corresponding behavioural sensor is a required task-boundary / code-review step that screens for
+  the substance of the decision: bespoke deterministic machinery solving a semantic problem, or a model
+  being used where exact derivation was available.
+- Consumer repos own their `settings.json`, so the platform distributes the hook script and the
+  baseline settings template; conformance requires the project-owned settings to wire it.
+
 ## Hooks: Guidance vs Enforcement
 
 CLAUDE.md and governance docs are guidance — they inform agent behaviour but cannot guarantee it under context saturation or instruction drift. Hooks are enforcement — they execute at harness lifecycle points and cannot be overridden by model behaviour.
@@ -80,6 +100,7 @@ Hooks are required (not docs) for:
 - Blocking destructive bash commands (force push, `rm -rf`, hard reset)
 - Running typecheck / lint / tests after file edits
 - Requiring approvals before commits or PRs are created
+- Requiring a capability-decision artefact before parser-/extractor-shaped content-interpretation changes are committed
 - Any constraint where a single violation has irreversible consequences
 
 **The test**: if the constraint must hold even at the end of a long, saturated session — wire it as a hook.

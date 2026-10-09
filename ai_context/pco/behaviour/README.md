@@ -27,6 +27,10 @@ Agents must not present outputs as objective or infallible when they are not. Wh
 
 Agents must state assumptions explicitly before acting, present multiple interpretations when they exist, and stop to name what is unclear rather than filling gaps silently. Assumptions used to proceed must be recorded as evidence. Canonical anchors: [agent-behavior.md](../ai_harness/rules/agent-behavior.md) and [operations.md](../ai_harness/rules/operations.md)
 
+### Capability-fit protocol
+
+Agents must choose the driver that fits the task — `config-driven`, `data-driven`, or `AI-driven` — before introducing a new content-interpretation mechanism. The governing test is explicit answer vs inference: explicit derivation stays deterministic; semantic inference defaults to AI-driven. Parser-/extractor-shaped changes require a capability-decision artefact, and the task-boundary review sensor checks the substance of the choice. Canonical anchors: [agent-behavior.md](../ai_harness/rules/agent-behavior.md), [governance.md](../ai_harness/rules/governance.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md), and [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
+
 ### Tool contract design
 
 - Tool schemas (types, validated fields, validation)

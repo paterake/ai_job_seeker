@@ -40,7 +40,7 @@ Canonical anchors: [agent-behavior.md](../ai_harness/rules/agent-behavior.md) (p
 ### Reference patterns (approved building blocks)
 
 - Planner/executor separation
-- Multi-agent review loops (independence preserved)
+- Multi-agent review loops (independence preserved; see [governance/HUB.md](../governance/HUB.md) "Independent review pattern")
 - Tool-broker pattern (central tool registry + entitlements)
 - Retrieval boundary (approved sources only; provenance maintained)
 - Evidence boundary (every run produces a verifiable artefact set)
@@ -82,7 +82,7 @@ Governance defines which architectural rules are non-negotiable (core pillars) v
 Governance defines:
 - Roles (architect/reviewer/builder/etc.)
 - Responsibilities and expected outputs per role
-- Independence requirements (e.g., adversarial review cannot share synthesis context)
+- Independence requirements (e.g., adversarial review cannot share synthesis context; see the canonical rule in [governance/HUB.md](../governance/HUB.md) "Independent review pattern")
 
 ### Topology commitment (harness completeness prerequisite)
 

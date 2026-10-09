@@ -24,6 +24,18 @@ capabilities:
     stage_since: 2026-05-19
     owner: rpatel
     evidence: "ai_context/pco/ai_harness/hooks/gate_git_push.sh enforces pre-push constraints as a deterministic guardrail."
+  - name: harness_hook_capability_decision_gate
+    tier: 2
+    stage: emerging
+    stage_since: 2026-09-14
+    owner: rpatel
+    evidence: "ai_context/pco/ai_harness/hooks/check_capability_decision.sh enforces presence of a capability-decision record before parser-/extractor-shaped changes are committed or proposed for PR."
+  - name: capability_fit_review_sensor
+    tier: 2
+    stage: emerging
+    stage_since: 2026-09-14
+    owner: rpatel
+    evidence: "scripts/review_capability_fit.py surfaces parser-/extractor-shaped staged changes and forces the explicit-vs-inference review questions at task boundary / code review."
   - name: skill_sync_pco
     tier: 1
     stage: established

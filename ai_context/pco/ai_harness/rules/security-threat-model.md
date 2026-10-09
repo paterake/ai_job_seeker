@@ -125,6 +125,20 @@ behavioural sensors (semantic guardrails, run review, human review at task bound
 | **Genie risk** | Exploits spec loopholes; gives what was asked for in an unexpected way | Human review at task boundary; adversarial specification tests |
 | **Code quality drift** | Duplicated literals, unused parameters, improper patterns, nested conditionals | Static analysis as a required sensor type |
 
+### Capability-Fit Review Sensor
+
+Capability-fit failure is a behavioural class, not a syntax error. The required review question at
+task boundary / code review is:
+
+- Is this task explicit derivation or semantic inference?
+- If inference is present, why is the mechanism not AI-driven?
+- If the solution is AI-driven, what makes deterministic derivation insufficient or misleading?
+- If the solution is deterministic, what exact explicit structure in the source makes fixed-rule recovery valid?
+
+This sensor is specifically aimed at two mirror-image failures:
+- bespoke deterministic machinery solving a semantic problem,
+- or model use where exact deterministic derivation was available.
+
 ## Multi-Agent Trust
 
 In multi-agent systems, a compromised orchestrator can instruct sub-agents to perform

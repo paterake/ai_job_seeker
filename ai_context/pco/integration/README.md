@@ -85,6 +85,13 @@ Governance defines:
 - Regression protection coverage for such changes (contract tests + eval suites tied to representative workflows)
 - Rollout approach (compatibility windows, dual-write/dual-read where applicable, canarying, rollback readiness)
 
+### Capability-decision hook distribution
+
+The platform distributes hook scripts and the baseline `settings.json` template that consumer repos
+wire into their project-owned harness settings. This includes the capability-decision gate for
+parser-/extractor-shaped content-interpretation changes: the hook enforces that a decision record
+exists before commit / PR creation, while the review sensor checks the substance of that choice.
+
 ## Artefacts and Surfaces (examples)
 
 - Tool registry (tool ID, owner, schema version, risk rating)

@@ -97,13 +97,18 @@ without waiting to be asked:
    about this item, confirm it agrees with the anchor doc's new status — memory is a second
    persistent surface outside the anchor doc, and the same drift this contract guards against
    inside one file can also open up between the anchor doc and memory.
+6. **Secret/redaction-signature self-check (cfg repos that declare `redaction.patterns[i]`).** Run the repo's boundary/secret gate against ALL text files this session touched in the cfg repo (anchor doc TODO.md, RUNBOOK.md, ORIENTATION.md, EXECUTE.md, acceptance-report JSON, any changed catalogue YAML). Confirm `check_boundary.py --staged` rc=0, or — if the project has no such script yet — manually grep every changed cfg file for a literal substring match against each `redaction.patterns[i]` regex from the catalogue. The only permitted exceptions are: (a) `catalogue.yaml` itself (it is the pattern source and contains the definition), and (b) the boundary-gate check script (it names patterns in comments). Everywhere else, including checkpoint crumbs, gotchas, and lesson-learned prose: replace the literal matched text with either (i) the pattern index pointer `redaction.patterns[N]` or (ii) the sanitised replacement token (e.g. `[REDACTED_TEST_ACCOUNT]`). DO NOT rely on your own reading of the prose to decide "this is obviously documentation not a secret" — the pre-commit gate regex cannot distinguish and will fail the commit regardless of intent.
 
 **Consequence**: a status check that only looks at the intro sentence misses stale
 verification output and stale next-step instructions embedded deeper in the item body —
 the gap a single status-prose rule does not catch, and that otherwise requires the operator
 to manually request a handover check after every single item. A memory file that contradicts
 the anchor doc is the same failure one layer up: a fresh session that trusts memory over a
-correctly-updated anchor doc (or vice versa) inherits whichever one is wrong.
+correctly-updated anchor doc (or vice versa) inherits whichever one is wrong. A cold-start
+session that inherits an anchor doc containing a bare redaction signature then writes a
+second unrelated checkpoint crumb → `git commit` fails on the unrelated commit because the
+boundary gate scans ALL staged files, not just the ones changed that session, and the bare
+signature was never cleaned from the anchor doc.
 
 ## Blocked Item Marker (Required When Applicable)
 
@@ -143,3 +148,23 @@ Verification
 Gotchas
 - <environment/tooling/dependency note>
 ```
+
+### Checkpoint Crumbs — Non-Negotiable Hygiene
+
+The Done block, Constraints, and Gotchas are written into git-tracked text files in the repo
+(anchor doc TODO.md, RUNBOOK.md, etc.). Two rules prevent recurring pre-commit boundary
+failures when the repo declares `redaction.patterns[i]` regexes:
+
+1. **Never embed a bare redaction signature in prose.** If the just-completed item
+   scrubbed a secret or discussed redaction output integrity, reference the pattern by
+   its catalogue index (e.g. `redaction.patterns[2]`) and/or by the sanitised replacement
+   token the writer emits (e.g. `[REDACTED_VENDOR_DOMAIN]`). NEVER paste the actual matched
+   substring into a checkpoint just to be concrete about what was scrubbed — the
+   boundary-gate regex cannot tell documentation of a secret apart from the secret itself,
+   and the next `git commit` (possibly for an unrelated item in a cold session) will fail
+   with `BOUNDARY GATE FAILED`.
+2. **Session-close step #6 (gate re-run) is mandatory.** After writing checkpoint crumbs,
+   actually run `scripts/check_boundary.py --staged` (or the repo's equivalent) as the
+   final act of the session and confirm rc=0 before declaring the item finished. Do not
+   assume "it was clean last session" — crumbs written in *this* session are the highest-
+   probability source of a regression.

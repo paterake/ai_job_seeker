@@ -15,7 +15,7 @@ non-conformant regardless of other correctness.
 
 | Pillar | Consequence of violation | Rule file |
 |---|---|---|
-| **UV only** | Introduces competing env/dep toolchains; reproducibility breaks; onboarding forks | `governance.md` — Python Tooling |
+| **UV only** | Introduces competing env/dep toolchains, non-canonical `uv` invocation, or raw `python` execution; reproducibility breaks; onboarding forks | `governance.md` — Python Tooling |
 | **Config drives code** | Domain strings baked into source; code cannot be reused across datasets without rewrite | `governance.md` — Config Purity |
 | **Low-code/OSS preference** | Custom re-implementations of solved problems accumulate as maintenance debt | `governance.md` — Low-Code/OSS Preference |
 | **Context minimisation** | Earlier rules lose weight as session grows; constraints silently stop holding | `context-economy.md` — Context Minimisation |
@@ -36,6 +36,7 @@ Rule files under `.claude/rules/` are **already in your context** via auto-loade
 | Task type | Relevant rule |
 |---|---|
 | Any code change | `agent-behavior.md` — pre-implementation gate, simplicity, surgical changes, verification · `governance.md` — UV-only, config drives code, file structure, OSS preference, docs currency |
+| Working in a config / use-case-realization repo (file placement, repo layout) | `config-repo-structure.md` |
 | LLM-calling modules (timeouts, budgets, tracing) | `operations.md` |
 | Retrieval / RAG changes | `retrieval.md` |
 | Publishing / disclosure risk | `publication.md` |

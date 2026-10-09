@@ -22,7 +22,7 @@ They are not advisory. Any work that violates a pillar is non-conformant regardl
 
 | # | Pillar | Consequence of violation |
 |---|---|---|
-| 1 | **UV only for Python** — all dependency management and script execution via `uv`; no `pip install` to OS, no Poetry/Conda/venv workarounds | Reproducibility breaks; environment state diverges; no consistent execution path |
+| 1 | **UV only for Python** — all dependency management and script execution via `uv`; canonical command form is `uv run python3 ...`; never raw `python`/`python3`; no `pip install` to OS, no Poetry/Conda/venv workarounds | Reproducibility breaks; environment state diverges; no consistent execution path |
 | 2 | **Config drives code** — no domain strings, entity names, thresholds, file paths, or prompt text in `.py` files; all in YAML config | Code cannot be reused across domains; domain changes require code changes; config and code governance diverge |
 | 3 | **Low-code / OSS preference** — prefer an existing OSS library over custom code when one covers the requirement adequately | Custom code accumulates maintenance liability; reimplements tested paths poorly; blocks reuse |
 | 4 | **Context minimisation** — work spanning multiple sessions uses the anchor doc / backlog continuity pattern; sessions are scoped to one coherent slice | Context saturation erodes earlier constraints; invariants drift silently; work becomes non-resumable |
@@ -31,6 +31,31 @@ They are not advisory. Any work that violates a pillar is non-conformant regardl
 
 Pillars 2 and 6 are two faces of the same rule: code is reusable mechanism; domain context is configuration.
 Pillars 4 and 5 are two faces of the same rule: long sessions accumulate noise; short sessions with durable state are the operating model.
+
+---
+
+## Capability-Fit Governance
+
+The platform governs three peer solution drivers:
+- **Config-driven** — variability is carried in configuration rather than code
+- **Data-driven** — the answer is explicit in the data and recoverable by fixed rules
+- **AI-driven** — the mechanism must infer meaning not explicit in the input
+
+Governance does not privilege deterministic mechanism by default. It asks which driver fits the task.
+The standing test is explicit answer vs inference:
+- explicit derivation defaults to deterministic mechanism,
+- semantic interpretation defaults to AI-driven mechanism.
+
+AI-driven is not a foreign exception. It is a first-class governed mode with its own obligations:
+evaluation, provenance, and recorded non-determinism. Deterministic mechanism is still the default
+for acquisition, bookkeeping, parsing of known syntactic structures, validation, and bounded transforms.
+
+Recurring failure class: bespoke deterministic machinery built for semantic work. The platform response
+is structural rather than rhetorical:
+- capability-fit rule in agent behaviour,
+- AI-driven recognised explicitly in governance vocabulary,
+- capability-decision artefact enforced before parser-/extractor-shaped changes are committed,
+- task-boundary review sensor screening the substance of the choice.
 
 ---
 
@@ -67,6 +92,20 @@ Placement criteria are independent of security risk tier. A low-risk workflow ma
 | **Tier 2 (moderate)** | Broader toolset, higher success rate across domains | Expanded eval coverage, stricter review for tool changes |
 | **Tier 3 (high)** | Strong general problem-solving, higher autonomy pressure | Blocking adversarial testing, tighter entitlements, independent review requirements |
 | **Tier 4 (frontier+)** | Rapid capability shifts, high leverage tools, novel behaviour risk | Governance-board approval for key changes, standing red-team capability, conservative rollout and monitoring |
+
+### Independent review pattern
+
+When a workflow, risk tier, or change class requires independent review, the canonical enforcement
+pattern is fixed-role separation:
+
+- One agent executes/builds; a different agent judges/reviews.
+- The judge/reviewer operates under the same repo contracts and behavioural rules as the executor.
+- The judge/reviewer must not share the executor's synthesis context; review input is limited to
+  the artefact, evidence, and explicit criteria required for review.
+- Using different fixed models for executor and judge is the preferred implementation of this
+  independence posture.
+- Same-model self-review may be used as advisory signal only; it does not satisfy an independent
+  review requirement.
 
 ### Policy taxonomy (what is governed)
 

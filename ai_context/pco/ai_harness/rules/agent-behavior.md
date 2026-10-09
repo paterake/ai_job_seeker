@@ -24,6 +24,23 @@ Derived from Andrej Karpathy's observations on LLM coding failure modes. These r
 
 **Consequence**: silent assumption filling is the leading source of implementation rework and the root mechanism of genie-risk failures (see `security-threat-model.md`). Treating a designed file map as governance-reviewed produces domain-coupled code that cannot be reused across datasets — the exact failure config-purity is designed to prevent.
 
+## Capability-Fit Gate
+
+Before introducing a new mechanism that interprets content, choose the driver explicitly:
+- **Config-driven** — variability is in policy, prompts, thresholds, routing, or templates held in config
+- **Data-driven** — the answer is already explicit in the data and recoverable by fixed rules
+- **AI-driven** — the task requires inference, judgment, or semantic interpretation not explicit in the input
+
+Apply the explicit-vs-inference test before writing code:
+- If the answer is explicit and derivable by parsing, lookup, joining, hashing, validation, or bounded transformation, default to deterministic mechanism.
+- If producing the answer requires interpreting meaning, relationships, intent, classification, or latent structure, default to an AI-driven mechanism.
+- Do not treat "structured input" as proof the task is deterministic. Structured data can still encode a semantic problem.
+- Do not swing the other way and use a model where a deterministic mechanism is exact, cheaper, and auditable.
+
+When the change introduces a new parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, record the choice in a capability-decision artefact before commit. The hook requirement and review sensor live in `harness-tool-contract.md`.
+
+**Consequence**: defaulting silently to deterministic code for an inference task produces bespoke, source-coupled mechanism and hides the wrong design choice until the cost of undoing it is high. Defaulting silently to a model for an explicit derivation task produces the mirror-image over-engineering.
+
 ## Simplicity First
 
 Implement the minimum code that solves the stated problem. Nothing speculative.
@@ -96,3 +113,20 @@ For each harness failure or behaviour violation:
 **The ratchet**: governance accretes from failures. Rules are added from evidence and removed by capability evidence — not by preference or convenience.
 
 **Consequence**: treating failures as isolated incidents produces a harness with no institutional memory. The same failure class recurs because the harness never encoded it as a constraint.
+
+### Recurring failure class: deterministic over-build for semantic work
+
+Record this as a recurring class, not a one-off incident:
+
+1. Coding agents default to writing code, so a model path looks like "less implementation" and is under-selected.
+2. The governance corpus historically rewarded deterministic mechanism and treated model use as foreign, so the bias was systemic rather than local.
+3. Deterministic builds were once the only viable path in some environments; the failure was not re-evaluating when the capability frame changed.
+4. No explicit capability-choice checkpoint existed, so model-vs-code was defaulted silently instead of reviewed.
+5. Structured inputs disguised semantic tasks as parsing problems, even when the real work was inference.
+6. Agents did not self-reframe reliably; the correction had to come from repeated human challenge, which means structure — not preference — must carry the fix.
+
+Required structural response:
+- add a capability-fit rule,
+- treat AI-driven as a first-class peer to config-driven and data-driven,
+- require a capability-decision artefact for parser-/extractor-shaped work,
+- and run a task-boundary review sensor for capability-fit.

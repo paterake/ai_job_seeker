@@ -11,7 +11,7 @@ tools:
     entitlements:
       roles: [any]
       environments: [any]
-    invocation: "python3 scripts/distill_harness.py governance-audit --repo ."
+    invocation: "uv run python3 scripts/distill_harness.py governance-audit --repo ."
 
   - name: harness-gov-validate
     description: Harness wiring validation — checks that repo structure matches the platform expectation (REPO_CONTRACT, skill symlinks, routing table completeness)
@@ -24,6 +24,6 @@ tools:
     entitlements:
       roles: [any]
       environments: [any]
-    invocation: "python3 scripts/distill_harness.py validate --target . --scope full"
+    invocation: "uv run python3 scripts/distill_harness.py validate --target . --scope full"
 
 mcp_servers: []
