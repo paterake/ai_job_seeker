@@ -403,7 +403,7 @@ def test_cli_match_default_dry_run_no_flags_zero_exit():
     assert "Final" in out and "P1" in out and "Title" in out
 
 
-def test_cli_match_agent_handoff_exits_2(monkeypatch):
+def test_cli_match_agent_handoff_exits_2(monkeypatch, tmp_path):
     _ensure_test_profile()
     from ai_job_seeker.cli import main
 
@@ -415,6 +415,19 @@ def test_cli_match_agent_handoff_exits_2(monkeypatch):
         _fake_generate_json_raises,
     )
 
+    # The dry-run sample listings are all engineering titles, which the
+    # hard-block filter removes before phase-2 — so feed one that survives.
+    ingest_json = tmp_path / "listings.json"
+    ingest_json.write_text(
+        json.dumps([
+            _listing(
+                title="Marketing Assistant",
+                description="Write campaign copy and manage social media",
+            ).to_dict()
+        ]),
+        encoding="utf-8",
+    )
+
     old = sys.stdout, sys.stderr
     buf = io.StringIO()
     errbuf = io.StringIO()
@@ -422,7 +435,7 @@ def test_cli_match_agent_handoff_exits_2(monkeypatch):
     try:
         sys.stdout = buf
         sys.stderr = errbuf
-        rc = main(["match", "--ollama-model", "qwen3.5:9b"])
+        rc = main(["match", "--ingest-json", str(ingest_json), "--ollama-model", "qwen3.5:9b"])
     except SystemExit as e:
         rc = e.code if isinstance(e.code, int) else 2
     finally:
