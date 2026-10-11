@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Trae, GitHub Copilot; Qwen wiring kept but no longer in use) operating in this repository, and the **superset** that can be synced into other repositories.
+`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Trae, GitHub Copilot) operating in this repository, and the **superset** that can be synced into other repositories.
 
 This is an operational surface, not “documentation”. It is the continuity layer that governs assistant behaviour and makes runs reproducible.
 
@@ -43,8 +43,8 @@ Additionally:
 
 - `.claude/{hooks,rules}` symlinked to `../ai_context/pco/ai_harness/{hooks,rules}`
 - `.claude/skills/` is a **real directory** of per-skill symlinks — managed by `distill_harness.py wire`. PCO skills point into `pco/ai_harness/skills/`; project skills point into `project/ai_harness/skills/`. Project skills override PCO skills on name collision.
-- Same wiring applies to `.qwen/`, `.trae/` and `.github/` (GitHub Copilot; `.github/` gets no `settings.json`)
-- Root entrypoints `CLAUDE.md`, `QWEN.md`, `TRAE.md` and `.github/copilot-instructions.md` pointing to `ai_context/ASSISTANTS.md`
+- Same wiring applies to `.trae/` and `.github/` (GitHub Copilot; `.github/` gets no `settings.json`)
+- Root entrypoints `CLAUDE.md`, `TRAE.md` and `.github/copilot-instructions.md` pointing to `ai_context/ASSISTANTS.md`
 
 **Why two layers:** `pco/` is a clean platform namespace that can be blown away and resynced without risk. `project/` is repo-owned and a sync never touches it. This eliminates namespace collision and makes the `PROTECTED_FILES` exclusion mechanism unnecessary.
 

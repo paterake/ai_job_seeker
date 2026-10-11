@@ -2,7 +2,6 @@
 description: Harness tool contract — edit-tool format as a capability floor, not a config detail. Loaded when changing harness, switching models, or modifying tool interfaces.
 globs:
   - ".claude/**"
-  - ".qwen/**"
   - ".trae/**"
   - "ai_context/**"
 basis: operational-experience
@@ -16,7 +15,7 @@ basis: operational-experience
 
 Governance transfers across harnesses. The edit-tool contract does not transfer automatically.
 
-The governance layer (rules, posture, context routing) is portable by design — the same rules are symlinked into `.claude/`, `.qwen/`, and `.trae/`. The tool format layer is not governed by the same mechanism: models are post-trained and RL'd against a specific harness's tool conventions (e.g. unified diff vs. search-and-replace block). This calibration is implicit and not visible in any config file.
+The governance layer (rules, posture, context routing) is portable by design — the same rules are symlinked into each harness dotfolder (`.claude/`, `.trae/`, `.github/`). The tool format layer is not governed by the same mechanism: models are post-trained and RL'd against a specific harness's tool conventions (e.g. unified diff vs. search-and-replace block). This calibration is implicit and not visible in any config file.
 
 **Consequence**: even with a clean, portable governance layer, a mismatched edit dialect collapses success rate and creates retry loops regardless of how well the harness routes context. Governance directs; the edit-tool contract still has to fit.
 
@@ -34,7 +33,7 @@ The edit-tool format a harness uses is a capability variable, not a configuratio
 
 ### When switching harnesses
 
-Before migrating governance to a new harness (e.g. Claude Code → Qwen Coder):
+Before migrating governance to a new harness (e.g. Claude Code → another coding harness):
 - Identify the edit-tool format each harness emits and expects.
 - Confirm the target model was post-trained or evaluated against that format.
 - Run a capability regression suite before declaring the migration complete — clean governance is a necessary but not sufficient condition.
