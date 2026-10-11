@@ -22,7 +22,7 @@ The canonical flow is the
 [kiera-job-search skill](../ai_context/project/ai_harness/skills/kiera-job-search/SKILL.md),
 which any harness triggers from a chat request. It runs these steps:
 
-1. **Check that the sibling** `ai_agent_core` checkout exists.
+1. **Sync dependencies** with `uv sync` (fetches the pinned `ai_agent_core` git tag).
 2. **Re-extract the profile** from the CV, with forced overwrite.
 3. **Restore the target fields** that extraction left for review. Extraction clears
    `target.roles` and `target.locations` every time, so the skill writes back the

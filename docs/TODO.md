@@ -30,12 +30,14 @@ only open work, constraints, and verification.
 | 2 | Stage 5 — Packet: ready-to-send folder per job; submission is a human-approval gate, no auto-send | ⬜ not started | [PRD → Acceptance Criteria](../PRD.md#acceptance-criteria) |
 | 3 | User action: review the candidate profile with Kiera — confirm `target.roles` / `remote` and the audit-role end date | ⬜ open (user) | [CONFIGURATION → Candidate profile](CONFIGURATION.md#candidate-profile-profilecandidateyaml) |
 | 4 | Defects and gaps found in the 2026-10-11 docs audit (salary key mismatch, empty shortlist exits 0, `ai_agent_core` not actually optional for profile/ingest, silent exclusions disable, hard-coded cohort keywords, `cli.py` size, no capability-decision record for the CV extractor, no phase-2 eval) | ⬜ open — triage | [PRD → Known Limitations](../PRD.md#known-limitations) |
-| 5 | kiera-job-search skill still says `ai_agent_core` is a path dependency and its step 1 checks for a `../ai_agent_core` sibling — stale since the git-tag pin; update the skill text | ⬜ open | [skill](../ai_context/project/ai_harness/skills/kiera-job-search/SKILL.md) |
 
 ## Completed
 
 Stages 0–3 (scaffold, profile, ingest, match) — full record of what was built and verified:
 `git show 97846f4:docs/todo/TODO.md`.
+
+kiera-job-search skill dependency text (git-tag pin, no sibling check), 2026-10-11:
+`git log -1 -- ai_context/project/ai_harness/skills/kiera-job-search/SKILL.md`.
 
 ---
 

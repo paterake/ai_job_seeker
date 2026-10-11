@@ -47,9 +47,9 @@ If the user explicitly specifies **search terms** or a **location** in the same 
 
 Work from the repo root: `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker`. Every command must use `uv run …` (never install Python globally).
 
-**Step 1 — Ensure the sibling ai_agent_core repo exists on disk.**
-- Path must be: `/Users/kierapatel/Documents/__code/git/emailrak/ai_agent_core` (git-cloned sibling).
-- The workspace declares it as a path dependency. If it's missing, print the remediation hint: clone `git@github.com:paterake/ai_agent_core.git` into that folder. The profile/ingest/match-agent commands will work without it, but the `match` subparser still resolves the workspace at `uv run` time so the sibling checkout must exist.
+**Step 1 — Sync dependencies.**
+- Run `uv sync` from the repo root. `ai-agent-core` is a pinned git dependency (tag `v0.11.0`, `==0.11.0`), fetched from GitHub; no sibling checkout is needed.
+- Every CLI command needs it installed (profile and ingest included). If the sync cannot fetch the tag, check network/GitHub access to `paterake/ai_agent_core` and stop with that hint.
 
 **Step 2 — Re-extract profile YAML from Kiera's CV (always --force).**
 ```bash
