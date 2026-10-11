@@ -29,11 +29,10 @@ Missing any of these is a blocker, not a backlog item.
 | `docs/RUNNERS.md` | Operational command reference — install, run, diagnose, utility commands (accepts `docs/ops/CLI.md` as a legacy alias) | No canonical command surface; humans and assistants derive commands from code or scattered notes, producing drift and support burden |
 
 † **`docs/TODO.md` is required only while the module (or repo) has open backlog.** Once
-`retire-backlog` has closed the backlog and removed the file, its absence is permitted and must not
-be treated as a blocker. A missing `docs/TODO.md` is a violation only when the module still has open
-backlog items (e.g. an Alpha module with open maturity gaps). This reconciles the contract with the
-`retire-backlog` skill, which deletes `docs/TODO.md` on completion — an intentional retirement and a
-drift defect are otherwise indistinguishable to `docs-alignment`.
+the backlog is closed and `docs/TODO.md` removed, its absence is permitted and must not be treated
+as a blocker. A missing `docs/TODO.md` is a violation only when the module still has open backlog
+items (e.g. an Alpha module with open maturity gaps); otherwise an intentional retirement and a
+drift defect are indistinguishable to `docs-alignment`.
 
 ### Conditional Required
 

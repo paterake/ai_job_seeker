@@ -4,7 +4,7 @@
 
 **Read this BEFORE starting any work.**
 
-> **Copilot note**: Copilot has no hook-execution lifecycle equivalent to Claude Code's `settings.json` `PreToolUse`/`Stop` hooks. Rules and skills are enforced the same way as the other three (auto-discovered from `.claude/rules/` and `.claude/skills/`), but the git-push gate, exception-expiry check, and execution-limits check in `.claude/hooks/` are not enforced for Copilot sessions. Treat this as a known limitation, not a silent gap — see `harness-tool-contract.md`.
+> **Copilot note**: Copilot is wired via `.github/copilot-instructions.md` (entrypoint) and `.github/{hooks,rules,skills}`: `hooks/` and `rules/` are directory symlinks into `ai_context/pco/ai_harness/`, and `skills/` is a managed directory of per-skill symlinks. No `settings.json` is wired under `.github/`, and Copilot has no hook-execution lifecycle equivalent to Claude Code's `settings.json` `PreToolUse`/`Stop` hooks, so the exception-expiry check, capability-decision check, and execution-limits check do not run for Copilot sessions. Treat this as a known limitation, not a silent gap — see `harness-tool-contract.md`.
 
 ## Platform Pillars (Non-Negotiable — Apply to All Work)
 

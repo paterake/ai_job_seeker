@@ -58,7 +58,7 @@ Governance defines, per role:
 
 ### Autonomy spectrum behaviour rules
 
-Canonical anchors: [governance/HUB.md](../governance/HUB.md) and [PCO_CONTRACT.md](../../../docs/concept/PCO_CONTRACT.md).
+Canonical anchors: [governance/HUB.md](../governance/HUB.md) and the PCO governance contract (`docs/concept/PCO_CONTRACT.md` in the PCO repo).
 
 ### Policy injection semantics
 
@@ -111,7 +111,7 @@ Canonical enforcement:
 
 Guidance files (CLAUDE.md, governance docs) inform behaviour but cannot guarantee it — context saturation and instruction drift weaken prose rules over long sessions. Hooks execute at harness lifecycle points and are not subject to model behaviour.
 
-Hard constraints — blocking destructive commands, enforcing typecheck/lint/tests after edits, requiring approvals before commits — are expressed as hooks in `settings.json` rather than prose guidance. See [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) for the enforcement anchor.
+Hard constraints — blocking destructive commands, enforcing typecheck/lint/tests after edits, requiring approvals before commits — should be expressed as hooks in `settings.json` rather than prose guidance. The PCO gate hooks return a PreToolUse `"deny"` inside `hookSpecificOutput` when they trip, which blocks the tool call, and exit silently otherwise so the normal permission flow applies. Their fail-open conditions are listed in [DENY_INTERFACE.md](../governance/DENY_INTERFACE.md#current-enforcement-points); notably the exception-expiry hook enforces in the PCO repo only. See [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) for the enforcement anchor.
 
 ### Session Design and Token Economy
 

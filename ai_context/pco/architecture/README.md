@@ -21,7 +21,7 @@ Define the reference architectures, boundaries, and approved patterns that make 
 
 ### Workflow taxonomy (named patterns)
 
-Canonical approved pattern list and the "unapproved variant requires review" governance rule: [PCO_CONTRACT.md](../../../docs/concept/PCO_CONTRACT.md) §7 "Approved Workflow Patterns".
+Canonical approved pattern list and the "unapproved variant requires review" governance rule: the PCO governance contract (`docs/concept/PCO_CONTRACT.md` in the PCO repo) §7 "Approved Workflow Patterns".
 
 Pattern selection guidance (architecture-specific; not in the contract):
 

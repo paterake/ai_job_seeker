@@ -28,7 +28,7 @@ Use this exact structure at the top of the anchor doc:
 ```text
 ## Resume (start here)
 
-- From `docs/<anchor-doc>.md`: Continue <item name> → “Still todo” step <n>
+- From `docs/todo/<anchor-doc>.md`: Continue <item name> → “Still todo” step <n>
 ```
 
 This resume line must be updated whenever the “Still todo” next step changes.
@@ -53,7 +53,7 @@ descriptive/spec sections (e.g. one `### Item N` per module) for a full backlog 
 
 | Work type | Anchor doc location |
 |---|---|
-| Cross-repo or cross-module work | `docs/<tracker>.md` in the affected root repo |
+| Cross-repo or cross-module work | `docs/todo/<tracker>.md` in the affected root repo |
 | Single-module backlog | `<module>/docs/TODO.md` (delete when exhausted) |
 | Contract/maturity gaps | module `PRD.md` |
 

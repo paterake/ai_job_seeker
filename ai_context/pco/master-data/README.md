@@ -49,7 +49,7 @@ The platform defines stable identifiers (and registry entries) for:
 - model
 - policy pack
 
-Each identity class has an explicit owner and lifecycle policy (creation, modification, deprecation). Registry formats and enforcement live in `ai_agent_core`; this spoke is the canonical policy anchor.
+Each identity class has an explicit owner and lifecycle policy (creation, modification, deprecation). Registry files live in this spoke and `governance/`; conformance checks are in the PCO tooling (`governed-repo-validate`). This spoke is the canonical policy anchor.
 
 ## Entitlements (Policy Anchor)
 
@@ -64,6 +64,8 @@ Default entitlement posture is deny-by-default for side-effecting tools and any 
 ## Workflow Declarations (Policy Anchor)
 
 Workflow registry entries must declare required output schema identifiers per workflow version. Executions must select an output schema and record the selected schema identifier/version in run evidence.
+
+Each workflow version also declares its risk tier and its required sensors (eval suites and review gates). **Consequence:** a workflow with no declared tier or sensors cannot be gated; tier-keyed entitlements and eval gates have nothing to bind to.
 
 ## Environment Baselines (Policy Anchor)
 

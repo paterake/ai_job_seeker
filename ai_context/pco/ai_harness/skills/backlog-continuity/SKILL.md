@@ -17,7 +17,7 @@ Maintain durable backlog state so each backlog item can be executed in a fresh s
 
 ## Inputs (Ask Only If Missing)
 
-- Anchor doc path (e.g., `docs/TODO_PCO_MATURITY.md`)
+- Anchor doc path (e.g., `docs/todo/TODO_<NAME>.md`)
 - Backlog item name (exact heading or label)
 - What changed (files + summary)
 - Verification command(s) actually run (or to be run)

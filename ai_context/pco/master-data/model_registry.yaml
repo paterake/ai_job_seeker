@@ -1,22 +1,52 @@
 schema_version: 1
+# On Azure deployment: add a cost_tier field to each model entry (models become fiscal controls).
 models:
+  - name: claude-opus-5-5
+    provider: anthropic
+    version: "5.5"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; primary harness model (Claude Code sessions and fast mode)"
+    allowlist_scope: [pco-governance, developer-assistance]
+
+  - name: claude-fable-5-1
+    provider: anthropic
+    version: "5.1"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; highest-capability tasks"
+    allowlist_scope: [pco-governance, developer-assistance]
+
+  - name: claude-sonnet-5-5
+    provider: anthropic
+    version: "5.5"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; general tasks"
+    allowlist_scope: [pco-governance, developer-assistance]
+
+  - name: claude-haiku-5-5
+    provider: anthropic
+    version: "5.5"
+    owner: pco-owner
+    evidence: "Anthropic model API — provider-assigned stable identifier; lightweight and latency-sensitive tasks"
+    allowlist_scope: [pco-governance, developer-assistance]
+
+  # Superseded by the 5.x family; retained so run evidence recorded against them still validates.
   - name: claude-sonnet-4-6
     provider: anthropic
     version: "4.6"
     owner: pco-owner
-    evidence: "Anthropic model API — provider-assigned stable identifier; primary harness model"
+    evidence: "Anthropic model API — provider-assigned stable identifier; superseded; historical runs only"
     allowlist_scope: [pco-governance, developer-assistance]
 
   - name: claude-opus-4-8
     provider: anthropic
     version: "4.8"
     owner: pco-owner
-    evidence: "Anthropic model API — provider-assigned stable identifier; high-capability tasks and fast mode"
+    evidence: "Anthropic model API — provider-assigned stable identifier; superseded; historical runs only"
     allowlist_scope: [pco-governance, developer-assistance]
 
   - name: claude-haiku-4-5-20251001
     provider: anthropic
     version: "4.5"
     owner: pco-owner
-    evidence: "Anthropic model API — provider-assigned stable identifier; lightweight and latency-sensitive tasks"
+    evidence: "Anthropic model API — provider-assigned stable identifier; superseded; historical runs only"
     allowlist_scope: [pco-governance, developer-assistance]

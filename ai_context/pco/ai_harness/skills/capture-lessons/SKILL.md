@@ -30,8 +30,8 @@ If neither is true, do not add anything.
 | Content type | Target file |
 |---|---|
 | A governance rule (what must hold and why) | `ai_context/pco/ai_harness/rules/<domain>.md` — add to the relevant rule file |
-| A non-obvious gotcha for a specific spoke | `ai_context/pco/<spoke>/README.md` — append to the `Non-Obvious Gotchas` section |
-| A repeatable trap in this repo's own operations | `ai_context/project/ASSISTANTS.md` — add to the Gotchas section |
+| A non-obvious gotcha for a specific spoke | `ai_context/project/<spoke>/README.md` — append to its `Non-Obvious Gotchas` section (`ai_context/pco/` is platform-synced and read-only) |
+| A repeatable trap in this repo's own operations | `ai_context/project/ASSISTANTS.md` — add a `Gotcha:` line next to the section it concerns (the file has no separate Gotchas section) |
 
 Do not add to `ai_context/pco/ASSISTANTS.md` — it is a static router; it must not accumulate lessons.
 

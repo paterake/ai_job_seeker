@@ -23,8 +23,7 @@ work is organised. These rules address it structurally.
 - Prefer durable documents over long sessions. Work that spans multiple sessions must use an
   anchor doc (backlog continuity pattern — see `ai_context/pco/governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md`) so each
   session starts warm from recorded state, not transcript archaeology. One session per task is
-  the primary model, not a fallback — see [behaviour/README.md](../../behaviour/README.md)
-  (Session Design and Token Economy) for the full operator pattern.
+  the primary model, not a fallback.
 - **Anchor doc structural requirement (non-negotiable):** any TODO file serving as an anchor
   document is incomplete without all four of these sections:
   1. Continuity header — states current status, next item, and "read X before touching code"

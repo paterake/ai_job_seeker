@@ -89,8 +89,10 @@ Governance defines:
 
 The platform distributes hook scripts and the baseline `settings.json` template that consumer repos
 wire into their project-owned harness settings. This includes the capability-decision gate for
-parser-/extractor-shaped content-interpretation changes: the hook enforces that a decision record
-exists before commit / PR creation, while the review sensor checks the substance of that choice.
+parser-/extractor-shaped content-interpretation changes: the hook denies the commit / PR-creation
+command when no valid decision record is staged (a PreToolUse `deny`, which blocks the call; it applies
+only where a consumer's settings wire the hook and detection is heuristic), while the review sensor
+checks the substance of that choice.
 
 ## Artefacts and Surfaces (examples)
 

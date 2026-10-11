@@ -54,7 +54,7 @@ Recurring failure class: bespoke deterministic machinery built for semantic work
 is structural rather than rhetorical:
 - capability-fit rule in agent behaviour,
 - AI-driven recognised explicitly in governance vocabulary,
-- capability-decision artefact enforced before parser-/extractor-shaped changes are committed,
+- capability-decision artefact checked by a hook that denies the commit / PR command when a parser-/extractor-shaped change is staged without one (heuristic detection; enforced where a repo's settings wire the hook),
 - task-boundary review sensor screening the substance of the choice.
 
 ---
@@ -227,7 +227,7 @@ The PCO is not frozen at authoring time. It is a living governance system that e
 |---|---|---|
 | Sensor | Detects stale rules, enforcement anomalies, new research gaps | Decide whether a signal warrants a rule change |
 | Proposer | Drafts the rule change with full rationale and source tracing | Approve the change |
-| Implementer | Writes the change into docs, updates the Gap Register, communicates downstream | Determine the organisation's risk appetite |
+| Implementer | Writes the change into docs, updates the backlog (docs/TODO.md), communicates downstream | Determine the organisation's risk appetite |
 
 Human approval gates exist for every rule change (canonical anchor: [core-posture.md](../ai_harness/rules/core-posture.md)). A governance system where the governed entity approves its own rules is not governance.
 

@@ -67,7 +67,7 @@ This is a governance contract for the agent harness.
 - `ai_context/` is prescriptive and assistant-facing. `docs/` is narrative and human-facing. A rule change with no corresponding doc update leaves humans and assistants out of sync.
 - Identify which governance area the change impacts (Agent Management wheel domain).
 - Update the corresponding spoke narrative under `ai_context/pco/<spoke>/README.md` to reflect the change.
-- If the change alters posture or operating model, also update `docs/PRD.md` in the same response.
+- If the change alters posture or operating model, also update `PRD.md` in the same response.
 
 ## Drift Tests
 

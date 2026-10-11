@@ -5,7 +5,9 @@
 
 ## Deny Response Shape
 
-Every denial event must carry these six fields:
+The target shape for a denial event is these six fields. The current PCO hooks emit a subset:
+none emits `run_id` or `approval_record` (the retired push gate was the only one that emitted
+`approval_record`), and `check_execution_limits.sh` also omits `policy_set` (see Current Enforcement Points):
 
 ```
 run_id:           <stable run identifier propagated from entry point; "local" if outside a governed run>
@@ -25,6 +27,10 @@ next_action:      <what the operator must do to unblock>
 | `exception_expired` | Exception invoked after its expiry date | Any |
 | `capability_experimental` | Capability in Experimental lifecycle stage invoked without a recorded adoption escalation | Any |
 | `supervision_required` | Action requires a fully supervised workflow; autonomous execution not permitted at this tier | Critical |
+| `expired_exceptions` | Emitted by the exception-expiry hook when a repo-local governance exception has expired (the hook's name for `exception_expired`) | Any |
+| `execution_limit_hit` | Emitted by the execution-limits hook when the tool-call budget is exhausted | Any |
+| `capability_decision_required` | Emitted by the capability-decision hook: parser-/extractor-shaped change staged without a capability-decision record | Any |
+| `capability_decision_invalid` | Emitted by the capability-decision hook: staged capability-decision record is missing required sections | Any |
 
 ## Per-Tier Denial Shapes
 
@@ -35,17 +41,15 @@ next_action:      <what the operator must do to unblock>
 | High | Protected change attempted without approval record | `approval_required` | Required — missing | Request approval from governance board; record the approval before re-attempting |
 | Critical | Fully supervised workflow required; autonomous execution blocked | `supervision_required` | Required — missing | Initiate fully supervised workflow with explicit human approval at each step |
 
-## Current Enforcement Point
+## Current Enforcement Points
 
-`.claude/hooks/gate_git_push.sh` intercepts `git push origin main` — a High-tier action (protected change, broad impact, irreversible without remediation). On denial it emits the following instantiation of the deny shape:
+The PCO hooks `check_exception_expiry.sh`, `check_capability_decision.sh` and `check_execution_limits.sh` return the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When a hook does not trip it exits 0 with no output and the call goes through the normal permission flow. Where each hook fails open:
 
-```
-risk_tier: high
-denial_reason: approval_required
-policy_set: pco-core/v1
-approval_record: missing
-next_action: request approval from governance board, or scope down to a non-main branch push
-```
+- Exception expiry: silent when the repo has no `scripts/distill_harness.py`, so it enforces in the PCO repo only, not in consumer repos. It fails closed on any validator failure (malformed registry, missing expiry, `uv` unavailable), denying every shell command until the registry validates.
+- Execution limits: silent when the limits file cannot be read. The count is per session, so the limit bounds one session, not a run spanning several sessions.
+- Capability decision: detection is a path/keyword heuristic over staged files; a content-interpretation change that matches neither passes silently.
+
+`gate_git_push.sh` was retired on 2026-10-11 by operator decision and is now a silent no-op: pushes to the operator's own repositories are pre-approved, and review before commit is enforced by the user-level commit gate. The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 
 ## Registration Surface
 

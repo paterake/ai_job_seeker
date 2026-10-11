@@ -11,7 +11,9 @@ If the context layer does not reflect those differences, assistants will behave 
 
 This file explains the “why” and defines the concern profiles that shape what belongs in each repo’s `ai_context/`.
 
-## The Three Primary Concern Profiles
+## The Four Primary Concern Profiles
+
+The governed repos themselves are listed in `ai_context/project/governance/consumers.yaml`; the profiles below name an example repo for each.
 
 ### 1) LLM Systems (ai_platform)
 
@@ -71,7 +73,7 @@ This file explains the “why” and defines the concern profiles that shape wha
 - PCO-specific skills or docs accidentally synced into consumer repos (consumers see irrelevant or misleading tooling)
 - `ai_context/pco/` and `ai_context/project/` boundaries blurred (platform artifact contaminated with repo-specific content)
 - CONTRACT.md or governance docs describing the old structure after a restructure (agents navigate from stale descriptions)
-- Skills wiring (`distill_harness.py wire`) not re-run after adding or moving a skill (`.claude/skills/` has stale symlinks)
+- `distill_harness.py sync` not re-run after adding or moving a skill (`sync` re-wires the managed `skills/` directories; `wire` is only needed to repair `hooks`/`rules` symlinks)
 
 **Context emphasis:**
 - sync boundary discipline (what belongs in `pco/` vs `project/`)

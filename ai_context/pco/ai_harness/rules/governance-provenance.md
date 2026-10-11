@@ -25,6 +25,7 @@ basis: operational-experience
 
 - Every rule file records its evidence basis in frontmatter as `basis:`, one of:
   `primary-standard` · `incident` · `research-derived` · `operational-experience`.
+  The tag is the author's first-pass judgement; a reviewer may reclassify it.
 - A `research-derived` rule is advisory until independently validated (see `agent-behavior.md`,
   External Research → Independent Validation); it must not be treated as authoritative on the
   strength of its own synthesis path alone.

@@ -18,4 +18,5 @@ policy_packs:
       - ai_context/pco/ai_harness/rules/harness-tool-contract.md
       - ai_context/pco/ai_harness/rules/publication.md
       - ai_context/pco/ai_harness/rules/compliance-lifecycle.md
+      - ai_context/pco/ai_harness/rules/config-repo-structure.md
       - ai_context/pco/ai_harness/rules/ai_context_sync.md

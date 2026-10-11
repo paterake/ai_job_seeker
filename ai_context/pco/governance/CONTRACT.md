@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Qwen, Trae) operating in this repository, and the **superset** that can be synced into other repositories.
+`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Qwen, Trae, GitHub Copilot) operating in this repository, and the **superset** that can be synced into other repositories.
 
 This is an operational surface, not “documentation”. It is the continuity layer that governs assistant behaviour and makes runs reproducible.
 
@@ -29,7 +29,7 @@ For a target repo to be “harness-wired”, it must have a **two-layer `ai_cont
 ```
 <repo>/ai_context/
   ASSISTANTS.md          ← repo-specific router and active backlog (repo-owned, never synced)
-  pco/                   ← synced wholesale from ai_agent_pco/ai_context/ (platform-owned, read-only)
+  pco/                   ← synced wholesale from ai_agent_pco/ai_context/pco/ (platform-owned, read-only)
     ai_harness/          ← platform hooks, rules, skills
     governance/          ← platform governance contracts
     ...                  ← all other platform spokes
@@ -43,8 +43,8 @@ Additionally:
 
 - `.claude/{hooks,rules}` symlinked to `../ai_context/pco/ai_harness/{hooks,rules}`
 - `.claude/skills/` is a **real directory** of per-skill symlinks — managed by `distill_harness.py wire`. PCO skills point into `pco/ai_harness/skills/`; project skills point into `project/ai_harness/skills/`. Project skills override PCO skills on name collision.
-- Same wiring applies to `.qwen/` and `.trae/`
-- Root entrypoints `CLAUDE.md`, `QWEN.md`, `TRAE.md` pointing to `ai_context/ASSISTANTS.md`
+- Same wiring applies to `.qwen/`, `.trae/` and `.github/` (GitHub Copilot; `.github/` gets no `settings.json`)
+- Root entrypoints `CLAUDE.md`, `QWEN.md`, `TRAE.md` and `.github/copilot-instructions.md` pointing to `ai_context/ASSISTANTS.md`
 
 **Why two layers:** `pco/` is a clean platform namespace that can be blown away and resynced without risk. `project/` is repo-owned and a sync never touches it. This eliminates namespace collision and makes the `PROTECTED_FILES` exclusion mechanism unnecessary.
 
@@ -93,14 +93,14 @@ The Additive Content Map must include a markdown table whose first column is `Sp
 
 ## Sync Behaviour
 
-The sync tool is [distill_harness.py](../../../scripts/distill_harness.py).
+The sync tool is `scripts/distill_harness.py` in the PCO repo.
 
 Key principles:
 - Prune is **on by default**: within the selected scope, target-only files under `ai_context/pco/` are removed so the platform namespace is deterministic. Use `--no-prune` to disable pruning when explicitly instructed.
 - Sync target is `<repo>/ai_context/pco/` — the platform namespace only. `ai_context/project/` and `ai_context/ASSISTANTS.md` are repo-owned and are never touched by sync.
 - Sync is **scoped**:
-  - `--scope harness` syncs only `ai_context/pco/ai_harness/`
-  - `--scope governance` syncs `ai_context/pco/governance/`
+  - `--scope harness` (the CLI default) syncs `ai_context/pco/ASSISTANTS.md` and `ai_context/pco/ai_harness/`
+  - `--scope governance` syncs `ai_context/pco/ASSISTANTS.md` and `ai_context/pco/governance/` (the `master-data/` registries are not in this scope; use `--scope full`)
   - `--scope full` syncs the full `ai_context/pco/` tree
 
 ## How This Applies Across Repos
@@ -127,7 +127,7 @@ As a result, its conformance declarations are not “additive only”. It must d
 - Policies are versioned and rolled out deliberately; unreviewed or “floating” governance changes are prohibited.
 - Tier 3/4 capability changes require a traceable approval record artefact; the record is stored in `audit/approvals/` (using `audit/templates/approval_record.md`) and referenced from the change evidence (e.g., capability registry `evidence` field or the change proposal).
 
-## Exceptions (Registry Contract; Pending Enforcement)
+## Exceptions (Registry Contract; expiry checked by `governed-repo-validate`; the exception-expiry hook denies Bash calls while an exception has expired, in the PCO repo only — it fails open in consumer repos)
 
 - Exceptions are time-bounded, attributable (owner + justification), and scoped; informal exceptions are prohibited.
 - Each governed repo maintains an exception registry at `ai_context/project/governance/exception_registry.yaml`.
@@ -146,7 +146,7 @@ Minimum registry fields:
 - `status` (`active` | `expired` | `revoked`)
 - `evidence` (link or pointer to the approval/evidence record)
 
-## Capability Lifecycle (Registry Contract; Pending Enforcement)
+## Capability Lifecycle (Registry Contract; Tier 3/4 approvals checked by `governance-audit`, Tier 3/4 adoption gate checked by `capability-registry-validate --target`, stage progression not enforced)
 
 - New agent capabilities (new tool classes, new model capabilities, new harness patterns) enter the platform through a defined lifecycle.
 - Capabilities are tracked in a registry with lifecycle stage and supporting evidence.
@@ -162,7 +162,7 @@ Minimum registry fields:
 - `owner`
 - `evidence`
 
-## Policy Packs (Registry and Rollout Contract; Pending Enforcement)
+## Policy Packs (Registry and Rollout Contract; registry checked by `governed-repo-validate`, rollout pending enforcement)
 
 - Policy packs have stable identifiers and semantic versions; changes without an upgrade path are prohibited for shared surfaces.
 - A policy pack registry records policy pack identity, versions, ownership, applicability, and rollout state.

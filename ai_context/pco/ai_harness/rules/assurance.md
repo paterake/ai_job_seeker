@@ -29,6 +29,8 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 ## Dataset Governance
 
 - Eval datasets are versioned artefacts. CI must pin to a specific dataset version; floating latest is prohibited.
+- Each dataset version that gates or scores behaviour declares its provenance: source, how cases were produced, and owner.
+  **Consequence:** a gold set of unknown origin cannot be checked for leakage or for sharing the evaluated output's synthesis path, so the gate it drives proves nothing.
 - Named splits must be explicit (e.g. `ci_smoke`, `ci_regression`, `nightly`, `red_team`).
 - Production failures become permanent regression cases — never discarded.
 

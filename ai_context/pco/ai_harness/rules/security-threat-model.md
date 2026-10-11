@@ -67,7 +67,8 @@ strictly requires for that phase:
 - **Research phase** (if required): isolated session, web/external access, no credentials,
   no write capabilities.
 - **Implementation phase**: codebase access, no external research, secrets brokered at point
-  of use only.
+  of use only and never written to logs, telemetry, traces or run evidence. **Consequence:** a
+  logged secret reaches every log reader and retention store, a leak that needs no outbound call.
 
 A single session that combines research (untrusted content) with implementation (credential
 access) is a trifecta condition. Separate them by design.

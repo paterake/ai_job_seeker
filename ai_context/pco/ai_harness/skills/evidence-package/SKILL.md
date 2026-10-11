@@ -1,3 +1,8 @@
+---
+name: "evidence-package"
+description: "Write and validate the append-only evidence record for the current governed run. Invoke at the end of a governed session, or when the Stop hook asks for it. After an execution-limit stop, invoke it in a new session: its shell steps are denied in the session that hit the limit."
+---
+
 # Skill: /evidence-package
 
 ## Purpose
@@ -9,6 +14,8 @@ governed session to produce an append-only audit artefact in `audit/runs/<run_id
 
 - At the end of any governed work session before closing.
 - When the `remind_evidence_package.sh` Stop hook emits a governance reminder.
+- After an execution-limit stop, in a **new** session (the run_id carries over): the session that hit
+  the limit has its shell commands denied, so steps 1, 2, 7 and 8 cannot run there.
 
 ## Steps
 
@@ -28,7 +35,7 @@ governed session to produce an append-only audit artefact in `audit/runs/<run_id
    - `run_id`: value from `.claude/current_run_id`
    - `policy_set`: `pco-core/v1` (unless a different policy pack was declared)
    - `workflow`: one-sentence description of what this session accomplished
-   - `model_identity`: the Claude model used (e.g. `claude-sonnet-4-6`) — must match a
+   - `model_identity`: the Claude model used (e.g. `claude-opus-5-5`) — must match a
      registered model in `ai_context/pco/master-data/model_registry.yaml`
    - `tool_identity`: blank if operator-driven; tool name if a governed tool was invoked
    - `approvals`: list of APR-* ids, or empty list
@@ -65,9 +72,12 @@ governed session to produce an append-only audit artefact in `audit/runs/<run_id
    ```
    Fix any reported issues before declaring the run closed.
 
-8. **Clear the run_id file** so the next session starts fresh:
+8. **Clear the run state.** Remove the run id so the next session seeds a new one. The
+   execution-limit hook counts per session under `.claude/tool_calls/<session_id>`, so every new
+   session starts at 0. Deleting finished sessions' counter files (and the legacy
+   `tool_call_count`) is optional housekeeping; deleting the current session's file resets its count.
    ```
-   rm .claude/current_run_id
+   rm -f .claude/current_run_id
    ```
 
 ## Append-Only Rule

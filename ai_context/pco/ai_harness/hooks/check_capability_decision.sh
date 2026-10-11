@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # check_capability_decision.sh — PreToolUse hook: require a capability-decision record
 # before commit / PR creation when staged changes look like a new content-interpretation surface.
+# Pass: exit 0 with no output (normal permission flow applies). Block: PreToolUse "deny" in hookSpecificOutput.
 set -euo pipefail
 
 payload="$(cat)"
@@ -10,7 +11,6 @@ case "$cmd" in
   *"git commit"*|*"gh pr create"*)
     ;;
   *)
-    jq -nc '{"permissionDecision": "allow"}'
     exit 0
     ;;
 esac
@@ -23,7 +23,6 @@ while IFS= read -r line; do
     [[ -n "$line" ]] && STAGED_PATHS+=("$line")
 done < <(git diff --cached --name-only --diff-filter=ACMR)
 if [[ "${#STAGED_PATHS[@]}" -eq 0 ]]; then
-    jq -nc '{"permissionDecision": "allow"}'
     exit 0
 fi
 
@@ -63,7 +62,6 @@ if [[ "$require_record" -eq 0 ]]; then
 fi
 
 if [[ "$require_record" -eq 0 ]]; then
-    jq -nc '{"permissionDecision": "allow"}'
     exit 0
 fi
 
@@ -85,7 +83,8 @@ policy_set: pco-core/v1
 next_action: add a capability-decision record under audit/capability_decisions/ using audit/templates/capability_decision_record.md, stage it, then retry the commit / PR command
 DENY
 )"
-    jq -nc --arg reason "$reason" '{"permissionDecision": "defer", "reason": $reason}'
+    jq -nc --arg reason "$reason" \
+        '{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": $reason}}'
     exit 0
 fi
 
@@ -108,8 +107,9 @@ done
 if [[ "${#missing_fields[@]}" -gt 0 ]]; then
     detail="$(printf '%s\n' "${missing_fields[@]}" | paste -sd '; ' -)"
     reason="$(printf 'GOVERNANCE DENY\nrisk_tier: high\ndenial_reason: capability_decision_invalid\npolicy_set: pco-core/v1\ndetail: %s\nnext_action: fill the required sections in the staged capability-decision record, then retry the commit / PR command' "$detail")"
-    jq -nc --arg reason "$reason" '{"permissionDecision": "defer", "reason": $reason}'
+    jq -nc --arg reason "$reason" \
+        '{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": $reason}}'
     exit 0
 fi
 
-jq -nc '{"permissionDecision": "allow"}'
+exit 0

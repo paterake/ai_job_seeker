@@ -80,7 +80,9 @@ Required record shape (minimum):
 - whether a config/prompt solution was considered.
 
 Enforcement semantics:
-- The hook enforces that a decision record exists; it does **not** prove the decision is correct.
+- The hook enforces that a decision record exists — it denies the commit / PR command otherwise — in repos
+  whose settings wire it; it fails open when its path/keyword heuristic does not recognise the change as
+  content-interpretation-shaped. It does **not** prove the decision is correct.
 - The corresponding behavioural sensor is a required task-boundary / code-review step that screens for
   the substance of the decision: bespoke deterministic machinery solving a semantic problem, or a model
   being used where exact derivation was available.

@@ -27,7 +27,7 @@ Confirm each required doc exists. Missing = blocker.
 - [ ] `docs/ARCHITECTURE.md`
 - [ ] `docs/RUNBOOK.md`
 - [ ] `docs/CONFIGURATION.md`
-- [ ] `docs/TODO.md` — required only while the module/repo has **open backlog**; permitted absent once `retire-backlog` has closed it (do not flag as a blocker in that case)
+- [ ] `docs/TODO.md` — required only while the module/repo has **open backlog**; permitted absent once the backlog is closed and `docs/TODO.md` removed (do not flag as a blocker in that case)
 - [ ] `docs/RUNNERS.md` (accepts `docs/ops/CLI.md` as a legacy alias)
 
 ### 2) Conditional Required

@@ -102,6 +102,7 @@ Eval datasets are versioned artefacts with explicit structure.
 
 - Named splits (e.g., `ci_smoke`, `ci_regression`, `nightly`, `red_team`)
 - Snapshotting/versioning when examples change, with CI pinned to a specific dataset version
+- Declared provenance per dataset version (source, how cases were produced, owner)
 - Promotion path for new examples: curated intake, de-duplication, and threat/quality tagging
 
 ### Test design patterns

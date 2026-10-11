@@ -1,23 +1,9 @@
 #!/usr/bin/env bash
+# gate_git_push.sh — RETIRED 2026-10-11 by operator decision. Silent no-op.
+# Pushes to the operator's own repositories are pre-approved, and review before commit is
+# enforced by the user-level pco-harness commit gate, so this push gate no longer blocks anything.
+# The file is kept because consumer settings.json files still reference it; a missing file would error.
 set -euo pipefail
 
-payload="$(cat)"
-cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')"
-
-case "$cmd" in
-  *"git push"*"origin main"*|*"git push"*" main"*)
-    reason="$(cat <<'DENY'
-GOVERNANCE DENY
-risk_tier: high
-denial_reason: approval_required
-policy_set: pco-core/v1
-approval_record: missing
-next_action: request approval from governance board, or scope down to a non-main branch push
-DENY
-)"
-    jq -nc --arg reason "$reason" '{"permissionDecision": "defer", "reason": $reason}'
-    ;;
-  *)
-    jq -nc '{"permissionDecision": "allow"}'
-    ;;
-esac
+cat > /dev/null  # consume stdin (hook contract); no decision is emitted
+exit 0
