@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11, <3.14"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -15,12 +15,13 @@ members = [
 
 [[package]]
 name = "ai-agent-core"
-version = "0.7.0"
+version = "0.11.0"
 source = { directory = "../ai_agent_core/implementation/ai_agent_core" }
 dependencies = [
     { name = "chromadb" },
     { name = "llama-index" },
     { name = "llama-index-embeddings-ollama" },
+    { name = "llama-index-embeddings-openai" },
     { name = "llama-index-llms-ollama" },
     { name = "llama-index-readers-file" },
     { name = "llama-index-retrievers-bm25" },
@@ -39,6 +40,7 @@ requires-dist = [
     { name = "chromadb", specifier = ">=0.6.0" },
     { name = "llama-index", specifier = ">=0.12.0" },
     { name = "llama-index-embeddings-ollama", specifier = ">=0.3.0" },
+    { name = "llama-index-embeddings-openai", specifier = ">=0.3.0" },
     { name = "llama-index-llms-ollama", specifier = ">=0.4.0" },
     { name = "llama-index-readers-file", specifier = ">=0.4.0" },
     { name = "llama-index-retrievers-bm25", specifier = ">=0.3.0" },
