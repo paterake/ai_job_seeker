@@ -25,8 +25,8 @@ The backlog and the next step are in [docs/TODO.md](docs/TODO.md).
   at the repo root because there is only one implementation.
 - Runtime config is in `implementation/job_seeker/config/`. Candidate profiles and all generated
   output sit under gitignored folders inside it.
-- The LLM substrate (backend-mode switch, JSON generation, agent handoff) comes from the sibling
-  repo `ai_agent_core`, which must be checked out next to this repo.
+- The LLM substrate (backend-mode switch, JSON generation, agent handoff) comes from the
+  `ai_agent_core` repo, pinned to a release tag as a git dependency.
 - `ai_context/` holds AI-assistant governance: `pco/` is a read-only synced platform copy and
   `project/` is owned by this repo.
 

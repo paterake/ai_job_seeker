@@ -7,8 +7,8 @@ Never use bare `python` or `pip`. What each one does in the full pipeline is in
 ## Setup
 
 ```bash
-# sibling checkouts must exist: ../ai_agent_core (required) and ../ai_agent_pco (validators only)
-uv sync                       # resolve the workspace incl. the ai_agent_core path dependency
+# ../ai_agent_pco sibling checkout is needed for the validators only
+uv sync                       # resolve the workspace incl. the pinned ai_agent_core git tag
 uv run ai-job-seeker --help   # lists only profile + ingest (match/applied/draft register on demand)
 ```
 

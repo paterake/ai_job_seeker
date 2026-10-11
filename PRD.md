@@ -221,6 +221,6 @@ Acceptance criteria are to be written when the stage is designed.
 
 | Module | Relationship |
 |---|---|
-| `ai_agent_core` (sibling repo) | This repo delegates to it for backend-mode resolution, JSON generation, cloud endpoints and keys, and the agent-handoff signal. It is consumed as a path dependency at a declared minimum version. |
+| `ai_agent_core` (pinned git dependency) | This repo delegates to it for backend-mode resolution, JSON generation, cloud endpoints and keys, and the agent-handoff signal. It is consumed as a git dependency pinned to release tag `v0.11.0` (`==0.11.0`). |
 | Job boards (three public APIs) | Upstream data sources. Their content is untrusted. |
 | Applied-jobs skill and the external tracker sheet | Downstream. The skill writes the local store through the CLI and mirrors rows to the sheet through the browser. |

@@ -16,7 +16,7 @@ members = [
 [[package]]
 name = "ai-agent-core"
 version = "0.11.0"
-source = { directory = "../ai_agent_core/implementation/ai_agent_core" }
+source = { git = "https://github.com/paterake/ai_agent_core.git?subdirectory=implementation%2Fai_agent_core&tag=v0.11.0#bad40619e33f3cd2f5ad1de6f58b1d18c1cbb134" }
 dependencies = [
     { name = "chromadb" },
     { name = "llama-index" },
@@ -33,33 +33,6 @@ dependencies = [
     { name = "pybreaker" },
     { name = "pyyaml" },
     { name = "ragas" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "chromadb", specifier = ">=0.6.0" },
-    { name = "llama-index", specifier = ">=0.12.0" },
-    { name = "llama-index-embeddings-ollama", specifier = ">=0.3.0" },
-    { name = "llama-index-embeddings-openai", specifier = ">=0.3.0" },
-    { name = "llama-index-llms-ollama", specifier = ">=0.4.0" },
-    { name = "llama-index-readers-file", specifier = ">=0.4.0" },
-    { name = "llama-index-retrievers-bm25", specifier = ">=0.3.0" },
-    { name = "llama-index-vector-stores-chroma", specifier = ">=0.4.0" },
-    { name = "ollama", specifier = ">=0.3.0" },
-    { name = "opentelemetry-api", specifier = ">=1.0.0" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.0.0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.0.0" },
-    { name = "pybreaker", specifier = ">=1.3.0" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "ragas", specifier = ">=0.4.0" },
-    { name = "redis", marker = "extra == 'redis'", specifier = ">=5.0.0" },
-]
-provides-extras = ["redis"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "pytest-cov", specifier = ">=4.0.0" },
 ]
 
 [[package]]
@@ -81,7 +54,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ai-agent-core", directory = "../ai_agent_core/implementation/ai_agent_core" },
+    { name = "ai-agent-core", git = "https://github.com/paterake/ai_agent_core.git?subdirectory=implementation%2Fai_agent_core&tag=v0.11.0" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.32.0" },

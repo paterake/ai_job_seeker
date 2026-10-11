@@ -6,9 +6,11 @@ This covers running and recovering the pipeline. Exact commands and flags are in
 
 ## Prerequisites
 
-1. This repo, with `../ai_agent_core` checked out next to it. **Every subcommand needs it**,
-   profile and ingest included (see [Missing ai_agent_core](#missing-ai_agent_core)).
-   `../ai_agent_pco` is needed only for the governance validators.
+1. This repo, synced with `uv sync`, which fetches the pinned `ai_agent_core` git tag (network
+   access to the `ai_agent_core` repo is needed on first sync). **Every subcommand needs
+   `ai_agent_core` installed**, profile and ingest included (see
+   [Missing ai_agent_core](#missing-ai_agent_core)). `../ai_agent_pco` is needed only for the
+   governance validators.
 2. `uv` installed. Run everything through `uv run` from the repo root. Never install into the
    system Python.
 3. Board API keys installed (see [Installing API keys](#installing-api-keys)).
@@ -103,11 +105,10 @@ A local model was used on the 8 GB machine. Kill it, stop the local model server
 `default_mode: agent`, an empty `local.model`, and an empty cloud section.
 
 ### Missing ai_agent_core
-Symptoms: `uv run` fails to resolve the workspace, or any command fails with an `ai_agent_core`
-import error. That includes `profile` and `ingest`, because the CLI imports the LLM judge at
-load time (verified 2026-10-11, contrary to the code comments). Fix: clone the `ai_agent_core`
-repo into `../ai_agent_core` so that `../ai_agent_core/implementation/ai_agent_core` exists,
-then run `uv sync`.
+Symptoms: `uv sync` cannot fetch the pinned `ai_agent_core` git tag, or any command fails with an
+`ai_agent_core` import error. That includes `profile` and `ingest`, because the CLI imports the LLM judge at
+load time (verified 2026-10-11, contrary to the code comments). Fix: check network/GitHub access to the
+`ai_agent_core` repo and that the pinned tag exists, then run `uv sync`.
 
 ### Profile errors
 - `Profile not found` / `missing required fields`: re-run the extraction, or fix the YAML. The

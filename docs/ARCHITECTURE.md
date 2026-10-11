@@ -7,12 +7,12 @@ behaviour in [AI.md](AI.md).
 ## Workspace layout
 
 - Root `pyproject.toml`: a uv workspace with a single member, `implementation/job_seeker`. It
-  declares `ai-agent-core` as a path source at `../ai_agent_core/implementation/ai_agent_core`.
+  pins `ai-agent-core` as a git source: the `ai_agent_core` repo at tag `v0.11.0`, subdirectory
+  `implementation/ai_agent_core` (no sibling checkout needed).
   Pytest settings also live here: `--import-mode=importlib`, the `src` path, and a cache under `.ignore/`.
 - `implementation/job_seeker/pyproject.toml`: the `ai-job-seeker` package. It provides the
-  `ai-job-seeker` console script and depends on `ai-agent-core>=0.5.0`, `pyyaml`, `python-docx` and `requests`.
-  The `>=` constraint is a floor, not a pin. The workspace path source overrides it, so the
-  version used is whatever is checked out in the sibling repo.
+  `ai-job-seeker` console script and depends on `ai-agent-core==0.11.0`, `pyyaml`, `python-docx` and `requests`.
+  Upgrading `ai_agent_core` means bumping both the tag and the `==` pin, re-locking, and re-running the tests.
 - `implementation/job_seeker/config/`: the YAML config, plus the gitignored `profile/` and `output/` folders.
 - `implementation/job_seeker/src/ai_job_seeker/`: the package (described below).
 - `implementation/job_seeker/tests/`: 32 tests across ingest, match and backend modes.
@@ -185,7 +185,7 @@ LLM-mode flags from `ai_agent_core.execution.add_execution_args` added. This is 
 **This does not make profile or ingest independent of `ai_agent_core`** (verified 2026-10-11).
 `cli.py` imports the `match` package at module load. That package imports `match/llm_judge.py`,
 and `llm_judge.py` imports `ai_agent_core.execution` at its top level. With `ai_agent_core`
-unimportable, importing the CLI fails, so every subcommand needs the sibling checkout. The
+unimportable, importing the CLI fails, so every subcommand needs `ai_agent_core` installed. The
 docstrings that say otherwise are stale.
 
 ## Design decisions
