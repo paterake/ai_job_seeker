@@ -1,12 +1,11 @@
 """Thin CLI entry point. Each subcommand is a thin wrapper over an importable
 phase module. Stage 1 ships `profile` only; further phases add subcommands.
 
-ai_agent_core.execution is only used by the match (phase-2 LLM judge) and
-draft (LLM generation) stages. For the stages that don't need it (profile,
-ingest), we deliberately defer that import to the point of use so the whole
-tool keeps working even if the ai_agent_core sibling checkout is missing on
-disk — the failure becomes a clear per-subcommand message instead of a
-venv-resolution failure at `uv run` time.
+ai_agent_core is a pinned git dependency (tag v0.11.0, installed by `uv sync`)
+and is required by every subcommand: this module imports the match package at
+load, which imports ai_agent_core.execution. Some ai_agent_core imports below
+are still deferred to the point of use, so a broken install surfaces as a
+per-subcommand message with the `uv sync` remediation hint.
 """
 
 from __future__ import annotations
@@ -389,12 +388,10 @@ def _atomic_json_dump(obj: Any, out_path: str | Path) -> Path:
     return p
 
 _AI_AGENT_CORE_IMPORT_ERR_HINT = (
-    "ai_agent_core could not be imported. It is declared as a sibling path "
-    "dependency in the workspace pyproject.toml — clone/checkout "
-    "ai_agent_core next to ai_job_seeker at "
-    "../ai_agent_core/ (relative to the workspace root), or install it as a "
-    "released package. It is only required for the match (phase-2 LLM judge) "
-    "and draft (LLM generation) stages; profile + ingest work without it."
+    "ai_agent_core could not be imported. It is a pinned git dependency "
+    "(tag v0.11.0) declared in the workspace pyproject.toml and is required "
+    "by every subcommand — run `uv sync` from the repo root to install it "
+    "(needs network access to the ai_agent_core GitHub repo)."
 )
 
 
@@ -417,8 +414,7 @@ def _require_ai_agent_core(what: str) -> Any:
 def _add_execution_args(parser: argparse.ArgumentParser, *, defaults: Any) -> None:
     """Mirror the shared-lib add_execution_args call; import lazily.
 
-    Used only for match/draft parsers; profile/ingest never hit this path so
-    they stay 100% PyPI-dep-only.
+    Used only for match/draft parsers; profile/ingest never hit this path.
     """
     mod = _require_ai_agent_core(parser.prog)
     mod.add_execution_args(parser, defaults=defaults)
@@ -2353,10 +2349,9 @@ def main(argv: list[str] | None = None) -> int:
     parser, sub = _build_base_parser(argv0)
 
     if _needs_execution_args(argv0):
-        # ai_agent_core is required only now (match or draft command). The
-        # import is nested here to keep profile/ingest 100% PyPI-dep-only — if
-        # ai_agent_core is missing, execution fails with the remediation hint
-        # from _require_ai_agent_core rather than an ImportError at import.
+        # match/draft need the LLM-mode flags from ai_agent_core.execution;
+        # build them only for those commands. (ai_agent_core is already
+        # required at module load via the match package.)
         try:
             backend_defaults = load_backend_defaults()
         except ImportError as e:

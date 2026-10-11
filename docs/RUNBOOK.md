@@ -107,7 +107,7 @@ A local model was used on the 8 GB machine. Kill it, stop the local model server
 ### Missing ai_agent_core
 Symptoms: `uv sync` cannot fetch the pinned `ai_agent_core` git tag, or any command fails with an
 `ai_agent_core` import error. That includes `profile` and `ingest`, because the CLI imports the LLM judge at
-load time (verified 2026-10-11, contrary to the code comments). Fix: check network/GitHub access to the
+load time (verified 2026-10-11). The CLI's error message gives the same `uv sync` fix. Fix: check network/GitHub access to the
 `ai_agent_core` repo and that the pinned tag exists, then run `uv sync`.
 
 ### Profile errors

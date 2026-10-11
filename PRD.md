@@ -214,8 +214,8 @@ Acceptance criteria are to be written when the stage is designed.
   enforces it.
 - **No eval harness for phase-2**, and no behavioural sensors for non-impersonation or
   no-fabrication (both are planned in the repo contract).
-- **Every command needs the LLM substrate installed.** The code says profile and ingest work
-  without it, but the command-line entry point imports it at load time.
+- **Every command needs the LLM substrate installed.** The command-line entry point imports it at
+  load time, so stages that make no model call (profile, ingest) still depend on it.
 
 ## Related Modules
 

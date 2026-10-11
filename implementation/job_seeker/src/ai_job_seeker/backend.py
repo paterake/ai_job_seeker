@@ -4,11 +4,10 @@ Keeps < 200 lines; all heavy lifting defers to ai_agent_core.execution.
 Also exposes profile-level defaults (cv_dir + expected stems) read from the
 same YAML — keeps mechanism config in one file.
 
-ai_agent_core imports are deliberately lazy in the two functions that actually
-need it (load_backend_defaults / apply_backend_overrides) — the profile
-defaults function (load_profile_defaults) has zero dependency on ai_agent_core
-so profile/ingest keep working even when the ai_agent_core sibling checkout
-is missing on disk.
+ai_agent_core imports are lazy in the two functions that use it
+(load_backend_defaults / apply_backend_overrides); load_profile_defaults does
+not import it. ai_agent_core is still required at runtime — it is a pinned git
+dependency (tag v0.11.0, installed by `uv sync`) and the CLI imports it at load.
 """
 
 from __future__ import annotations
@@ -116,11 +115,10 @@ def load_backend_defaults(
         from ai_agent_core.execution import ArgDefaults
     except ImportError as e:
         raise ImportError(
-            "ai_agent_core.execution.ArgDefaults is unavailable — needed only "
+            "ai_agent_core.execution.ArgDefaults is unavailable — needed "
             "to build the match/draft CLI subparsers (they carry LLM-mode "
-            "flags). Clone/checkout ai_agent_core next to ai_job_seeker at "
-            "../ai_agent_core/ or install as a released package. Profile and "
-            "ingest commands work without ai_agent_core."
+            "flags). ai_agent_core is a pinned git dependency (tag v0.11.0) "
+            "required by every subcommand; run `uv sync` from the repo root."
         ) from e
 
     cfg = _load_yaml(cfg_path)

@@ -3,9 +3,9 @@
 Public surface re-exports everything the CLI or downstream draft stage needs.
 
 ExecutionConfig/ExecutionMode (from ai_agent_core) are used only by the LLM
-judge gate (phase-2). They are imported lazily by rank_listings() so the rest
-of the pipeline (profile + ingest) works even when ai_agent_core is missing
-on disk. That keeps profile/ingest 100% PyPI-dep-only.
+judge gate (phase-2) for type checks. ai_agent_core is a required, pinned git
+dependency (tag v0.11.0, installed by `uv sync`); this package imports it at
+load via llm_judge.
 """
 
 from __future__ import annotations
@@ -47,17 +47,16 @@ def _require_ai_agent_core_for_phase2() -> tuple[Any, Any]:
     """Return (ExecutionConfig, ExecutionMode) classes — or import loudly.
 
     Used only when the caller actually passes cfg AND mode (i.e. phase-2 LLM
-    judge will run). If ai_agent_core isn't installed, phase-1 still works
-    (caller passes cfg=None, mode=None) — this is the "agent mode" default.
+    judge will run). ai_agent_core is a required, pinned git dependency
+    (tag v0.11.0) — this package already imports it at load via llm_judge.
     """
     try:
         from ai_agent_core.execution import ExecutionConfig as _EC, ExecutionMode as _EM
     except ImportError as e:
         raise ImportError(
-            "ai_agent_core could not be imported — needed only for phase-2 LLM "
-            "judge scoring. Clone/checkout ai_agent_core next to ai_job_seeker "
-            "at ../ai_agent_core/ or skip phase-2 by running match without "
-            "--ollama-model / --llm-provider flags (agent default = phase-1 only)."
+            "ai_agent_core could not be imported — it is a pinned git "
+            "dependency (tag v0.11.0) required by every subcommand. Run "
+            "`uv sync` from the repo root to install it."
         ) from e
     return _EC, _EM
 
@@ -103,7 +102,7 @@ def rank_listings(
     )
     if run_phase2 and scored:
         # Type-check the user-passed cfg/mode against ai_agent_core types only
-        # when phase-2 is actually requested — otherwise keep the import cold.
+        # when phase-2 is actually requested.
         _EC, _EM = _require_ai_agent_core_for_phase2()
         if not isinstance(cfg, _EC) or not isinstance(mode, _EM):
             raise TypeError(

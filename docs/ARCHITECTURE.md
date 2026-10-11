@@ -186,7 +186,7 @@ LLM-mode flags from `ai_agent_core.execution.add_execution_args` added. This is 
 `cli.py` imports the `match` package at module load. That package imports `match/llm_judge.py`,
 and `llm_judge.py` imports `ai_agent_core.execution` at its top level. With `ai_agent_core`
 unimportable, importing the CLI fails, so every subcommand needs `ai_agent_core` installed. The
-docstrings that say otherwise are stale.
+remaining deferred imports only shape where an install error is reported (with a `uv sync` hint).
 
 ## Design decisions
 
