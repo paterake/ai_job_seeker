@@ -97,7 +97,7 @@ For each failing check:
 1. **Required doc missing (greenfield)** — create using the template shape (PRD: `ai_context/pco/governance/templates/PRD_TEMPLATE.md`; others: follow segregation rules). No inventory needed.
 2. **Required doc missing (content exists elsewhere in wrong doc)** — inventory the source doc first; extract and move the relevant content to the new doc; remove it from the source. Do not duplicate.
 3. **Content in the wrong doc** — inventory the doc; map each section to its correct destination; move sections one at a time; verify the source doc is empty of misplaced content before closing.
-4. **Superseded doc to retire** — read in full; confirm every section is either present in the canonical source or explicitly redundant. Only then delete or archive.
+4. **Superseded doc to retire** — read in full; confirm every section is either present in the canonical source or explicitly redundant. Only then delete it (no archive; the commit history keeps it).
 5. **TODO file misplaced** — move intact to `docs/todo/` if active; if completed, move its durable facts into code or docs and delete it, citing the commit in its `docs/TODO.md` Completed row; update `docs/TODO.md` index. Structural move — no inventory needed.
 6. **PRD references implementation files** — rewrite those references to contract language; preserve all non-implementation content.
 7. **Extension doc undiscoverable** — add a link from `ARCHITECTURE.md` or `README.md`; do not move the doc.
@@ -116,7 +116,6 @@ For each failing check:
 ```bash
 ls docs/
 ls docs/todo/ 2>/dev/null
-ls docs/todo/archive/ 2>/dev/null
 find . -name "TODO*.md" -not -path "*/todo/*" -not -path "*/.venv/*"
 find . -name "PRD.md" -not -path "*/.venv/*"
 ```
