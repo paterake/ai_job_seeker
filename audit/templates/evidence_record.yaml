@@ -2,7 +2,9 @@
 #
 # Usage:
 #   cp this file to audit/runs/<run_id>.yaml and populate all fields.
-#   Validate with: python3 scripts/distill_harness.py evidence-validate --record audit/runs/<run_id>.yaml
+#   Validate with (consumer repo, PCO checked out alongside):
+#     uv run python3 ../ai_agent_pco/scripts/distill_harness.py evidence-validate --record audit/runs/<run_id>.yaml
+#   Inside the PCO itself the script path is scripts/distill_harness.py.
 #
 # Append-only once closed_at is set (operations rule).
 # run_id must be taken from .claude/current_run_id — never generated mid-run.
@@ -34,7 +36,7 @@ tool_calls: []              # ordered sequence of tool invocations
   #   outcome: success
 
 verification_commands: []   # MUST contain re-runnable commands with recorded output
-  # - command: "python3 scripts/distill_harness.py governed-repo-validate --repo ."
+  # - command: "uv run python3 ../ai_agent_pco/scripts/distill_harness.py governed-repo-validate --repo ."
   #   output: |
   #     (paste full command output here)
   # - command: "bash scripts/test_expiry_enforcement.sh"
