@@ -16,10 +16,6 @@ behaviour in [AI.md](AI.md).
 - `implementation/job_seeker/config/`: the YAML config, plus the gitignored `profile/` and `output/` folders.
 - `implementation/job_seeker/src/ai_job_seeker/`: the package (described below).
 - `implementation/job_seeker/tests/`: 32 tests across ingest, match and backend modes.
-- `_build_7_section_shortlist.py` at the repo root: a stray one-off script that merges seven
-  per-section shortlist JSONs (A–G). Nothing in the docs or skills calls it. Its `sys.path` insert
-  resolves outside the repo, and it sits outside the config-repo structure. Its status is
-  unverified, so treat it as not part of the pipeline.
 
 ## Components
 
