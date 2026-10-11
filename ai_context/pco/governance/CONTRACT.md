@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Qwen, Trae, GitHub Copilot) operating in this repository, and the **superset** that can be synced into other repositories.
+`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Trae, GitHub Copilot; Qwen wiring kept but no longer in use) operating in this repository, and the **superset** that can be synced into other repositories.
 
 This is an operational surface, not “documentation”. It is the continuity layer that governs assistant behaviour and makes runs reproducible.
 

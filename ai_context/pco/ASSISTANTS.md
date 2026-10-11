@@ -1,6 +1,6 @@
 # AI Assistant Guide — Platform (PCO)
 
-**Shared context for all coding assistants (Claude, Qwen, Trae, GitHub Copilot).**
+**Shared context for all coding assistants (Claude, Trae, GitHub Copilot).** Qwen Code is no longer in use (operator, 2026-10-11); its `.qwen/` wiring and `QWEN.md` are kept, not purged.
 
 **Read this BEFORE starting any work.**
 
