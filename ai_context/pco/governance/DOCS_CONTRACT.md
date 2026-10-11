@@ -52,7 +52,7 @@ All other TODO files are filed under `docs/todo/`.
 |----------|---------|
 | `docs/TODO.md` | Open initiatives (pointer + status) and completed section. One file, root only. |
 | `docs/todo/<initiative>.md` | Active anchor docs for named multi-session initiatives. Session continuity artefacts. |
-| `docs/todo/archive/` | Closed initiative anchor docs. Retained briefly for reference; delete when no longer needed — git holds the history. |
+| (no archive) | A completed anchor doc is deleted once its durable facts are moved into code or docs; its Completed row in `docs/TODO.md` cites the commit (`git show <hash>:<path>`). |
 
 **Consequence**: named `TODO_<X>.md` files in the docs root make it impossible to distinguish the
 live backlog from session artefacts and historical records at a glance.

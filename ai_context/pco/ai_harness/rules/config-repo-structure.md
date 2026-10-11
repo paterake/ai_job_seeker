@@ -14,8 +14,9 @@ filled by whatever path is convenient in the moment.
 ## Fixed Homes (Required)
 
 - `cfg/` — runtime configuration the platform reads (config files and config trees).
-- `docs/` — human-facing docs. `docs/todo/` holds active backlog anchors; `docs/todo/archive/`
-  holds completed ones.
+- `docs/` — human-facing docs. `docs/todo/` holds active backlog anchors only. A completed
+  anchor is deleted once its durable facts are moved into code or docs; its Completed row in
+  `docs/TODO.md` cites the commit (`git show <hash>:<path>`).
 - `scripts/` — project glue only. Mechanism code lives in the platform repo, never here.
 - Root holds **only** `README.md` plus these folders. No loose config, docs, or backlog files at
   the root.

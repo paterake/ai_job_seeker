@@ -41,7 +41,7 @@ Check each trigger. If trigger is true and doc is absent = blocker.
 
 - [ ] `docs/TODO.md` is the only TODO file in the docs root
 - [ ] Active initiative anchor docs are under `docs/todo/`
-- [ ] Closed initiative docs are under `docs/todo/archive/` or deleted
+- [ ] Completed anchor docs are deleted (no `docs/todo/archive/`) once their durable facts are in code or docs; each Completed row in `docs/TODO.md` cites the commit (`git show <hash>:<path>`)
 - [ ] No `TODO_<X>.md` files sitting in the docs root
 
 ### 4) Segregation
@@ -98,7 +98,7 @@ For each failing check:
 2. **Required doc missing (content exists elsewhere in wrong doc)** — inventory the source doc first; extract and move the relevant content to the new doc; remove it from the source. Do not duplicate.
 3. **Content in the wrong doc** — inventory the doc; map each section to its correct destination; move sections one at a time; verify the source doc is empty of misplaced content before closing.
 4. **Superseded doc to retire** — read in full; confirm every section is either present in the canonical source or explicitly redundant. Only then delete or archive.
-5. **TODO file misplaced** — move intact to `docs/todo/` or `docs/todo/archive/`; update `docs/TODO.md` index. Structural move — no inventory needed.
+5. **TODO file misplaced** — move intact to `docs/todo/` if active; if completed, move its durable facts into code or docs and delete it, citing the commit in its `docs/TODO.md` Completed row; update `docs/TODO.md` index. Structural move — no inventory needed.
 6. **PRD references implementation files** — rewrite those references to contract language; preserve all non-implementation content.
 7. **Extension doc undiscoverable** — add a link from `ARCHITECTURE.md` or `README.md`; do not move the doc.
 
