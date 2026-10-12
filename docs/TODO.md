@@ -43,6 +43,9 @@ kiera-job-search skill dependency text (git-tag pin, no sibling check), 2026-10-
 
 ### Operator-held: API key install note (left as-is by operator decision, 2026-10-11)
 
+Covered by governance exception `EXC-2026-10-12-001` (expires 2027-10-12) in
+[exception_registry.yaml](../ai_context/project/governance/exception_registry.yaml).
+
 
 **Still todo (user action — blocks live ingest)**
 1. Install Adzuna credentials (already staged) + (optionally) Reed / The Muse into the canonical on-disk layout:
