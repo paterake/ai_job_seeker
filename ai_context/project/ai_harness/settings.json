@@ -1,5 +1,5 @@
 {
-  "_comment": "Project-owned harness settings, symlinked into .claude/.trae/.qwen. Hook paths are harness-agnostic (resolved from the git root) so the same file works under every harness. Add project-specific hooks below the governed baseline.",
+  "_comment": "Project-owned harness settings, symlinked into .claude/.trae. Hook paths are harness-agnostic (resolved from the git root) so the same file works under every harness. Add project-specific hooks below the governed baseline.",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -22,6 +22,10 @@
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_exception_expiry.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_capability_decision.sh\""
           },
           {
             "type": "command",
