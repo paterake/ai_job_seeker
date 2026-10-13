@@ -61,7 +61,7 @@ Governance defines:
 - Review process for new tools (security, safety, operational impact)
 - Deprecation and migration rules
 
-Tool selection discipline — avoid near-duplicate tools; name the failure mode a tool prevents; treat MCP as supply-chain risk: [governance.md](../ai_harness/rules/governance.md).
+Tool selection discipline — avoid near-duplicate tools; name the failure mode a tool prevents; treat MCP as supply-chain risk; integrate vendors natively, never through home-grown wrappers: [governance.md](../ai_harness/rules/governance.md).
 
 ### Entitlements and risk tiers
 
@@ -107,6 +107,7 @@ checks the substance of that choice.
 Canonical enforcement:
 - Edit-tool contract, approval gates (effective oversight — competent overseer, no rubber-stamp — and segregation of duties at go-live, author ≠ approver), hooks vs guidance: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
 - Tool selection discipline, MCP supply-chain risk, OSS preference: [governance.md](../ai_harness/rules/governance.md)
+- Native first (integrate through the vendor's or platform's own plugin, SDK or extension points; no wrapper CLIs, adapter skills or glue): [governance.md](../ai_harness/rules/governance.md)
 - Vendor procurement / TPRM (completed third-party risk assessment before adoption) and access recertification: [governance.md](../ai_harness/rules/governance.md)
 - Telemetry contract for tool calls, tool registry requirements: [operations.md](../ai_harness/rules/operations.md)
 

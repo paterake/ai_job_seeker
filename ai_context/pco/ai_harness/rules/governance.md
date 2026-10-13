@@ -154,6 +154,21 @@ For the full documentation contract (required doc set, segregation rules, PRD au
 - Do not reach for a model where a deterministic mechanism is exact, cheaper, and auditable.
 - The design review question is not "can code do this?" but "which driver best fits the goal and evidence obligations?"
 
+## Native First
+
+- Integrate any vendor, model, tool or platform through its native integration: its own plugin or
+  skill, SDK, API, or the host platform's extension points (for example Claude Code skills, hooks
+  and MCP). Do not build or maintain wrapper CLIs, adapter skills or glue layers to integrate it.
+- Use what the native integration offers; scope its use through the vendor's approval record, not
+  through extra layers. Platform controls (`operations.md`, `security-threat-model.md`) still apply.
+- If no native path exists for a use, that use is not integrated: say so; do not build a bridge.
+- This does not ban the one shared, governed call surface per vendor that *AI Infrastructure
+  Primitives* and `operations.md` require for product mechanism. Behaviour changes there are config,
+  not new layers.
+- **Consequence:** a wrapper is a second integration to maintain and creates friction; it drifts from
+  the vendor and duplicates what already exists. Observed 2026-10-13, when a custom screening CLI, its
+  skill and duplicate pipeline judge modes were built and then reverted.
+
 ## Tool Selection Discipline
 
 Fewer, focused tools outperform a large overlapping toolset.
