@@ -58,7 +58,7 @@ Governance defines, per role:
 
 ### Autonomy spectrum behaviour rules
 
-Canonical anchors: [governance/HUB.md](../governance/HUB.md) and the PCO governance contract (`docs/concept/PCO_CONTRACT.md` in the PCO repo).
+Canonical anchor: [governance/HUB.md](../governance/HUB.md).
 
 ### Policy injection semantics
 

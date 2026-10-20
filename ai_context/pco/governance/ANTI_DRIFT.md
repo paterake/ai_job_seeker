@@ -20,8 +20,8 @@ This is a governance contract for the agent harness.
 
 ### Commands
 
-- `docs/ops/CLI.md` is the canonical source for commands a human should run.
-- `docs/ops/CLI.md` must not restate behavioural semantics; it links to `ai_context/pco/governance/CONTRACT.md`.
+- `docs/RUNNERS.md` is the canonical source for commands a human should run.
+- `docs/RUNNERS.md` must not restate behavioural semantics; it links to `ai_context/pco/governance/CONTRACT.md`.
 
 ### Documentation contract
 
@@ -49,13 +49,13 @@ This is a governance contract for the agent harness.
 
 ### If you change a script under `scripts/`
 
-- If the change affects how a human runs the system, update `docs/ops/CLI.md` in the same change set.
+- If the change affects how a human runs the system, update `docs/RUNNERS.md` in the same change set.
 - If the change affects sync semantics or target repo shape, update `ai_context/pco/governance/CONTRACT.md` in the same change set.
 
 ### If you change `ai_context/pco/governance/CONTRACT.md`
 
-- Update `docs/ops/CLI.md` only if commands or flags changed.
-- Otherwise keep `docs/ops/CLI.md` unchanged and rely on linking to avoid drift.
+- Update `docs/RUNNERS.md` only if commands or flags changed.
+- Otherwise keep `docs/RUNNERS.md` unchanged and rely on linking to avoid drift.
 
 ### If you change `ai_context/pco/governance/DOCS_CONTRACT.md`
 

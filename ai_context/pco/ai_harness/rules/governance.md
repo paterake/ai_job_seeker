@@ -77,7 +77,7 @@ A path or wiring change is not a driver decision and needs no record.
 - Never invoke raw `python` or `python3` in this governed workspace. Use `uv run python3 ...` instead.
 - This applies to every Python execution path: scripts, validators, one-liners, tests, and ad-hoc local commands.
 - Do not introduce `pip`/`requirements.txt`, Poetry, Pipenv, Conda, or ad-hoc virtualenv workflows.
-- If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock` and keep commands in `docs/ops/CLI.md` (do not duplicate runbooks across multiple docs).
+- If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock` and keep commands in `docs/RUNNERS.md` (do not duplicate runbooks across multiple docs).
 
 ## Code Reuse Gate
 
