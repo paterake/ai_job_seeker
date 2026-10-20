@@ -39,7 +39,7 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 ## Capability Decisions Are Reviewed, Not Gated
 
 The driver choice for a new content-interpretation mechanism (`governance.md` → Driver Selection) is checked at
-task boundary / code review, where `review_capability_fit.py --staged` can screen the substance: bespoke
+task boundary / code review, where the reviewer screens the substance: bespoke
 deterministic machinery solving a semantic problem, or a model used where exact derivation was available.
 No hook gates it. **Consequence:** a commit gate can prove only that a record exists, not that the choice is
 right, so it adds a step to every commit without catching a wrong driver.

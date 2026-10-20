@@ -18,12 +18,6 @@ capabilities:
     stage_since: "2026-05-19"
     owner: rpatel
     evidence: "scripts/distill_harness.py governance-audit provides a heuristic contradiction scan across ai_context (canonical rules, governance contracts, and spoke narratives)."
-  - name: capability_fit_review_sensor
-    tier: 2
-    stage: emerging
-    stage_since: "2026-09-14"
-    owner: rpatel
-    evidence: "scripts/review_capability_fit.py surfaces parser-/extractor-shaped staged changes and forces the explicit-vs-inference review questions at task boundary / code review."
   - name: skill_sync_pco
     tier: 1
     stage: established
