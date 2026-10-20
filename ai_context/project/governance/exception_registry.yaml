@@ -12,10 +12,10 @@ exceptions:
       (operator, 2026-10-12, APR-2026-10-12-001).
     owner: operator
     granted_by: operator
-    granted: 2026-10-12
+    granted: "2026-10-12"
     # One year: the registry requires an expiry; set by the directing session's
     # instruction, not by the operator. Re-decide (rotate or renew) before it lapses.
-    expires: 2027-10-12
+    expires: "2027-10-12"
     scope: >-
       The Adzuna app_id and app_key values in the operator-held API key install note of
       docs/TODO.md, and the same values in git history (first committed 34beb15,
