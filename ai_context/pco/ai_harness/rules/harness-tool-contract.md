@@ -46,14 +46,16 @@ Required record shape: `governance.md` → Capability-Decision Record (template:
 `audit/templates/capability_decision_record.md`).
 
 Enforcement semantics:
-- The hook enforces that a decision record exists — it denies the commit / PR command otherwise — in repos
-  whose settings wire it; it fails open when its path/keyword heuristic does not recognise the change as
-  content-interpretation-shaped. It does **not** prove the decision is correct.
+- A git `pre-commit` hook enforces that a staged decision record exists, and refuses the commit otherwise, in
+  every clone whose `core.hooksPath` points at the PCO hooks (whichever tool commits). It fails open when its
+  path/keyword heuristic does not recognise the change as content-interpretation-shaped. It does **not** prove
+  the decision is correct. **Consequence:** a PreToolUse gate runs before the command, so a single call that
+  creates, stages and commits a file passed it unseen (observed 2026-10-20); only the staged tree is reliable.
 - The corresponding behavioural sensor is a required task-boundary / code-review step that screens for
   the substance of the decision: bespoke deterministic machinery solving a semantic problem, or a model
   being used where exact derivation was available.
-- Consumer repos own their `settings.json`, so the platform distributes the hook script and the
-  baseline settings template; conformance requires the project-owned settings to wire it.
+- `core.hooksPath` is clone-local, so `sync`/`wire` and the SessionStart setup hook set it, and
+  `validate_harness_wiring.py` fails when it is not set.
 
 ## Hooks: Guidance vs Enforcement
 
@@ -79,7 +81,8 @@ The hooks the PCO ships, what each needs and what it does when a tool is missing
   and never passes that call silently.
   **Consequence:** a gate that passes when `jq` or `ruby` is missing is enforcement that silently does not
   happen (observed 2026-10-20: every gate failed open with a tool off PATH).
-- Cloud sessions provision the gates' tools through the `setup_cloud_session.sh` SessionStart hook, which
-  every `.claude/settings.json` wires (`validate_harness_wiring.py` fails otherwise).
+- Cloud sessions provision the gates' tools, and every session sets `core.hooksPath`, through the
+  `setup_cloud_session.sh` SessionStart hook, which every `.claude/settings.json` wires (`validate_harness_wiring.py`
+  fails otherwise).
 
 **Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.

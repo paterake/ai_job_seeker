@@ -88,11 +88,11 @@ Governance defines:
 ### Capability-decision hook distribution
 
 The platform distributes hook scripts and the baseline `settings.json` template that consumer repos
-wire into their project-owned harness settings. This includes the capability-decision gate for
-parser-/extractor-shaped content-interpretation changes: the hook denies the commit / PR-creation
-command when no valid decision record is staged (a PreToolUse `deny`, which blocks the call; it applies
-only where a consumer's settings wire the hook and detection is heuristic), while the review sensor
-checks the substance of that choice.
+wire into their project-owned harness settings. The capability-decision gate for parser-/extractor-shaped
+content-interpretation changes is a git `pre-commit` hook instead, reached through `core.hooksPath`
+(set by `sync`/`wire` and the SessionStart setup hook): it refuses the commit when no valid decision record
+is staged, whichever tool commits. It runs only in a clone whose `core.hooksPath` points at it, `--no-verify`
+skips it, and detection is heuristic; the review sensor checks the substance of the choice.
 
 ## Artefacts and Surfaces (examples)
 

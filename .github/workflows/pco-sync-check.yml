@@ -1,0 +1,20 @@
+# Fails when the PCO-synced files (ai_context/pco/ and the root AGENTS.md) differ from the manifest the
+# last sync wrote. They are PCO-owned: fix a failure by re-syncing from the PCO, never by editing here.
+name: PCO sync check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pco-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Synced PCO files match ai_context/pco/.sync.sha256
+        run: |
+          m=ai_context/pco/.sync.sha256
+          grep -v '^#' "$m" | sha256sum --check --strict --quiet \
+            && diff <(grep -v '^#' "$m" | cut -c67- | LC_ALL=C sort) \
+                    <({ find ai_context/pco -type f ! -path "$m"; echo AGENTS.md; } | LC_ALL=C sort) \
+            || { echo "::error::PCO-synced files differ from $m. Re-run distill_harness.py sync from the PCO; never hand-edit them."; exit 1; }

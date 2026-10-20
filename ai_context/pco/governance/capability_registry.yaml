@@ -23,7 +23,7 @@ capabilities:
     stage: emerging
     stage_since: "2026-09-14"
     owner: rpatel
-    evidence: "ai_context/pco/ai_harness/hooks/check_capability_decision.sh returns a PreToolUse deny (hookSpecificOutput.permissionDecision: deny) that blocks the commit / PR-creation command when parser-/extractor-shaped changes are staged without a valid capability-decision record; it exits silently otherwise. Detection is a path/keyword heuristic, enforced only where a repo's settings wire the hook. Regression: scripts/test_capability_decision_gate.sh."
+    evidence: "ai_context/pco/ai_harness/hooks/pre-commit (a git hook, reached through core.hooksPath) aborts the commit when parser-/extractor-shaped changes are staged without a valid staged capability-decision record; it exits silently otherwise. Detection is a path/keyword heuristic, enforced only in clones whose core.hooksPath points at the PCO hooks; --no-verify skips it. Regression: scripts/test_capability_decision_gate.sh."
   - name: capability_fit_review_sensor
     tier: 2
     stage: emerging

@@ -1,6 +1,13 @@
 # Agent Hooks
 
-The gate hooks below return a PreToolUse decision inside `hookSpecificOutput`. When a gate trips,
+`pre-commit` is a git hook, not a Claude Code hook: git runs it for every commit made in a clone whose
+`core.hooksPath` is `ai_context/pco/ai_harness/hooks`, whichever tool commits. `sync`, `wire` and
+`init-consumer` set that, and so does `setup_cloud_session.sh` in any Claude Code session, when it is unset.
+It checks only what is staged, which is what the commit records, so a command that creates, stages and commits a
+file in one call cannot pass it. A PreToolUse hook runs before the command and could not see such a file
+(observed 2026-10-20). It denies by printing the deny shape on stderr and exiting 1, and it needs only git.
+
+The Claude Code gate hook below returns a PreToolUse decision inside `hookSpecificOutput`. When a gate trips,
 the hook prints `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
 "permissionDecisionReason": <structured reason>}}` and Claude Code blocks the tool call, in interactive
 and non-interactive sessions alike. When a gate does not trip, the hook exits 0 with no output, so the
@@ -12,13 +19,11 @@ Claude Code shows and which blocks the call. Exit 2 needs no `jq`.
 
 | Hook | Event | Needs | When a tool or its config is missing |
 |---|---|---|---|
-| `check_capability_decision.sh` | PreToolUse(Bash) | jq, git | No jq: blocks commit / PR-creation commands, and passes other calls. No git: passes, because there is nothing to commit. |
+| `pre-commit` | git pre-commit | git | Without git nothing is committed. Not in `core.hooksPath`: it does not run (`validate_harness_wiring.py` fails). |
 | `check_execution_limits.sh` | PreToolUse(Bash) | jq, ruby | No jq, no ruby, or no positive `max_tool_calls` in the limits file: blocks every shell call, because a session it cannot count is unbounded. |
-| `setup_cloud_session.sh` | SessionStart | apt-get | Runs only when `CLAUDE_CODE_REMOTE=true`. Installs whichever of jq, ruby and git is missing. If that fails it prints one line to stdout, which Claude Code adds to the session context, and lets the session start; the gates then block as above. |
+| `setup_cloud_session.sh` | SessionStart | git; apt-get (cloud) | Sets `core.hooksPath` when it is unset (no git: skipped). When `CLAUDE_CODE_REMOTE=true` it also installs whichever of jq, ruby and git is missing. If either step fails it prints one line to stdout, which Claude Code adds to the session context, and lets the session start; the gates then behave as above. |
 
-- `check_capability_decision.sh`: denies commit / PR-creation commands (`capability_decision_required` / `capability_decision_invalid`) for parser-/extractor-shaped content-interpretation changes unless a valid capability-decision record is present. Detection is a path/keyword heuristic over every file the command could commit: staged, unstaged and untracked. The hook runs before the command, so checking only staged files let `git add … && git commit` and `git commit -a` through (observed 2026-10-20). Two consequences of that over-approximation:
-  - a stray untracked parser-shaped file blocks commits until it has a record or is gitignored;
-  - an untracked record satisfies the gate even when the command won't commit it.
+- `pre-commit`: refuses the commit (`capability_decision_required` / `capability_decision_invalid`) for staged parser-/extractor-shaped content-interpretation changes unless a valid capability-decision record is staged with them. Detection is a path/keyword heuristic over the staged files. `git commit --no-verify` skips it; a PreToolUse check against that is added only on evidence that agents do it (operator, 2026-10-20).
 - `check_execution_limits.sh`: counts Bash calls per session in `.claude/tool_calls/<session_id>` (falls back to `.claude/tool_call_count` when the payload has no `session_id`) and denies (`execution_limit_hit`) once the count reaches `max_tool_calls`, writing `.claude/execution_limit_hit`. Every session starts at 0.
 
 Exception expiry is not a hook: `exception-registry-validate` (run by `governed-repo-validate`) fails on an
