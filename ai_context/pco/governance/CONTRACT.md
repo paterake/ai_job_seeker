@@ -126,7 +126,7 @@ As a result, its conformance declarations are not “additive only”. It must d
 - Enforcement anomalies (false positive/false negative) trigger review and an explicit governance decision, not just logging.
 - Rules are examined at a regular cadence regardless of triggers; the cadence record is part of governance evidence.
 - Policies are versioned and rolled out deliberately; unreviewed or “floating” governance changes are prohibited.
-- Tier 3/4 capability changes require a traceable approval record artefact; the record is stored in `audit/approvals/` (using `audit/templates/approval_record.md`) and referenced from the change evidence (e.g., capability registry `evidence` field or the change proposal).
+- Tier 3/4 capability changes require a traceable approval. A PCO-owned capability is approved by its entry in the PCO capability registry. A repo-owned one needs an approval record in that repo's `audit/approvals/` (template `ai_context/pco/templates/approval_record.md`), referenced from the change evidence.
 
 ## Exceptions (Registry Contract; expiry checked by `governed-repo-validate`, not by a hook)
 

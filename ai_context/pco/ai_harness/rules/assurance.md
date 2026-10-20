@@ -70,7 +70,7 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 
 ## Incident Capture (Required)
 
-- When an incident or near miss occurs, file an incident report in `audit/incidents/` using `audit/templates/incident_report.md`.
+- When an incident or near miss occurs, file an incident report in `audit/incidents/` using `ai_context/pco/templates/incident_report.md`.
 - If the incident produces a governance change, the incident report must cross-reference the affected governance surface(s): rule file(s) under `ai_context/pco/ai_harness/rules/` and/or registry entry IDs in `ai_context/pco/governance/*_registry.yaml`.
 - If a governance change is justified by an incident, the change record (approval, PR, or run evidence) must link back to the incident report.
 

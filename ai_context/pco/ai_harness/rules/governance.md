@@ -62,8 +62,7 @@ Any task with a material inference step is AI-driven by default. Do not call a s
 ### Capability-Decision Record
 
 When a new parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, involves a real
-choice between drivers, record it (template `audit/templates/capability_decision_record.md`, or the commit
-message for a small change):
+choice between drivers, record it in the commit message or PR description (fields: `ai_context/pco/templates/capability_decision_record.md`):
 - task type,
 - chosen driver,
 - why the other driver was not chosen,

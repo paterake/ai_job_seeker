@@ -53,4 +53,4 @@ capabilities:
     stage: emerging
     stage_since: "2026-05-19"
     owner: rpatel
-    evidence: "Approved via APR-2026-05-19-001 (audit/approvals/2026-05-19_APR-2026-05-19-001_assistant_repo_mutation.md). Scope: assistant ability to modify repo state via controlled edit/delete/command primitives; bounded by platform rules requiring audit trails + human approval for governance changes."
+    evidence: "PCO-owned; approved by this registry entry. Scope: assistant ability to modify repo state via controlled edit/delete/command primitives; bounded by platform rules requiring audit trails + human approval for governance changes."
