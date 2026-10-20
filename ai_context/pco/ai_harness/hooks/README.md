@@ -17,8 +17,7 @@ Claude Code shows and which blocks the call. Exit 2 needs no `jq`.
 - `check_execution_limits.sh`: counts Bash calls per session in `.claude/tool_calls/<session_id>` (falls back to `.claude/tool_call_count` when the payload has no `session_id`) and denies (`execution_limit_hit`) once the count reaches `max_tool_calls`, writing `.claude/execution_limit_hit`. Every session starts at 0.
 
 Not hooks:
-- **Capability decisions** are guidance (`governance.md` → Driver Selection) plus the optional
-  `review_capability_fit.py` sensor at code review. A commit gate for them was retired on 2026-10-20: every record it
-  required was paperwork for a non-parser change, and it proved only that a record existed (operator decision).
+- **Capability decisions** are guidance (`governance.md` → Driver Selection), reviewed at code review
+  (`harness-tool-contract.md` → Capability Decisions Are Reviewed, Not Gated).
 - **Exception expiry:** `exception-registry-validate` (run by `governed-repo-validate`) fails on an
   expired exception. An expired exception can be renewed or removed, so it is not a must-never-fail gate.

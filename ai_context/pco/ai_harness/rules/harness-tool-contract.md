@@ -41,9 +41,8 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 The driver choice for a new content-interpretation mechanism (`governance.md` → Driver Selection) is checked at
 task boundary / code review, where `review_capability_fit.py --staged` can screen the substance: bespoke
 deterministic machinery solving a semantic problem, or a model used where exact derivation was available.
-No hook gates it. **Consequence:** a commit gate (2026-09 to 2026-10-20) proved only that a record existed;
-every record it required was paperwork for a non-parser change, so it cost every commit and caught nothing
-(operator decision, 2026-10-20). Reinstate a gate only on evidence of a wrong-driver change reaching a commit.
+No hook gates it. **Consequence:** a commit gate can prove only that a record exists, not that the choice is
+right, so it adds a step to every commit without catching a wrong driver.
 
 ## Hooks: Guidance vs Enforcement
 
@@ -68,8 +67,6 @@ The hooks the PCO ships, what each needs and what it does when a tool is missing
   and never passes that call silently.
   **Consequence:** a gate that passes when `jq` or `ruby` is missing is enforcement that silently does not
   happen (observed 2026-10-20: every gate failed open with a tool off PATH).
-- The PCO is used from VS Code (Claude Code, Copilot; Remote Control drives the same local session). Cloud
-  sessions get the committed context natively and need no PCO-specific setup; add one only on evidence of need
-  (operator decision, 2026-10-20).
+- The context reaches every session as committed files; the PCO adds no session-environment setup.
 
 **Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.
