@@ -26,7 +26,7 @@ applyTo: "**/*.py"
 - Every LLM call must emit a structured telemetry event including: `run_id`, model identifier, input/output sizes, latency, and token counts when available.
 - Every tool call must emit a structured telemetry event including: `run_id`, tool identifier (and schema version), input/output sizes, latency, and error/degrade fields when applicable.
 - Input/output hashes are added to both events where the solution is High/Critical risk or declares an audit or
-  replay need. *Source: GenAI research record (benchmark: hashes stronger than typical); basis: research-derived.*
+  replay need.
 - Default operational logs and telemetry must not contain raw prompts, raw tool payloads, or raw retrieved content; only hashes, sizes, identifiers, and controlled metadata are permitted by default.
 
 ## Run Review

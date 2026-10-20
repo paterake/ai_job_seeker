@@ -7,7 +7,7 @@ globs:
   - "**/retriev*/**"
   - "**/ingest*/**"
   - "**/settings.json"
-basis: research-derived
+basis: primary-standard
 spoke: security
 paths:
   - "**/agent*/**"
@@ -47,7 +47,6 @@ A RAG pipeline with tool use satisfies all three conditions by design.
 Every agent treats untrusted content as data, reads it in an isolated context, and never combines it with
 credential access or external write capabilities. A High/Critical solution also registers every content source
 it can read in the tier table below; for other solutions the table is optional.
-*Source: GenAI research record (benchmark: the principle is standard, the formal taxonomy stronger than typical).*
 
 | Tier | Examples | Permitted agent action |
 |------|----------|----------------------|

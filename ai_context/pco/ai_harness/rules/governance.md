@@ -50,7 +50,6 @@ Choose the driver that fits the task:
 - **Simplest pattern first.** An AI-driven solution starts as a single model call; it becomes a fixed workflow,
   then an agent, only when evidence shows the simpler pattern fails the task. **Consequence:** an agent where a
   call would do adds loops, cost and failure surface that its evals and bounds must then cover.
-  *Source: GenAI research record (Anthropic "Building effective agents"); basis: research-derived.*
 
 ### Explicit Answer vs Inference Test
 

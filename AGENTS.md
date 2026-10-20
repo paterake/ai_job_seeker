@@ -57,5 +57,4 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
   genie-risk failure.*
 - Adopting a tool or MCP server, or building agents that read untrusted content: `security-threat-model.md`.
 
-Provenance (`governance-provenance.md`): "Before you start", "Security" and the first two "While you work"
-items are `research-derived`, advisory until independently validated; the rest are `operational-experience`.
+Provenance (`governance-provenance.md`): `operational-experience`.

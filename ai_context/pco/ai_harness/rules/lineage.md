@@ -20,13 +20,11 @@ applyTo: "**/*.py"
   solution's risk tier. High is any irreversible, destructive, outbound or financial action; a high tool sets
   `requires_approval: true` (`governed-repo-validate` fails otherwise) and runs behind the human checkpoint in
   `operations.md`.
-  *Source: GenAI research record (OpenAI practical guide to building agents); basis: research-derived.*
 - Every model endpoint must have a stable identifier and an allowlist entry; runs must record the model identifier used.
 - Tools, workflows, and policy packs shared across repos or teams use semantic versioning; breaking changes
   ship with a migration note and a compatibility window. A surface used in one repo needs only a stable version
-  identifier. *Source: GenAI research record (benchmark: semver stronger than typical); basis: research-derived.*
+  identifier.
 - Downstream repos must pin platform dependencies and model snapshots explicitly; "floating latest" is prohibited for governed execution surfaces.
-  *Model snapshots — source: GenAI research record (the field pins model snapshots).*
 
 ## Lineage and Evidence
 

@@ -22,11 +22,10 @@ applyTo: "**/eval*/**,**/*eval*.py,**/*eval*.yaml,audit/**"
 ## Error Analysis Before Gates
 
 - Before building an eval gate, read real traces and failures and name the failure modes. The first suite is
-  20–50 tasks drawn from those failures, scored by binary pass/fail checks, not generic metrics.
+  20–50 tasks drawn from those failures, scored by explicit pass/fail checks, not generic metrics.
 - Keep capability evals (new behaviour, expected to start low) separate from regression evals (expected to stay
   passing). An LLM judge is validated against human labels before it gates.
 - **Consequence:** a suite built before any failure is seen measures guesses, so it passes while real failures ship.
-  *Source: GenAI research record (Anthropic "Demystifying evals for AI agents"; hamel.dev evals FAQ); basis: research-derived.*
 
 ## Eval as a Gate (Non-Negotiable)
 
@@ -42,7 +41,6 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 - **Output-level** (always): score the final artefact against explicit criteria
 - **Trajectory-level** (agents and tool loops): score the sequence of tool calls and decisions, not just the final output
 - **Thread-level** (multi-turn products only): score multi-turn coherence, not only individual turns.
-  *Source: GenAI research record (benchmark: thread-level stronger than typical); basis: research-derived.*
 
 ## Dataset Governance
 

@@ -33,5 +33,4 @@ applyTo: "**/*.py"
 - A tool rated `risk_tier: high` in its registry (`lineage.md`) runs only after a human approves that call;
   the stop is enforced in the runtime, not requested in the prompt. **Consequence:** an irreversible or
   outbound action taken on an injected or mistaken instruction cannot be undone afterwards.
-  *Source: GenAI research record (OpenAI practical guide to building agents); basis: research-derived.*
 - The control plane must support kill-switches scoped at least to: per-run and per-workflow; kill-switch activation must be recorded as evidence.
