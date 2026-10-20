@@ -203,5 +203,5 @@ Record this as a recurring class, not a one-off incident:
 Required structural response:
 - add a capability-fit rule,
 - treat AI-driven as a first-class peer to config-driven and data-driven,
-- require a capability-decision artefact for parser-/extractor-shaped work,
+- record the driver choice for parser-/extractor-shaped work where it was a real decision,
 - and run a task-boundary review sensor for capability-fit.

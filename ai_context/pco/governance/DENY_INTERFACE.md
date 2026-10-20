@@ -28,8 +28,6 @@ next_action:      <what the operator must do to unblock>
 | `capability_experimental` | Capability in Experimental lifecycle stage invoked without a recorded adoption escalation | Any |
 | `supervision_required` | Action requires a fully supervised workflow; autonomous execution not permitted at this tier | Critical |
 | `execution_limit_hit` | Emitted by the execution-limits hook when the tool-call budget is exhausted | Any |
-| `capability_decision_required` | Emitted by the `pre-commit` capability-decision hook: staged parser-/extractor-shaped change without a staged capability-decision record | Any |
-| `capability_decision_invalid` | Emitted by the `pre-commit` capability-decision hook: the staged capability-decision record is missing required sections | Any |
 
 ## Per-Tier Denial Shapes
 
@@ -42,10 +40,7 @@ next_action:      <what the operator must do to unblock>
 
 ## Current Enforcement Points
 
-The PCO hook `check_execution_limits.sh` returns the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When it does not trip it exits 0 with no output and the call goes through the normal permission flow. If it cannot run (a tool or its config is missing), it fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape. The git `pre-commit` hook prints the deny shape on stderr and exits 1, which aborts the commit: [hooks/README.md](../ai_harness/hooks/README.md). Limits of each hook:
-
-- Execution limits: the count is per session, so the limit bounds one session, not a run spanning several sessions.
-- Capability decision: detection is a path/keyword heuristic over the staged files; a content-interpretation change that matches neither passes silently. It runs only where `core.hooksPath` points at the PCO hooks, and `git commit --no-verify` skips it.
+The PCO hook `check_execution_limits.sh` returns the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When it does not trip it exits 0 with no output and the call goes through the normal permission flow. If it cannot run (a tool or its config is missing), it fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape: [hooks/README.md](../ai_harness/hooks/README.md). Its limit: the count is per session, so it bounds one session, not a run spanning several sessions.
 
 The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 

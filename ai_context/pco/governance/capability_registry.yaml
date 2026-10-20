@@ -18,12 +18,6 @@ capabilities:
     stage_since: "2026-05-19"
     owner: rpatel
     evidence: "scripts/distill_harness.py governance-audit provides a heuristic contradiction scan across ai_context (canonical rules, governance contracts, and spoke narratives)."
-  - name: harness_hook_capability_decision_gate
-    tier: 2
-    stage: emerging
-    stage_since: "2026-09-14"
-    owner: rpatel
-    evidence: "ai_context/pco/ai_harness/hooks/pre-commit (a git hook, reached through core.hooksPath) aborts the commit when parser-/extractor-shaped changes are staged without a valid staged capability-decision record; it exits silently otherwise. Detection is a path/keyword heuristic, enforced only in clones whose core.hooksPath points at the PCO hooks; --no-verify skips it. Regression: scripts/test_capability_decision_gate.sh."
   - name: capability_fit_review_sensor
     tier: 2
     stage: emerging

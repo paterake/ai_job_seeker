@@ -36,26 +36,14 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 - Go-live gates for High/Critical solutions add effective-oversight and segregation-of-duties
   obligations: [ENTERPRISE_OBLIGATIONS.md](../../governance/ENTERPRISE_OBLIGATIONS.md).
 
-## Capability-Decision Enforcement
+## Capability Decisions Are Reviewed, Not Gated
 
-Prose guidance is not enough for recurring capability-fit failures. When a change introduces a new
-parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, the harness must
-enforce that a capability-decision artefact exists before commit / PR creation.
-
-Required record shape: `governance.md` → Capability-Decision Record (template:
-`audit/templates/capability_decision_record.md`).
-
-Enforcement semantics:
-- A git `pre-commit` hook enforces that a staged decision record exists, and refuses the commit otherwise, in
-  every clone whose `core.hooksPath` points at the PCO hooks (whichever tool commits). It fails open when its
-  path/keyword heuristic does not recognise the change as content-interpretation-shaped. It does **not** prove
-  the decision is correct. **Consequence:** a PreToolUse gate runs before the command, so a single call that
-  creates, stages and commits a file passed it unseen (observed 2026-10-20); only the staged tree is reliable.
-- The corresponding behavioural sensor is a required task-boundary / code-review step that screens for
-  the substance of the decision: bespoke deterministic machinery solving a semantic problem, or a model
-  being used where exact derivation was available.
-- `core.hooksPath` is clone-local, so `sync`/`wire` and the SessionStart setup hook set it, and
-  `validate_harness_wiring.py` fails when it is not set.
+The driver choice for a new content-interpretation mechanism (`governance.md` → Driver Selection) is checked at
+task boundary / code review, where `review_capability_fit.py --staged` can screen the substance: bespoke
+deterministic machinery solving a semantic problem, or a model used where exact derivation was available.
+No hook gates it. **Consequence:** a commit gate (2026-09 to 2026-10-20) proved only that a record existed;
+every record it required was paperwork for a non-parser change, so it cost every commit and caught nothing
+(operator decision, 2026-10-20). Reinstate a gate only on evidence of a wrong-driver change reaching a commit.
 
 ## Hooks: Guidance vs Enforcement
 
@@ -70,7 +58,6 @@ Use a hook, not docs, for:
 - Blocking destructive bash commands (force push, `rm -rf`, hard reset)
 - Running typecheck / lint / tests after file edits
 - Requiring approvals before commits or PRs are created
-- Requiring a capability-decision artefact before parser-/extractor-shaped content-interpretation changes are committed
 - Any constraint where a single violation has irreversible consequences
 
 **The test**: if the constraint must hold even at the end of a long, saturated session — wire it as a hook.
@@ -81,8 +68,8 @@ The hooks the PCO ships, what each needs and what it does when a tool is missing
   and never passes that call silently.
   **Consequence:** a gate that passes when `jq` or `ruby` is missing is enforcement that silently does not
   happen (observed 2026-10-20: every gate failed open with a tool off PATH).
-- Cloud sessions provision the gates' tools, and every session sets `core.hooksPath`, through the
-  `setup_cloud_session.sh` SessionStart hook, which every `.claude/settings.json` wires (`validate_harness_wiring.py`
-  fails otherwise).
+- The PCO is used from VS Code (Claude Code, Copilot; Remote Control drives the same local session). Cloud
+  sessions get the committed context natively and need no PCO-specific setup; add one only on evidence of need
+  (operator decision, 2026-10-20).
 
 **Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.

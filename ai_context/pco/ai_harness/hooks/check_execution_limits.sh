@@ -16,7 +16,7 @@ fail_closed() {
 }
 for tool in jq ruby; do
     command -v "$tool" >/dev/null 2>&1 \
-        || fail_closed "$tool not found on PATH (install it; cloud sessions: setup_cloud_session.sh)"
+        || fail_closed "$tool not found on PATH (install it)"
 done
 
 payload="$(cat)"

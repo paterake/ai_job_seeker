@@ -85,14 +85,11 @@ Governance defines:
 - Regression protection coverage for such changes (contract tests + eval suites tied to representative workflows)
 - Rollout approach (compatibility windows, dual-write/dual-read where applicable, canarying, rollback readiness)
 
-### Capability-decision hook distribution
+### Hook distribution
 
 The platform distributes hook scripts and the baseline `settings.json` template that consumer repos
-wire into their project-owned harness settings. The capability-decision gate for parser-/extractor-shaped
-content-interpretation changes is a git `pre-commit` hook instead, reached through `core.hooksPath`
-(set by `sync`/`wire` and the SessionStart setup hook): it refuses the commit when no valid decision record
-is staged, whichever tool commits. It runs only in a clone whose `core.hooksPath` points at it, `--no-verify`
-skips it, and detection is heuristic; the review sensor checks the substance of the choice.
+wire into their project-owned harness settings. Capability decisions are not gated by a hook; they are
+reviewed at code review (`harness-tool-contract.md` → Capability Decisions Are Reviewed, Not Gated).
 
 ## Artefacts and Surfaces (examples)
 

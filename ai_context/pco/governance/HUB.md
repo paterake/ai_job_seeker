@@ -54,7 +54,7 @@ Recurring failure class: bespoke deterministic machinery built for semantic work
 is structural rather than rhetorical:
 - capability-fit rule in agent behaviour,
 - AI-driven recognised explicitly in governance vocabulary,
-- capability-decision artefact checked by a hook that denies the commit / PR command when a parser-/extractor-shaped change is staged without one (heuristic detection; enforced where a repo's settings wire the hook),
+- an optional capability-decision record (a commit gate for it was retired on 2026-10-20: it produced paperwork, not better decisions),
 - task-boundary review sensor screening the substance of the choice.
 
 ---

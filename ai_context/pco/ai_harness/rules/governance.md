@@ -61,13 +61,16 @@ Any task with a material inference step is AI-driven by default. Do not call a s
 
 ### Capability-Decision Record
 
-Before introducing a new parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, record:
+When a new parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, involves a real
+choice between drivers, record it (template `audit/templates/capability_decision_record.md`, or the commit
+message for a small change):
 - task type,
 - chosen driver,
 - why the other driver was not chosen,
 - and whether a config/prompt solution was considered.
 
-The hook only proves the decision was recorded; it does not prove the decision is correct. Correctness is screened by the capability-fit review sensor at task boundary / code review.
+No hook enforces this; correctness is screened by the capability-fit review sensor at task boundary / code review.
+A path or wiring change is not a driver decision and needs no record.
 
 ## Python Tooling (UV Only)
 

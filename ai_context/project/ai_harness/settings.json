@@ -11,16 +11,6 @@
           }
         ]
       }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/setup_cloud_session.sh\""
-          }
-        ]
-      }
     ]
   }
 }
