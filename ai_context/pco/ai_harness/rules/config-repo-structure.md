@@ -42,8 +42,7 @@ filled by whatever path is convenient in the moment.
 
 **Consequence:** an agent that takes the convenient path and dumps files at the root produces a repo
 that is unnavigable, hides deprecated material behind live material, and defeats the config-driven
-reuse the platform exists for. Observed in a 2026-09 config-repo cleanup, where an accreted
-root of loose config, backlog, and retired-pipeline artefacts had to be reorganised wholesale.
+reuse the platform exists for.
 
 Downstream repos own their own layout, but this structure is the default a coding agent must apply
 and preserve; a deviation requires an explicit, recorded decision. This is the repo-level companion

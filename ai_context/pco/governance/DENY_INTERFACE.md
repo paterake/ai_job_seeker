@@ -6,8 +6,7 @@
 ## Deny Response Shape
 
 The target shape for a denial event is these six fields. The current PCO hooks emit a subset:
-none emits `run_id` or `approval_record` (the retired push gate was the only one that emitted
-`approval_record`), and `check_execution_limits.sh` also omits `policy_set` (see Current Enforcement Points):
+none emits `run_id` or `approval_record`, and `check_execution_limits.sh` also omits `policy_set` (see Current Enforcement Points):
 
 ```
 run_id:           <stable run identifier propagated from entry point; "local" if outside a governed run>
