@@ -65,8 +65,8 @@ A constraint whose violation is reversible and caught by a validator (e.g. excep
 The hooks the PCO ships, what each needs and what it does when a tool is missing: [hooks/README.md](../hooks/README.md).
 - A gate hook fails closed when it cannot run: it blocks a call it governs with a one-line reason (exit 2),
   and never passes that call silently.
-  **Consequence:** a gate that passes when `jq` or `ruby` is missing is enforcement that silently does not
-  happen (observed 2026-10-20: every gate failed open with a tool off PATH).
+  **Consequence:** a gate that passes when a tool it needs is missing is enforcement that silently does not
+  happen.
 - The context reaches every session as committed files; the PCO adds no session-environment setup.
 
 **Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.

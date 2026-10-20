@@ -62,8 +62,6 @@ The governed repos themselves are listed in `ai_context/project/governance/consu
 - structured outputs and formatting rules
 - safe automation patterns (idempotency, replay, audit)
 
-**Concrete implementation reference:** none governed (`elt_lake` left PCO governance on 2026-10-20).
-
 ### 4) Platform Governance (ai_agent_pco)
 
 **Primary risk:** governance drift — rules, structure, or contracts diverge across the PCO and its consumer repos without anyone noticing.

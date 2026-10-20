@@ -2,13 +2,11 @@
 
 > Read on demand — not an auto-loaded rule. These obligations apply when a solution is taken to
 > enterprise production (High/Critical risk tier, personal data, external vendors, go-live), not to
-> routine coding-agent work. Moved out of the auto-loaded rules on 2026-10-20 so they stop costing
-> context in every session; their force is unchanged.
+> routine coding-agent work.
 
 ## Compliance Lifecycle
 
-**Status:** authored from an internal adversarial coverage test (2026-08-27). Wording is advisory
-until Legal/DPO sign-off (see `governance-provenance.md` → Independent Validation). These rules require
+**Status:** wording is advisory until Legal/DPO sign-off (see `governance-provenance.md` → Independent Validation). These rules require
 solutions to **declare and control** an obligation; they do not state the legal answer.
 
 ### Data Residency / Sovereignty / Cross-Border Transfer

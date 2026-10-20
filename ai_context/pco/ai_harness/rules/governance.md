@@ -188,7 +188,6 @@ For the full documentation contract (required doc set, segregation rules, PRD au
   Primitives* and `operations.md` require for product mechanism. Behaviour changes there are config,
   not new layers.
 - **Consequence:** a wrapper is a second integration to maintain and creates friction; it drifts from
-  the vendor and duplicates what already exists. Observed 2026-10-13, when a custom screening CLI, its
-  skill and duplicate pipeline judge modes were built and then reverted.
+  the vendor and duplicates what already exists.
 
 Adding a tool or MCP server: `security-threat-model.md` §4 (trust assessment and tool-selection test).
