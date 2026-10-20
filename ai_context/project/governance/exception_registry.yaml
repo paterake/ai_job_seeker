@@ -22,5 +22,5 @@ exceptions:
       2026-08-19). No other credential, file or service.
     status: active
     evidence: >-
-      ai_agent_pco audit/approvals/2026-10-12_APR-2026-10-12-001_operator_morning_decisions.md
-      (commit a789721), item 1.
+      ai_agent_pco `git show a789721:audit/approvals/2026-10-12_APR-2026-10-12-001_operator_morning_decisions.md`,
+      item 1 (audit/ removed from the PCO 2026-10-20).
