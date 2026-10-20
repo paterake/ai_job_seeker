@@ -1,6 +1,6 @@
 # Agent Core — governed repo
 
-Always loaded: Claude Code through `CLAUDE.md` (`@AGENTS.md`); Copilot, Codex, Cursor and others natively.
+Always loaded by Claude Code through `CLAUDE.md` (`@AGENTS.md`).
 The PCO syncs this file from `ai_context/pco/AGENTS.md`; never edit the root copy. Everything else loads on
 demand: path-scoped rules arrive with matching files, and the DMBOK spoke index is `ai_context/pco/ASSISTANTS.md`.
 The repo's own context starts at `ai_context/project/ASSISTANTS.md`.

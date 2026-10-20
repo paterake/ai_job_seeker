@@ -1,12 +1,5 @@
 ---
 description: Security threat model for agent harnesses — prompt injection, content trust classification, per-task privilege decomposition, MCP supply chain, non-impersonation. Loaded for any task involving tool use, retrieval, external content, or multi-agent workflows.
-globs:
-  - "**/agent*/**"
-  - "**/tool*/**"
-  - "**/*mcp*"
-  - "**/retriev*/**"
-  - "**/ingest*/**"
-  - "**/settings.json"
 basis: primary-standard
 spoke: security
 paths:
@@ -16,7 +9,6 @@ paths:
   - "**/retriev*/**"
   - "**/ingest*/**"
   - "**/settings.json"
-applyTo: "**/agent*/**,**/tool*/**,**/*mcp*,**/retriev*/**,**/ingest*/**,**/settings.json"
 ---
 
 > Governance narrative: [security spoke](../../security/README.md)

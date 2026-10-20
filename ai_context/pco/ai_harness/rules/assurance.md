@@ -1,10 +1,5 @@
 ---
 description: Assurance and eval governance rules. Loaded when editing eval code, eval datasets or audit records.
-globs:
-  - "**/eval*/**"
-  - "**/*eval*.py"
-  - "**/*eval*.yaml"
-  - "audit/**"
 basis: operational-experience
 spoke: assurance
 paths:
@@ -12,7 +7,6 @@ paths:
   - "**/*eval*.py"
   - "**/*eval*.yaml"
   - "audit/**"
-applyTo: "**/eval*/**,**/*eval*.py,**/*eval*.yaml,audit/**"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)

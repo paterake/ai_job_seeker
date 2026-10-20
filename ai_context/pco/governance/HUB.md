@@ -284,7 +284,7 @@ Because changes to `ai_agent_core` affect all consumers, its change control is s
 
 ### How rules are loaded
 
-Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` frontmatter loads at session start; a rule with `paths:` loads when the agent first reads or edits a matching file (Claude Code ignores the `globs:` key, which is kept for Trae). Every rule is path-scoped. The always-loaded core is the root `AGENTS.md` (synced from `ai_context/pco/AGENTS.md`), which `CLAUDE.md` imports and other tools read natively. Governance docs that need explicit reads are listed in the on-demand spoke index `ai_context/pco/ASSISTANTS.md`. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
+Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` frontmatter loads at session start; a rule with `paths:` loads when the agent first reads or edits a matching file. Every rule is path-scoped. The always-loaded core is the root `AGENTS.md` (synced from `ai_context/pco/AGENTS.md`), which `CLAUDE.md` imports. Governance docs that need explicit reads are listed in the on-demand spoke index `ai_context/pco/ASSISTANTS.md`. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
 
 ### Within-session enforcement
 

@@ -1,12 +1,9 @@
 ---
 description: Tracing and privacy-safe telemetry for LLM-calling modules — run_id propagation, span hygiene, telemetry event contract, post-run review. Loaded when editing Python, because model-calling modules carry no naming pattern.
-globs:
-  - "**/*.py"
 basis: operational-experience
 spoke: observability
 paths:
   - "**/*.py"
-applyTo: "**/*.py"
 ---
 
 > Governance narrative: [observability spoke](../../observability/README.md)

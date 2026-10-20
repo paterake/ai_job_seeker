@@ -32,6 +32,3 @@ The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.m
 | Backlog / multi-session work (anchor docs) | [AI_ASSISTANT_BACKLOG_CONTINUITY.md](governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md) |
 | Module docs and PRDs | [DOCS_CONTRACT.md](governance/DOCS_CONTRACT.md) |
 | Enterprise go-live (residency, data-subject rights, vendors, retention, FinOps, oversight) | [ENTERPRISE_OBLIGATIONS.md](governance/ENTERPRISE_OBLIGATIONS.md) |
-
-Copilot reads rules through `.github/instructions/` (one symlink per rule, scoped by `applyTo:`) and
-runs none of the hooks: a known gap (`harness-tool-contract.md`).

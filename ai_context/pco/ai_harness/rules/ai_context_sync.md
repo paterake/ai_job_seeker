@@ -1,12 +1,9 @@
 ---
 description: Sync trigger fired when any ai_context/ file is edited. Ensures prescriptive AI-facing changes propagate to human-facing documentation.
-globs:
-  - "ai_context/**"
 basis: operational-experience
 spoke: knowledge
 paths:
   - "ai_context/**"
-applyTo: "ai_context/**"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

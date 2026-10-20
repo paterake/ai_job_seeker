@@ -2,7 +2,7 @@
 
 ## Why This Exists
 
-The harness wiring is the same everywhere (the same `ai_harness` paths and the same `.claude/.trae/.github` symlink pattern), but the **dominant risk surface** differs by repo.
+The harness wiring is the same everywhere (the same `ai_harness` paths and the same `.claude` symlink pattern), but the **dominant risk surface** differs by repo.
 
 If the context layer does not reflect those differences, assistants will behave like generic tools:
 - they will over-focus on irrelevant constraints

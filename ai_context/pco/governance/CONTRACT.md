@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ai_context/` is the canonical, versioned context layer for all assistants (Claude, Trae, GitHub Copilot) operating in this repository, and the **superset** that can be synced into other repositories.
+`ai_context/` is the canonical, versioned context layer for Claude Code operating in this repository, and the **superset** that can be synced into other repositories.
 
 This is an operational surface, not “documentation”. It is the continuity layer that governs assistant behaviour and makes runs reproducible.
 
@@ -43,9 +43,9 @@ Additionally:
 
 - `.claude/{hooks,rules}` symlinked to `../ai_context/pco/ai_harness/{hooks,rules}`
 - `.claude/skills/` is a **real directory** of per-skill symlinks — managed by `distill_harness.py wire`. PCO skills point into `pco/ai_harness/skills/`; project skills point into `project/ai_harness/skills/`. Project skills override PCO skills on name collision.
-- Same wiring applies to `.trae/` and `.github/` (GitHub Copilot; `.github/` gets no `settings.json` and no `rules` symlink: instead `.github/instructions/` holds one `<rule>.instructions.md` symlink per PCO rule, managed by `distill_harness.py wire`/`sync`; every rule carries `applyTo:` frontmatter)
+- Only `.claude/` is wired. Other tools read the committed context their own way; the PCO does not wire or validate them
 - Root `AGENTS.md`: the always-loaded core, an exact copy of `ai_context/pco/AGENTS.md` written by `distill_harness.py wire`/`sync` (never edit it in place)
-- Root entrypoints: `CLAUDE.md` imports the core (`@AGENTS.md`); `TRAE.md` and `.github/copilot-instructions.md` point to it. All three are repo-owned; sync never writes them
+- Root entrypoint: `CLAUDE.md` imports the core (`@AGENTS.md`). It is repo-owned; sync never writes it
 
 **Why two layers:** `pco/` is a clean platform namespace that can be blown away and resynced without risk. `project/` is repo-owned and a sync never touches it. This eliminates namespace collision and makes the `PROTECTED_FILES` exclusion mechanism unnecessary.
 

@@ -1,13 +1,5 @@
 ---
 description: Architecture rules for code — config purity, driver selection, simplest pattern first, reuse and shared-code homes, file structure, native-first integration. Loaded when editing code or configuration.
-globs:
-  - "**/*.py"
-  - "**/*.sh"
-  - "**/*.js"
-  - "**/*.ts"
-  - "**/*.yaml"
-  - "**/*.yml"
-  - "**/*.toml"
 basis: operational-experience
 spoke: architecture
 paths:
@@ -18,7 +10,6 @@ paths:
   - "**/*.yaml"
   - "**/*.yml"
   - "**/*.toml"
-applyTo: "**/*.py,**/*.sh,**/*.js,**/*.ts,**/*.yaml,**/*.yml,**/*.toml"
 ---
 
 > Governance narrative: [architecture spoke](../../architecture/README.md)

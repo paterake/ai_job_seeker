@@ -1,12 +1,9 @@
 ---
 description: LLMOps runtime bounds — budgets, bounded loops and retries, input caps, degrade modes, kill switches. Loaded when editing Python, because model-calling modules carry no naming pattern.
-globs:
-  - "**/*.py"
 basis: operational-experience
 spoke: operations
 paths:
   - "**/*.py"
-applyTo: "**/*.py"
 ---
 
 > Governance narrative: [operations spoke](../../operations/README.md). Tracing and telemetry: `observability.md`.

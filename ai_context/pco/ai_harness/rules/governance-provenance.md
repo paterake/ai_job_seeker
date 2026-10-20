@@ -1,14 +1,10 @@
 ---
 description: Governance provenance and scope of validation — the PCO declares the use-case scope its governance is validated for, and every rule file records its evidence basis. Loaded when authoring or changing governance surfaces.
-globs:
-  - "ai_context/**/*.md"
-  - "docs/**/*.md"
 basis: operational-experience
 spoke: assurance
 paths:
   - "ai_context/**/*.md"
   - "docs/**/*.md"
-applyTo: "ai_context/**/*.md,docs/**/*.md"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)

@@ -1,16 +1,11 @@
 ---
 description: Retrieval and RAG rules. Loaded when editing retrieval, query, or ingestion code.
-globs:
-  - "**/retriev*/**"
-  - "**/ingest*/**"
-  - "**/query*/**"
 basis: operational-experience
 spoke: knowledge
 paths:
   - "**/retriev*/**"
   - "**/ingest*/**"
   - "**/query*/**"
-applyTo: "**/retriev*/**,**/ingest*/**,**/query*/**"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

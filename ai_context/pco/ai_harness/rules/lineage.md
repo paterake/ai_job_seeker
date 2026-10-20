@@ -1,12 +1,9 @@
 ---
 description: Registries, versioning and lineage for LLM-calling modules — tool and model identity, per-tool risk rating, version pinning, lineage manifest, append-only evidence. Loaded when editing Python, because model-calling modules carry no naming pattern.
-globs:
-  - "**/*.py"
 basis: operational-experience
 spoke: lineage
 paths:
   - "**/*.py"
-applyTo: "**/*.py"
 ---
 
 > Governance narrative: [lineage spoke](../../lineage/README.md). Registry data: [master-data spoke](../../master-data/README.md).

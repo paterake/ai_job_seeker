@@ -1,16 +1,11 @@
 ---
 description: Publishing safety and workflow rules. Loaded when editing publishable content — publication docs, the synced ai_context, and the enterprise governance docs.
-globs:
-  - "publication/**/*.md"
-  - "ai_context/**/*.md"
-  - "docs/enterprise/**/*.md"
 basis: operational-experience
 spoke: knowledge
 paths:
   - "publication/**/*.md"
   - "ai_context/**/*.md"
   - "docs/enterprise/**/*.md"
-applyTo: "publication/**/*.md,ai_context/**/*.md,docs/enterprise/**/*.md"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

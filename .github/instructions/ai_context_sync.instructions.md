@@ -1,1 +1,0 @@
-../../ai_context/pco/ai_harness/rules/ai_context_sync.md

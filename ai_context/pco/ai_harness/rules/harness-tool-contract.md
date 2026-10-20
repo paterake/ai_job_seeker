@@ -1,22 +1,12 @@
 ---
 description: Harness tool contract — edit-tool format as a capability floor, not a config detail. Loaded when changing harness, switching models, or modifying tool interfaces.
-globs:
-  - ".claude/**"
-  - ".trae/**"
-  - ".github/**"
-  - "ai_context/**"
-  - "audit/**"
-  - "**/settings.json"
 basis: operational-experience
 spoke: integration
 paths:
   - ".claude/**"
-  - ".trae/**"
-  - ".github/**"
   - "ai_context/**"
   - "audit/**"
   - "**/settings.json"
-applyTo: ".claude/**,.trae/**,.github/**,ai_context/**,audit/**,**/settings.json"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)
