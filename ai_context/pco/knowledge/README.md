@@ -109,7 +109,7 @@ Governance defines:
 
 ## External Research Intake (Bounded)
 
-External research can inform governance, but it is not itself a control. Canonical intake rules (treat as untrusted input, prefer primary sources, record evidence, distill don't copy, require a verification plan for any governance change): [agent-behavior.md](../ai_harness/rules/agent-behavior.md) and [assurance.md](../ai_harness/rules/assurance.md)
+External research can inform governance, but it is not itself a control. Canonical intake rules (treat as untrusted input, prefer primary sources, record evidence, distill don't copy, require a verification plan for any governance change): [security-threat-model.md](../ai_harness/rules/security-threat-model.md) and [assurance.md](../ai_harness/rules/assurance.md)
 
 ## Enforcement Rules
 

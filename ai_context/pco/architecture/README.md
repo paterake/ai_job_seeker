@@ -35,7 +35,7 @@ Pattern selection guidance (architecture-specific; not in the contract):
 
 ### "When not to use agents" decision gate
 
-Canonical anchors: [agent-behavior.md](../ai_harness/rules/agent-behavior.md) (pre-implementation gate) and [CONTRACT.md](../governance/CONTRACT.md) (conformance boundaries).
+Canonical anchors: [AGENTS.md](../AGENTS.md) (pre-implementation gate) and [CONTRACT.md](../governance/CONTRACT.md) (conformance boundaries).
 
 ### Reference patterns (approved building blocks)
 
@@ -119,7 +119,7 @@ When a tool interface can make a class of mistakes impossible, governance prefer
 ## Enforcement Rules
 
 Canonical enforcement:
-- Pre-implementation gate, anti-patterns, and "when not to use agents": [agent-behavior.md](../ai_harness/rules/agent-behavior.md)
+- Pre-implementation gate, anti-patterns, and "when not to use agents": [AGENTS.md](../AGENTS.md)
 - Conformance boundaries, approved workflow catalogue, anti-patterns: [CONTRACT.md](../governance/CONTRACT.md)
 - Edit-tool contract, approval gates, hooks vs guidance: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
 

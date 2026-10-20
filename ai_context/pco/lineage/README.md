@@ -68,7 +68,7 @@ Governance defines:
 Canonical enforcement:
 - Tool/model/policy/workflow identity, semantic versioning, lineage/evidence invariants: [operations.md](../ai_harness/rules/operations.md)
 - Assurance artefact provenance requirements: [assurance.md](../ai_harness/rules/assurance.md)
-- Research citation requirements for governance changes: [agent-behavior.md](../ai_harness/rules/agent-behavior.md) and [CONTRACT.md](../governance/CONTRACT.md)
+- Research citation requirements for governance changes: [security-threat-model.md](../ai_harness/rules/security-threat-model.md) → External Research and [CONTRACT.md](../governance/CONTRACT.md)
 - Records retention schedule and legal-hold override on run evidence and logs (append-only is a durability property, not a retention policy): [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
 
 ## Enforcement Points (where the control plane enforces)

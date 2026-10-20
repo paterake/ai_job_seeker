@@ -1,4 +1,4 @@
 # Trae Project Instructions — ai_job_seeker
 
-See [ai_context/ASSISTANTS.md](ai_context/ASSISTANTS.md) for all project conventions,
-assistant roles, skills, memory, and harness instructions.
+Read [AGENTS.md](AGENTS.md) (the always-on core) first. Repo context:
+[ai_context/ASSISTANTS.md](ai_context/ASSISTANTS.md) (read on demand).

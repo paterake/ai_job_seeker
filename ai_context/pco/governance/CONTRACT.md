@@ -44,7 +44,8 @@ Additionally:
 - `.claude/{hooks,rules}` symlinked to `../ai_context/pco/ai_harness/{hooks,rules}`
 - `.claude/skills/` is a **real directory** of per-skill symlinks — managed by `distill_harness.py wire`. PCO skills point into `pco/ai_harness/skills/`; project skills point into `project/ai_harness/skills/`. Project skills override PCO skills on name collision.
 - Same wiring applies to `.trae/` and `.github/` (GitHub Copilot; `.github/` gets no `settings.json` and no `rules` symlink: instead `.github/instructions/` holds one `<rule>.instructions.md` symlink per PCO rule, managed by `distill_harness.py wire`/`sync`; every rule carries `applyTo:` frontmatter)
-- Root entrypoints `CLAUDE.md`, `TRAE.md` and `.github/copilot-instructions.md` pointing to `ai_context/ASSISTANTS.md`
+- Root `AGENTS.md`: the always-loaded core, an exact copy of `ai_context/pco/AGENTS.md` written by `distill_harness.py wire`/`sync` (never edit it in place)
+- Root entrypoints: `CLAUDE.md` imports the core (`@AGENTS.md`); `TRAE.md` and `.github/copilot-instructions.md` point to it. All three are repo-owned; sync never writes them
 
 **Why two layers:** `pco/` is a clean platform namespace that can be blown away and resynced without risk. `project/` is repo-owned and a sync never touches it. This eliminates namespace collision and makes the `PROTECTED_FILES` exclusion mechanism unnecessary.
 

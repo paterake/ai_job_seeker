@@ -45,6 +45,11 @@ This resume line must be updated whenever the “Still todo” next step changes
 | **Verification** | Exact command(s) — "should work" is not a check |
 | **Gotchas** | Discovered friction that a fresh session would otherwise re-learn |
 
+These sections are non-negotiable. A missing Accumulated Active Constraints section is the most common failure: use a
+placeholder until the first item completes. **Consequence:** an anchor doc without them is a handoff that
+will fail. The next session re-derives constraints from context, which is expensive and unreliable, instead of
+reading them as stated facts.
+
 An anchor doc may also be a **hybrid**: the checkpoint sections above plus per-item
 descriptive/spec sections (e.g. one `### Item N` per module) for a full backlog spec. See
 "Single Source of Truth for Status" below for the constraint this hybrid shape must follow.
@@ -125,7 +130,7 @@ Mark it explicitly rather than letting it read like a normal in-progress item:
 
 **Consequence**: an unresolved ambiguity that reads like a normal next-step invites a cold
 session to silently pick an interpretation and proceed — assumption filling (see
-`ai_context/pco/ai_harness/rules/agent-behavior.md` § Pre-Implementation Gate) is the documented
+`ai_context/pco/AGENTS.md` → Before you start) is the documented
 failure mode this produces, and it is harder to catch after the fact than before a session ends.
 
 ## Checkpoint Template

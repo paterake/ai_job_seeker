@@ -21,15 +21,15 @@ Make agent behaviour specifiable, testable, and versioned, so "how the agent beh
 
 ### Epistemic honesty (non-negotiable behaviour)
 
-Agents must not present outputs as objective or infallible when they are not. When confidence is low or a request is outside reliable capability, signal uncertainty explicitly, surface ambiguity before proceeding, and return a structured low-confidence result rather than a confident wrong answer. Canonical anchor: [agent-behavior.md](../ai_harness/rules/agent-behavior.md)
+Agents must not present outputs as objective or infallible when they are not. When confidence is low or a request is outside reliable capability, signal uncertainty explicitly, surface ambiguity before proceeding, and return a structured low-confidence result rather than a confident wrong answer. Canonical anchor: [AGENTS.md](../AGENTS.md)
 
 ### Specification ambiguity protocol
 
-Agents must state assumptions explicitly before acting, present multiple interpretations when they exist, and stop to name what is unclear rather than filling gaps silently. Assumptions used to proceed must be recorded as evidence. Canonical anchors: [agent-behavior.md](../ai_harness/rules/agent-behavior.md) and [operations.md](../ai_harness/rules/operations.md)
+Agents must state assumptions explicitly before acting, present multiple interpretations when they exist, and stop to name what is unclear rather than filling gaps silently. Assumptions used to proceed must be recorded as evidence. Canonical anchors: [AGENTS.md](../AGENTS.md) and [operations.md](../ai_harness/rules/operations.md)
 
 ### Capability-fit protocol
 
-Agents must choose the driver that fits the task — `config-driven`, `data-driven`, or `AI-driven` — before introducing a new content-interpretation mechanism. The governing test is explicit answer vs inference: explicit derivation stays deterministic; semantic inference defaults to AI-driven. Parser-/extractor-shaped changes require a capability-decision artefact, and the task-boundary review sensor checks the substance of the choice. Canonical anchors: [agent-behavior.md](../ai_harness/rules/agent-behavior.md), [governance.md](../ai_harness/rules/governance.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md), and [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
+Agents must choose the driver that fits the task — `config-driven`, `data-driven`, or `AI-driven` — before introducing a new content-interpretation mechanism. The governing test is explicit answer vs inference: explicit derivation stays deterministic; semantic inference defaults to AI-driven. Parser-/extractor-shaped changes require a capability-decision artefact, and the task-boundary review sensor checks the substance of the choice. Canonical anchors: [AGENTS.md](../AGENTS.md), [governance.md](../ai_harness/rules/governance.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md), and [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
 
 ### Tool contract design
 
@@ -62,7 +62,7 @@ Canonical anchors: [governance/HUB.md](../governance/HUB.md) and the PCO governa
 
 ### Policy injection semantics
 
-Core posture and security posture must be injected as non-conversational policy by the harness at session start — not as user-editable guidance. Canonical anchors: [core-posture.md](../ai_harness/rules/core-posture.md) and [CONTRACT.md](../governance/CONTRACT.md).
+Core posture and security posture must be injected as non-conversational policy by the harness at session start — not as user-editable guidance. Canonical anchors: the always-loaded core [AGENTS.md](../AGENTS.md) and [CONTRACT.md](../governance/CONTRACT.md).
 
 ### Output formats and evidence requirements
 
@@ -81,9 +81,9 @@ Governance defines what "done" means per workflow step:
 ## Enforcement Rules
 
 Canonical enforcement:
-- Pre-implementation gate, simplicity, surgical changes, verification: [agent-behavior.md](../ai_harness/rules/agent-behavior.md)
+- Pre-implementation gate, simplicity, surgical changes, verification, session boundaries, memory discipline: the always-loaded core [AGENTS.md](../AGENTS.md)
 - Config drives code; no domain context in code; Python tooling uses `uv`: [governance.md](../ai_harness/rules/governance.md)
-- Context minimisation, session boundaries, anchor doc pattern: [context-economy.md](../ai_harness/rules/context-economy.md)
+- Anchor doc pattern and its required sections: [AI_ASSISTANT_BACKLOG_CONTINUITY.md](../governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md)
 - Guidance vs enforcement; edit-tool compatibility; approval gates: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
 - Automated-decision safeguards (High/Critical decisions affecting individuals): how a decision is explained, contested, reviewed by a human, and how DSARs over prompt/output logs are served: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
 - Scope-of-validation declaration and rule evidence-basis (`basis:`) provenance; assistant-research-derived governance is advisory until validated by a non-shared-path source: [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
@@ -115,7 +115,33 @@ Hard constraints — blocking destructive commands, enforcing typecheck/lint/tes
 
 ### Session Design and Token Economy
 
-Canonical rules and enforcement model: [context-economy.md](../ai_harness/rules/context-economy.md).
+Session boundaries are in the core ([AGENTS.md](../AGENTS.md) → Sessions and memory). Token management:
+
+- Long-running sessions that resolve a single ask by accumulating large context are an anti-pattern.
+  Design work in chapters: one anchor doc item per session.
+- Config-driven code directly reduces token burn: an existing piece of code reused via config change
+  eliminates the probability of re-implementation. This is a consequence of the Config Purity rule
+  (see `governance.md`), not an independent rule.
+- Domain context in code forces regeneration. When the domain changes, code with baked-in domain
+  assumptions cannot be reused — a new implementation is triggered. Keep domain context in config
+  so the same mechanism is reused across runs and domains.
+- Proliferation of near-identical implementations is a token economy failure: multiple files
+  performing similar operations on slight domain variations is the symptom of domain context leaking
+  into code. Treat it as a governance violation, not just a code smell.
+
+### Failure Harvest
+
+Every agent failure is a permanent signal. Do not treat it as a one-off incident.
+
+For each harness failure or behaviour violation:
+1. Identify the root failure class (assumption filling, false success signal, scope creep, format mismatch, etc.)
+2. Engineer a structural fix — a rule, a hook, a test, or a verification step.
+3. Record the fix in the appropriate governance doc; wire it as a hook in `settings.json` if the constraint must hold unconditionally.
+4. Remove a constraint only when the model demonstrably no longer triggers that failure class.
+
+**The ratchet**: governance accretes from failures. Rules are added from evidence and removed by capability evidence — not by preference or convenience.
+
+**Consequence**: treating failures as isolated incidents produces a harness with no institutional memory. The same failure class recurs because the harness never encoded it as a constraint.
 
 ## Evidence and Metrics (what observability measures)
 
@@ -133,7 +159,7 @@ Canonical rules and enforcement model: [context-economy.md](../ai_harness/rules/
 - Over-prescription: behaviour spec becomes so rigid it blocks legitimate work
 - Hard constraints written as prose guidance rather than enforced by hooks — they erode as context fills
 - Multi-task sessions rather than one session per task — context accumulates, earlier governance rules lose weight, and constraints erode without any visible signal
-- Agent failures treated as one-off incidents rather than harvested into permanent rules (see Failure Harvest in [agent-behavior.md](../ai_harness/rules/agent-behavior.md))
+- Agent failures treated as one-off incidents rather than harvested into permanent rules (see Failure Harvest above)
 
 ## Agent Behaviour Failure Taxonomy
 

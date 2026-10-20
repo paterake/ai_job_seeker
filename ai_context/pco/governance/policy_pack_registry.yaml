@@ -6,15 +6,13 @@ policy_packs:
     evidence: ai_context/pco/ai_harness/rules/
     description: Core PCO governance rules — posture, agent behavior, security, operations, retrieval, and assurance
     rule_files:
-      - ai_context/pco/ai_harness/rules/core-posture.md
+      - ai_context/pco/AGENTS.md
       - ai_context/pco/ai_harness/rules/governance-provenance.md
-      - ai_context/pco/ai_harness/rules/agent-behavior.md
       - ai_context/pco/ai_harness/rules/security-threat-model.md
       - ai_context/pco/ai_harness/rules/operations.md
       - ai_context/pco/ai_harness/rules/governance.md
       - ai_context/pco/ai_harness/rules/retrieval.md
       - ai_context/pco/ai_harness/rules/assurance.md
-      - ai_context/pco/ai_harness/rules/context-economy.md
       - ai_context/pco/ai_harness/rules/harness-tool-contract.md
       - ai_context/pco/ai_harness/rules/publication.md
       - ai_context/pco/ai_harness/rules/config-repo-structure.md

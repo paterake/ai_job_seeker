@@ -1,6 +1,6 @@
 # AI Assistant Entry Point — ai_job_seeker
 
-**Start here. Read both files below before doing any work.**
+**Read on demand.** The always-loaded core is the root `AGENTS.md`; this index routes to the rest.
 
 ## Two-layer structure
 
@@ -11,7 +11,7 @@
 | Platform (PCO) | `pco/` | The PCO — synced from ai_agent_pco | Yes |
 | Project | `project/` | This repo | Never synced |
 
-## Read order (required)
+## Where to look
 
-1. **[pco/ASSISTANTS.md](pco/ASSISTANTS.md)** — platform pillars, universal routing table, governance rules. Apply to all work in all governed repos.
+1. **[pco/ASSISTANTS.md](pco/ASSISTANTS.md)** — spoke index: which DMBOK spoke and governance doc a task needs.
 2. **[project/ASSISTANTS.md](project/ASSISTANTS.md)** — repo-specific posture, task routing, active backlog. Apply when working in this repo specifically.

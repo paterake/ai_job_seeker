@@ -229,7 +229,7 @@ The PCO is not frozen at authoring time. It is a living governance system that e
 | Proposer | Drafts the rule change with full rationale and source tracing | Approve the change |
 | Implementer | Writes the change into docs, updates the backlog (docs/TODO.md), communicates downstream | Determine the organisation's risk appetite |
 
-Human approval gates exist for every rule change (canonical anchor: [core-posture.md](../ai_harness/rules/core-posture.md)). A governance system where the governed entity approves its own rules is not governance.
+Human approval gates exist for every rule change (canonical anchor: [AGENTS.md](../AGENTS.md) → Governance changes). A governance system where the governed entity approves its own rules is not governance.
 
 ### What a governed repo cannot do unilaterally
 
@@ -284,12 +284,12 @@ Because changes to `ai_agent_core` affect all consumers, its change control is s
 
 ### How rules are loaded
 
-Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` frontmatter loads at session start; a rule with `paths:` loads when the agent first reads or edits a matching file (Claude Code ignores the `globs:` key, which is kept for Trae). Only the core rules (`core-posture`, `agent-behavior`, `security-threat-model`, `context-economy`) are unscoped, so a session starts with the minimum. The agent then reads `CLAUDE.md` → `ai_context/ASSISTANTS.md`, which identifies which rules apply to the task and routes it to governance docs that require explicit reads (CONTRACT.md, ANTI_DRIFT.md, etc.). Rule files are already in context — the router does not re-read them. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
+Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` frontmatter loads at session start; a rule with `paths:` loads when the agent first reads or edits a matching file (Claude Code ignores the `globs:` key, which is kept for Trae). Every rule is path-scoped. The always-loaded core is the root `AGENTS.md` (synced from `ai_context/pco/AGENTS.md`), which `CLAUDE.md` imports and other tools read natively. Governance docs that need explicit reads are listed in the on-demand spoke index `ai_context/pco/ASSISTANTS.md`. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
 
 ### Within-session enforcement
 
-- Platform pillars, agent-behavior, security and context-economy rules are active from the first tool call; scoped rules join when the agent touches a matching file.
-- The deterministic router identifies which rules are most relevant and routes to governance docs that need explicit reads — it does not load rule files (the harness loads them, at start or on a matching file).
+- The core (`AGENTS.md`) is active from the first tool call; scoped rules join when the agent touches a matching file.
+- The spoke index routes to governance docs that need explicit reads; it does not load rule files (the harness loads them on a matching file).
 - Computational sensors (tests, linters, structural validators) run within a session and report violations synchronously.
 
 ### Cross-session enforcement and the bootstrapping loop
@@ -299,7 +299,7 @@ Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` fron
 
 ### Human review as the governance sensor
 
-Automated sensors cannot detect semantic contradictions between governance docs or rules that weaken controls. Human review is the primary sensor for governance doc changes (canonical anchor: [core-posture.md](../ai_harness/rules/core-posture.md)).
+Automated sensors cannot detect semantic contradictions between governance docs or rules that weaken controls. Human review is the primary sensor for governance doc changes (canonical anchor: [AGENTS.md](../AGENTS.md) → Governance changes).
 
 ### Enforcement trigger summary
 

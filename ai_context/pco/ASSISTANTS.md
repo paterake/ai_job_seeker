@@ -1,70 +1,37 @@
-# AI Assistant Guide — Platform (PCO)
+# Spoke Index — Platform (PCO)
 
-**Shared context for all coding assistants (Claude, Trae, GitHub Copilot).**
+**Read on demand.** The always-loaded core is the root `AGENTS.md` (source: [AGENTS.md](AGENTS.md)).
+Rules under `ai_harness/rules/` are all path-scoped: the harness loads each one when you read or edit
+a matching file, so do not read them pre-emptively. Use this index when a task needs a spoke's
+narrative or a governance doc.
 
-**Read this BEFORE starting any work.**
+## Spokes (DAMA-DMBOK wheel → agent harness)
 
-> **Copilot note**: Copilot is wired via `.github/copilot-instructions.md` (entrypoint) and `.github/{hooks,instructions,skills}`: `hooks/` is a directory symlink into `ai_context/pco/ai_harness/`, `instructions/` holds one `<rule>.instructions.md` symlink per rule (scoped by each rule's `applyTo:` frontmatter), and `skills/` is a managed directory of per-skill symlinks. VS Code Copilot also reads `.claude/rules` directly, so it may load each rule twice. No source documents whether github.com code review follows symlinked instruction files; that is unverified. No `settings.json` is wired under `.github/`, and Copilot has no hook-execution lifecycle equivalent to Claude Code's `settings.json` `PreToolUse`/`Stop` hooks, so the exception-expiry check, capability-decision check, and execution-limits check do not run for Copilot sessions. Treat this as a known limitation, not a silent gap — see `harness-tool-contract.md`.
+The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.md).
 
-## Platform Pillars (Non-Negotiable — Apply to All Work)
-
-Six blocking pillars apply to all work in all governed repos. Violating any one is
-non-conformant regardless of other correctness.
-
-> **Intentional duplication note**: the pillar definitions also appear in [governance/HUB.md](governance/HUB.md) (canonical narrative source) and in `docs/concept/PCO_CONTRACT.md` (stakeholder-facing declaration). This copy is kept here deliberately — ASSISTANTS.md loads at every session start, so agents need the pillars in context without reading HUB.md. The "Rule file" column is additive content not present in HUB.md. Do not deduplicate this table away.
-
-| Pillar | Consequence of violation | Rule file |
+| Spoke | Read when the task touches | Path-scoped rules |
 |---|---|---|
-| **UV only** | Introduces competing env/dep toolchains, non-canonical `uv` invocation, or raw `python` execution; reproducibility breaks; onboarding forks | `governance.md` — Python Tooling |
-| **Config drives code** | Domain strings baked into source; code cannot be reused across datasets without rewrite | `governance.md` — Config Purity |
-| **Low-code/OSS preference** | Custom re-implementations of solved problems accumulate as maintenance debt | `governance.md` — Low-Code/OSS Preference |
-| **Context minimisation** | Earlier rules lose weight as session grows; constraints silently stop holding | `context-economy.md` — Context Minimisation |
-| **Token management** | Long sessions regenerate instead of reusing; cost scales with domain churn | `context-economy.md` — Token Management |
-| **No domain context in code** | Same as Config drives code — these are one rule stated twice for emphasis | `governance.md` — Config Purity |
+| [architecture/](architecture/README.md) | Repo layout, module boundaries, config placement | `governance.md`, `config-repo-structure.md` |
+| [behaviour/](behaviour/README.md) | Agent behaviour, sessions, token economy, Failure Harvest | — (core: `AGENTS.md`) |
+| [operations/](operations/README.md) | LLM-calling modules: bounds, budgets, tracing, kill switches | `operations.md` |
+| [security/](security/README.md) | Untrusted content, tools/MCP, publishing, agents | `security-threat-model.md`, `publication.md` |
+| [integration/](integration/README.md) | Harness switch, model upgrade, hooks, edit-tool format | `harness-tool-contract.md` |
+| [knowledge/](knowledge/README.md) | Retrieval/RAG, docs, anti-drift | `retrieval.md`, `ai_context_sync.md` |
+| [master-data/](master-data/README.md) | Model/tool registries, policy packs, exceptions | — |
+| [observability/](observability/README.md) | Telemetry, analytics, FinOps | — |
+| [lineage/](lineage/README.md) | Tool/workflow registration, versioning, run lineage | — |
+| [assurance/](assurance/README.md) | Evals, datasets, incidents, rule provenance | `assurance.md`, `governance-provenance.md` |
 
-Pillars 2+6 = one rule (code is mechanism; domain context is config).
-Pillars 4+5 = one rule (long sessions accumulate noise; short sessions with durable state are the model).
+## Governance docs (explicit read)
 
----
-
-## Deterministic Router (Task → Required Reads)
-
-Rule files under `.claude/rules/` are loaded by the harness — do not re-read them. Four load at session start (`core-posture`, `agent-behavior`, `security-threat-model`, `context-economy`); the rest carry `paths:` frontmatter and load when you read or edit a matching file. Use the two tables below: the first identifies which rules apply to your task; the second lists governance docs that need an explicit read.
-
-### Rule files — loaded by the harness (identify and apply, no read needed)
-
-| Task type | Relevant rule |
+| Task | Read |
 |---|---|
-| Any code change | `agent-behavior.md` — pre-implementation gate, simplicity, surgical changes, verification · `governance.md` — UV-only, config drives code, file structure, OSS preference, docs currency |
-| Working in a config / use-case-realization repo (file placement, repo layout) | `config-repo-structure.md` |
-| LLM-calling modules (timeouts, budgets, tracing) | `operations.md` |
-| Retrieval / RAG changes | `retrieval.md` |
-| Publishing / disclosure risk | `publication.md` |
-| Harness switch / model upgrade / edit-tool format | `harness-tool-contract.md` |
-| Security / sensitive tooling | `security-threat-model.md` |
-| Evaluations / assurance changes | `assurance.md` |
-| Authoring/changing governance rules; scope-of-validation or rule provenance | `governance-provenance.md` |
-
-### Governance docs — read explicitly (not auto-loaded)
-
-| Task type | Read explicitly |
-|---|---|
-| `ai_context/` structure or anti-drift | [CONTRACT.md](governance/CONTRACT.md) |
+| `ai_context/` structure, sync scope, what is authoritative | [CONTRACT.md](governance/CONTRACT.md) |
 | Anti-drift / "no duplication" questions | [ANTI_DRIFT.md](governance/ANTI_DRIFT.md) |
 | Repo concern profile / what belongs in ai_context | [CONCERNS.md](governance/CONCERNS.md) |
-| Backlog / multi-session work | [AI_ASSISTANT_BACKLOG_CONTINUITY.md](governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md) |
-| Enterprise go-live: data residency, data-subject rights, IP/output ownership, retention/legal hold, vendor procurement, access recertification, regulatory notification, FinOps, go-live oversight | [ENTERPRISE_OBLIGATIONS.md](governance/ENTERPRISE_OBLIGATIONS.md) |
-| Domain-specific implementation notes for this repo | `project/{domain}/README.md` |
+| Backlog / multi-session work (anchor docs) | [AI_ASSISTANT_BACKLOG_CONTINUITY.md](governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md) |
+| Module docs and PRDs | [DOCS_CONTRACT.md](governance/DOCS_CONTRACT.md) |
+| Enterprise go-live (residency, data-subject rights, vendors, retention, FinOps, oversight) | [ENTERPRISE_OBLIGATIONS.md](governance/ENTERPRISE_OBLIGATIONS.md) |
 
-## After Reading This File
-
-Read **[../project/ASSISTANTS.md](../project/ASSISTANTS.md)** — repo-specific posture, local task routing, and active backlog.
-Then follow the routing table above for any task-specific reads.
-
-## Anti-Drift Contract
-
-Documentation drift is a governance failure. Canonical rules live in [ANTI_DRIFT.md](governance/ANTI_DRIFT.md).
-
-## Concern Profiles
-
-Concern profiles and their rationale live in [CONCERNS.md](governance/CONCERNS.md).
+Copilot reads rules through `.github/instructions/` (one symlink per rule, scoped by `applyTo:`) and
+runs none of the hooks: a known gap (`harness-tool-contract.md`).
