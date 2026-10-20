@@ -13,11 +13,6 @@ basis: operational-experience
 4. **PCO is read-only for downstream agents**: Agents running in consumer repos (any repo that syncs from the PCO) must never edit PCO rule files directly — not even to apply a valid fix.
 5. **Human approval is required for governance changes**: Any change to platform governance surfaces (PCO rules/hooks/skills and governance contracts) must receive explicit human approval; agents must not self-approve or bypass review.
 
-## Policy Injection Semantics (Required)
-
-- Core posture, security posture, and other blocking governance pillars must be injected as non-conversational policy by the harness at session start (not as user-editable or conversational guidance).
-- If policy packs are used, the run must record the policy pack identifiers/versions in run evidence.
-
 ## PCO Update Protocol (non-negotiable)
 
 When an agent in a downstream project identifies a gap or error in a PCO rule:

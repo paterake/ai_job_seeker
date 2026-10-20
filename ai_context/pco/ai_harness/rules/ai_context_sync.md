@@ -3,6 +3,8 @@ description: Sync trigger fired when any ai_context/ file is edited. Ensures pre
 globs:
   - "ai_context/**"
 basis: operational-experience
+paths:
+  - "ai_context/**"
 ---
 
 # ai_context → Human Docs Sync

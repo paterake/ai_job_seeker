@@ -85,8 +85,8 @@ Canonical enforcement:
 - Config drives code; no domain context in code; Python tooling uses `uv`: [governance.md](../ai_harness/rules/governance.md)
 - Context minimisation, session boundaries, anchor doc pattern: [context-economy.md](../ai_harness/rules/context-economy.md)
 - Guidance vs enforcement; edit-tool compatibility; approval gates: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
-- Automated-decision safeguards (High/Critical decisions affecting individuals): how a decision is explained, contested, reviewed by a human, and how DSARs over prompt/output logs are served: [compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md)
-- Scope-of-validation declaration and rule evidence-basis (`basis:`) provenance; assistant-research-derived governance is advisory until validated by a non-shared-path source: [governance-provenance.md](../ai_harness/rules/governance-provenance.md) and [agent-behavior.md](../ai_harness/rules/agent-behavior.md)
+- Automated-decision safeguards (High/Critical decisions affecting individuals): how a decision is explained, contested, reviewed by a human, and how DSARs over prompt/output logs are served: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
+- Scope-of-validation declaration and rule evidence-basis (`basis:`) provenance; assistant-research-derived governance is advisory until validated by a non-shared-path source: [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
 
 ## Enforcement Points (where the control plane enforces)
 
@@ -135,22 +135,47 @@ Canonical rules and enforcement model: [context-economy.md](../ai_harness/rules/
 - Multi-task sessions rather than one session per task — context accumulates, earlier governance rules lose weight, and constraints erode without any visible signal
 - Agent failures treated as one-off incidents rather than harvested into permanent rules (see Failure Harvest in [agent-behavior.md](../ai_harness/rules/agent-behavior.md))
 
-## Maturity Model (pragmatic)
+## Agent Behaviour Failure Taxonomy
 
-### Level 1: Contracted
+These are failure modes not detectable by system error sensors. They require
+behavioural sensors (semantic guardrails, run review, human review at task boundary):
 
-- Role definitions exist
-- Tool schemas exist for critical tools
-- Outputs have minimum structure
+| Failure mode | Description | Detection approach |
+|---|---|---|
+| **Overeagerness** | Generates unrequested features or business logic inferred from domain terms | Semantic guardrails; scope review at task boundary |
+| **Assumption filling** | Fills spec gaps autonomously without signalling; produces production problems without system error | Require explicit ambiguity surfacing; adversarial eval scenarios |
+| **Brute-force fix** | Applies hacky solutions (increase memory, add annotations) rather than root-cause fixes | Static analysis sensors; code review gates |
+| **False success signal** | Reports task complete despite failing tests or violated constraints | Require verification command output in completion signal |
+| **Genie risk** | Exploits spec loopholes; gives what was asked for in an unexpected way | Human review at task boundary; adversarial specification tests |
+| **Code quality drift** | Duplicated literals, unused parameters, improper patterns, nested conditionals | Static analysis as a required sensor type |
 
-### Level 2: Tested
+### Capability-Fit Review Sensor
 
-- Behaviour is evaluated offline with regression gates
-- High-risk paths require explicit escalation/approval
-- Schema validation is blocking for key interfaces
+Capability-fit failure is a behavioural class, not a syntax error. The required review question at
+task boundary / code review is:
 
-### Level 3: Adaptively governed
+- Is this task explicit derivation or semantic inference?
+- If inference is present, why is the mechanism not AI-driven?
+- If the solution is AI-driven, what makes deterministic derivation insufficient or misleading?
+- If the solution is deterministic, what exact explicit structure in the source makes fixed-rule recovery valid?
 
-- Policy and behaviour changes roll out with compatibility and eval coverage
-- Online monitoring detects drift and triggers controlled responses
-- Contracts support substitution of models/tools without weakening governance
+This sensor is specifically aimed at two mirror-image failures:
+- bespoke deterministic machinery solving a semantic problem,
+- or model use where exact deterministic derivation was available.
+
+## Recurring failure class: deterministic over-build for semantic work
+
+Record this as a recurring class, not a one-off incident:
+
+1. Coding agents default to writing code, so a model path looks like "less implementation" and is under-selected.
+2. The governance corpus historically rewarded deterministic mechanism and treated model use as foreign, so the bias was systemic rather than local.
+3. Deterministic builds were once the only viable path in some environments; the failure was not re-evaluating when the capability frame changed.
+4. No explicit capability-choice checkpoint existed, so model-vs-code was defaulted silently instead of reviewed.
+5. Structured inputs disguised semantic tasks as parsing problems, even when the real work was inference.
+6. Agents did not self-reframe reliably; the correction had to come from repeated human challenge, which means structure — not preference — must carry the fix.
+
+Required structural response:
+- add a capability-fit rule,
+- treat AI-driven as a first-class peer to config-driven and data-driven,
+- require a capability-decision artefact for parser-/extractor-shaped work,
+- and run a task-boundary review sensor for capability-fit.

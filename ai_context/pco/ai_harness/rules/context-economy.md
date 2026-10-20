@@ -11,13 +11,6 @@ basis: operational-experience
 
 # Context Economy Rules
 
-## Why This Matters
-
-Long sessions accumulate context noise. Earlier constraints, architectural rules, and style
-invariants compete with growing task-specific signals. They are not ignored — they are lower-weight
-signals in a saturated context. This is not a model failure; it is a structural problem with how
-work is organised. These rules address it structurally.
-
 ## Context Minimisation
 
 - Prefer durable documents over long sessions. Work that spans multiple sessions must use an
@@ -57,12 +50,3 @@ work is organised. These rules address it structurally.
 - Proliferation of near-identical implementations is a token economy failure: multiple files
   performing similar operations on slight domain variations is the symptom of domain context leaking
   into code. Treat it as a governance violation, not just a code smell.
-
-## The Connection Between Rules
-
-These rules are not independent. They form a reinforcing set:
-
-- Config purity → code is reusable → fewer reimplementations → fewer token-intensive sessions
-- Anchor doc pattern → each session starts warm → no context saturation → constraints hold
-- OSS preference → less custom code → less maintenance surface → less regeneration pressure
-- No domain context in code → same mechanism runs across domains → no "create new version for X" asks

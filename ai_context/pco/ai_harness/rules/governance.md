@@ -5,6 +5,14 @@ globs:
   - "**/*.yaml"
   - "**/*.yml"
 basis: operational-experience
+paths:
+  - "**/*.py"
+  - "**/*.sh"
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/*.yaml"
+  - "**/*.yml"
+  - "**/*.toml"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)
@@ -17,7 +25,7 @@ basis: operational-experience
 - If a string would change when adopting a new dataset or domain, it belongs in configuration, not code.
 - Treat code as reusable mechanism. Treat domain context as configuration and context-layer inputs; do not bake domain assumptions into implementations.
 
-**Config directory structure:**
+**Config directory structure (code repos; config repos use `cfg/`, see `config-repo-structure.md`):**
 - `config/` — runtime config YAMLs (entity lists, thresholds, data paths, tuning params)
 - `config/prompts/` — LLM prompt YAMLs (one file per prompt, named by purpose)
 
@@ -180,20 +188,3 @@ Fewer, focused tools outperform a large overlapping toolset.
 **The test**: can you name the specific failure mode this tool prevents, and does no existing tool already cover it? If not, do not add it.
 
 **Consequence**: tool proliferation degrades prompt quality, expands MCP supply-chain attack surface, and makes tool schemas harder to reason about in long sessions.
-
-## Procurement & Access Lifecycle
-
-- **Vendor procurement / TPRM.** A model or tool vendor must carry a completed third-party risk
-  assessment covering data handling, contractual liability, and exit terms before adoption —
-  `vendor_assessment_ref` is a pointer to that completed process, not a substitute for it.
-  **Consequence:** a vendor field with no assessment behind it is due-diligence theatre; the
-  liability and exit exposure it was meant to control is unmanaged.
-- **Access recertification.** Human and agent access to a solution is provisioned by named identity
-  and recertified on a schedule; joiner/mover/leaver changes are applied. **Consequence:** access
-  granted once and never reviewed is how orphaned privilege accumulates across hundreds of
-  solutions — the standing exposure no runtime control detects.
-
-## Publication Safety (when content is publishable)
-
-- Do not include client/company identifiers or internal programme names in publishable content.
-- Avoid repository-internal file paths in publishable narrative content; describe mechanisms in plain language.

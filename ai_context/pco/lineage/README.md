@@ -69,7 +69,7 @@ Canonical enforcement:
 - Tool/model/policy/workflow identity, semantic versioning, lineage/evidence invariants: [operations.md](../ai_harness/rules/operations.md)
 - Assurance artefact provenance requirements: [assurance.md](../ai_harness/rules/assurance.md)
 - Research citation requirements for governance changes: [agent-behavior.md](../ai_harness/rules/agent-behavior.md) and [CONTRACT.md](../governance/CONTRACT.md)
-- Records retention schedule and legal-hold override on run evidence and logs (append-only is a durability property, not a retention policy): [compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md)
+- Records retention schedule and legal-hold override on run evidence and logs (append-only is a durability property, not a retention policy): [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
 
 ## Enforcement Points (where the control plane enforces)
 
@@ -89,22 +89,3 @@ Canonical enforcement anchors: [operations.md](../ai_harness/rules/operations.md
 - Registry drift: tools/policies exist without ownership or lifecycle
 - "He said / she said" post-mortems due to missing lineage
 - Breaking changes shipped without compatibility and migration
-
-## Maturity Model (pragmatic)
-
-### Level 1: Registered and queryable
-
-- Core registries exist and are used
-- Runs record basic lineage (workflow, policy versions, tool versions)
-
-### Level 2: Version-governed
-
-- Deprecation and migration are real and enforced
-- Projects pin and negotiate versions deliberately
-- Evidence completeness is validated
-
-### Level 3: Forensics-grade
-
-- Full lineage supports reliable audits and reproductions
-- Drift is detected early and corrected via controlled rollouts
-- Governance decisions are demonstrably evidence-based

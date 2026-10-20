@@ -5,6 +5,11 @@ globs:
   - "**/*.yaml"
   - "**/*.yml"
 basis: operational-experience
+paths:
+  - "**/eval*/**"
+  - "**/*eval*.py"
+  - "**/*eval*.yaml"
+  - "audit/**"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)

@@ -4,6 +4,9 @@ globs:
   - "ai_context/**/*.md"
   - "docs/**/*.md"
 basis: operational-experience
+paths:
+  - "ai_context/**/*.md"
+  - "docs/**/*.md"
 ---
 
 # Governance Provenance and Scope of Validation
@@ -26,9 +29,20 @@ basis: operational-experience
 - Every rule file records its evidence basis in frontmatter as `basis:`, one of:
   `primary-standard` · `incident` · `research-derived` · `operational-experience`.
   The tag is the author's first-pass judgement; a reviewer may reclassify it.
-- A `research-derived` rule is advisory until independently validated (see `agent-behavior.md`,
-  External Research → Independent Validation); it must not be treated as authoritative on the
+- A `research-derived` rule is advisory until independently validated (see Independent Validation below); it must not be treated as authoritative on the
   strength of its own synthesis path alone.
 - **Consequence:** a research-derived rule and a hard-won incident rule look identical without a
   basis tag; a reviewer cannot tell which to re-validate against primary sources. Provenance makes
   targeted re-validation possible instead of re-auditing the whole corpus.
+
+## Independent Validation (of assistant-derived governance)
+
+Governance content derived from LLM/assistant research is **advisory until validated by a source
+that does not share the assistant's synthesis path** — a human domain expert or a primary standard —
+before it is treated as authoritative. Tag such content `basis: research-derived` (see
+Rule Provenance above) and record the validation when it lands.
+
+**Consequence:** an assistant stress-testing its own prior output shares that output's blind spots;
+treating the result as an independent audit re-imports the same bias through every future
+assistant-assisted governance change. This generalises the Legal/DPO sign-off gate on
+[ENTERPRISE_OBLIGATIONS.md](../../governance/ENTERPRISE_OBLIGATIONS.md) (Compliance Lifecycle) into a standing principle.

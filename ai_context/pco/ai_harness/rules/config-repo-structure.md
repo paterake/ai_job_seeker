@@ -3,6 +3,9 @@ description: Structure discipline for configuration / use-case-realization repos
 globs:
   - "**/*"
 basis: operational-experience
+paths:
+  - "cfg/**"
+  - "**/cfg/**"
 ---
 
 # Config-Repo Structure
@@ -16,7 +19,7 @@ filled by whatever path is convenient in the moment.
 - `cfg/` — runtime configuration the platform reads (config files and config trees).
 - `docs/` — human-facing docs. `docs/todo/` holds active backlog anchors only. A completed
   anchor is deleted once its durable facts are moved into code or docs; its Completed row in
-  `docs/TODO.md` cites the commit (`git show <hash>:<path>`).
+  `docs/TODO.md` cites the commit (`git show <hash>^:<path>`).
 - `scripts/` — project glue only. Mechanism code lives in the platform repo, never here.
 - Root holds **only** `README.md` plus these folders. No loose config, docs, or backlog files at
   the root.
@@ -34,7 +37,7 @@ filled by whatever path is convenient in the moment.
 
 **Consequence:** an agent that takes the convenient path and dumps files at the root produces a repo
 that is unnavigable, hides deprecated material behind live material, and defeats the config-driven
-reuse the platform exists for. Observed in the 2026-09 MOAS config-repo cleanup, where an accreted
+reuse the platform exists for. Observed in a 2026-09 config-repo cleanup, where an accreted
 root of loose config, backlog, and retired-pipeline artefacts had to be reorganised wholesale.
 
 Downstream repos own their own layout, but this structure is the default a coding agent must apply

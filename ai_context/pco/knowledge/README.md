@@ -119,7 +119,7 @@ Covers: chunking parameters in config (not code), hybrid search as a first-class
 
 Output ownership & source licensing: every solution declares ownership of its generated output and
 the license posture of the sources feeding generation; a source whose license forbids the intended
-use is non-conformant ([compliance-lifecycle.md](../ai_harness/rules/compliance-lifecycle.md)).
+use is non-conformant ([ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)).
 
 ## Enforcement Points (where the control plane enforces)
 
@@ -162,23 +162,3 @@ The same harness wiring can support different repos, but the context reflects th
 - LLM system repos emphasise bounded execution, evals, retrieval correctness, and tracing
 - Publishing repos emphasise leakage prevention, evidence discipline, and avoiding drift across packs
 - Data/document repos emphasise determinism, schema/format correctness, and repeatable transformations
-
-## Maturity Model (pragmatic)
-
-### Level 1: Curated and referenced
-
-- Policy and runbooks are centralised
-- Retrieval sources are whitelisted
-- Provenance is recorded for retrieved content
-
-### Level 2: Lifecycle-governed
-
-- Deprecation exists and is enforced
-- Review cadence is tracked for critical content
-- Duplication is actively removed and prevented
-
-### Level 3: Evidence-driven knowledge
-
-- Content changes are driven by telemetry and incident learnings
-- Retrieval policies adapt by risk tier (stricter for high-risk workflows)
-- Provenance supports reliable forensics and audit queries

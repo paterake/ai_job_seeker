@@ -7,6 +7,12 @@ globs:
   - "scripts/**/*.py"
   - "scripts/**/*.md"
 basis: operational-experience
+paths:
+  - "publication/**/*.md"
+  - "ai_context/**/*.md"
+  - "ai_context/**/*.json"
+  - "scripts/**/*.py"
+  - "scripts/**/*.md"
 ---
 
 # Publishing Rules

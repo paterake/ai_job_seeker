@@ -5,6 +5,10 @@ globs:
   - "**/ingest*/**"
   - "**/query*/**"
 basis: operational-experience
+paths:
+  - "**/retriev*/**"
+  - "**/ingest*/**"
+  - "**/query*/**"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

@@ -284,12 +284,12 @@ Because changes to `ai_agent_core` affect all consumers, its change control is s
 
 ### How rules are loaded
 
-At session start, rule files under `.claude/rules/` are auto-loaded via their glob patterns (based on file types being touched). The agent then reads `CLAUDE.md` → `ai_context/ASSISTANTS.md`, which identifies which rules apply to the task and routes it to governance docs that require explicit reads (CONTRACT.md, ANTI_DRIFT.md, etc.). Rule files are already in context — the router does not re-read them. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
+Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` frontmatter loads at session start; a rule with `paths:` loads when the agent first reads or edits a matching file (Claude Code ignores the `globs:` key, which is kept for Trae). Only the core rules (`core-posture`, `agent-behavior`, `security-threat-model`, `context-economy`) are unscoped, so a session starts with the minimum. The agent then reads `CLAUDE.md` → `ai_context/ASSISTANTS.md`, which identifies which rules apply to the task and routes it to governance docs that require explicit reads (CONTRACT.md, ANTI_DRIFT.md, etc.). Rule files are already in context — the router does not re-read them. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
 
 ### Within-session enforcement
 
-- Platform pillars and agent-behavior rules are active from the first tool call.
-- The deterministic router identifies which rules are most relevant and routes to governance docs that need explicit reads — it does not load rule files (those are already in context via globs).
+- Platform pillars, agent-behavior, security and context-economy rules are active from the first tool call; scoped rules join when the agent touches a matching file.
+- The deterministic router identifies which rules are most relevant and routes to governance docs that need explicit reads — it does not load rule files (the harness loads them, at start or on a matching file).
 - Computational sensors (tests, linters, structural validators) run within a session and report violations synchronously.
 
 ### Cross-session enforcement and the bootstrapping loop

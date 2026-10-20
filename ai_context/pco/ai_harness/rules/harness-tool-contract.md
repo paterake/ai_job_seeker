@@ -5,51 +5,21 @@ globs:
   - ".trae/**"
   - "ai_context/**"
 basis: operational-experience
+paths:
+  - ".claude/**"
+  - ".trae/**"
+  - ".github/**"
+  - "ai_context/**"
+  - "audit/**"
+  - "**/settings.json"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)
 
 # Harness Tool Contract
 
-## The Portability Distinction
-
-Governance transfers across harnesses. The edit-tool contract does not transfer automatically.
-
-The governance layer (rules, posture, context routing) is portable by design — the same rules are symlinked into each harness dotfolder (`.claude/`, `.trae/`, `.github/`). The tool format layer is not governed by the same mechanism: models are post-trained and RL'd against a specific harness's tool conventions (e.g. unified diff vs. search-and-replace block). This calibration is implicit and not visible in any config file.
-
-**Consequence**: even with a clean, portable governance layer, a mismatched edit dialect collapses success rate and creates retry loops regardless of how well the harness routes context. Governance directs; the edit-tool contract still has to fit.
-
-## Edit-Tool Format as a Capability Variable
-
-The edit-tool format a harness uses is a capability variable, not a configuration detail.
-
-- A model calibrated to one edit dialect may emit structurally valid but unparseable output when the expected format changes.
-- Success rate collapse from format mismatch is indistinguishable from model capability failure without explicit diagnosis.
-- Recovery is complete when the expected format is restored — with no model change. This confirms the root cause is the tool format, not the model.
-
-**Consequence**: treating the edit-tool contract as a neutral detail leads to silent capability degradation that is misdiagnosed as model regression.
-
-## Required Controls
-
-### When switching harnesses
-
-Before migrating governance to a new harness (e.g. Claude Code → another coding harness):
-- Identify the edit-tool format each harness emits and expects.
-- Confirm the target model was post-trained or evaluated against that format.
-- Run a capability regression suite before declaring the migration complete — clean governance is a necessary but not sufficient condition.
-
-### When changing a tool interface
-
-Any change to tool schema, argument semantics, output format, or default behaviour is a model-impact event (not just an engineering change). Treat it as such:
-- Flag the change as model-impacting before merging.
-- Require regression evidence from a representative workflow eval, not just unit tests.
-- Apply a compatibility window if the change affects the edit tool specifically.
-
-### When upgrading models
-
-A model upgrade may shift the post-training distribution for tool format expectations. Do not assume forward compatibility:
-- Re-validate the edit-tool contract for the new model version.
-- Treat unexplained success rate drops after a model upgrade as a potential format mismatch before assuming model regression.
+Edit-tool format, harness switches, model upgrades and tool-interface changes (model-impact events)
+are governed in the [integration spoke](../../integration/README.md).
 
 ## Approval Gates (Policy Anchor)
 
@@ -58,25 +28,16 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 - Approval gates are named and must present explicit options and consequences.
 - Proceeding past an approval gate without an approval record is prohibited.
 - The approval record must have a stable identifier and be bound to `run_id` (and referenced in run lineage when used).
-- **Effective oversight (not nominal).** For a gate on a High/Critical solution, the named overseer
-  must be competent for that risk tier and the gate must be designed to resist automation bias — the
-  approval record captures a substantive decision, not a rubber-stamp. **Consequence:** a signature
-  box is not oversight; nominal sign-off fails the AI Act's effectiveness bar while appearing compliant.
-- **Segregation of duties at go-live.** At the go-live gate, the approver must not be the author of
-  the change; author ≠ approver is enforced, not advisory. **Consequence:** self-approval at go-live
-  defeats the conformance gate — the one control the gate exists to provide is bypassed by one person.
-
+- Go-live gates for High/Critical solutions add effective-oversight and segregation-of-duties
+  obligations: [ENTERPRISE_OBLIGATIONS.md](../../governance/ENTERPRISE_OBLIGATIONS.md).
 ## Capability-Decision Enforcement
 
 Prose guidance is not enough for recurring capability-fit failures. When a change introduces a new
 parser-/extractor-shaped mechanism, or a comparable content-interpretation surface, the harness must
 enforce that a capability-decision artefact exists before commit / PR creation.
 
-Required record shape (minimum):
-- task type,
-- chosen driver (`config-driven` | `data-driven` | `AI-driven` | explicit hybrid),
-- why the other driver was not chosen,
-- whether a config/prompt solution was considered.
+Required record shape: `governance.md` → Capability-Decision Record (template:
+`audit/templates/capability_decision_record.md`).
 
 Enforcement semantics:
 - The hook enforces that a decision record exists — it denies the commit / PR command otherwise — in repos

@@ -29,9 +29,9 @@ Pillars 4+5 = one rule (long sessions accumulate noise; short sessions with dura
 
 ## Deterministic Router (Task → Required Reads)
 
-Rule files under `.claude/rules/` are **already in your context** via auto-loaded globs — do not re-read them. Use the two tables below: the first identifies which rules apply to your task; the second lists governance docs that need an explicit read.
+Rule files under `.claude/rules/` are loaded by the harness — do not re-read them. Four load at session start (`core-posture`, `agent-behavior`, `security-threat-model`, `context-economy`); the rest carry `paths:` frontmatter and load when you read or edit a matching file. Use the two tables below: the first identifies which rules apply to your task; the second lists governance docs that need an explicit read.
 
-### Rule files — already in context (identify and apply, no read needed)
+### Rule files — loaded by the harness (identify and apply, no read needed)
 
 | Task type | Relevant rule |
 |---|---|
@@ -44,7 +44,6 @@ Rule files under `.claude/rules/` are **already in your context** via auto-loade
 | Security / sensitive tooling | `security-threat-model.md` |
 | Evaluations / assurance changes | `assurance.md` |
 | Authoring/changing governance rules; scope-of-validation or rule provenance | `governance-provenance.md` |
-| Data residency, data-subject rights, IP/output ownership, retention/legal hold | `compliance-lifecycle.md` |
 
 ### Governance docs — read explicitly (not auto-loaded)
 
@@ -54,6 +53,7 @@ Rule files under `.claude/rules/` are **already in your context** via auto-loade
 | Anti-drift / "no duplication" questions | [ANTI_DRIFT.md](governance/ANTI_DRIFT.md) |
 | Repo concern profile / what belongs in ai_context | [CONCERNS.md](governance/CONCERNS.md) |
 | Backlog / multi-session work | [AI_ASSISTANT_BACKLOG_CONTINUITY.md](governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md) |
+| Enterprise go-live: data residency, data-subject rights, IP/output ownership, retention/legal hold, vendor procurement, access recertification, regulatory notification, FinOps, go-live oversight | [ENTERPRISE_OBLIGATIONS.md](governance/ENTERPRISE_OBLIGATIONS.md) |
 | Domain-specific implementation notes for this repo | `project/{domain}/README.md` |
 
 ## After Reading This File
