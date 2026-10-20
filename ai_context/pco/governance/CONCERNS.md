@@ -48,7 +48,7 @@ The governed repos themselves are listed in `ai_context/project/governance/consu
 
 **Concrete implementation reference:** `ai_publish/ai_context`
 
-### 3) Data and Document Engineering (elt_lake)
+### 3) Data and Document Engineering
 
 **Primary risk:** incorrect transformation and irreproducible results across mixed workloads.
 
@@ -62,7 +62,7 @@ The governed repos themselves are listed in `ai_context/project/governance/consu
 - structured outputs and formatting rules
 - safe automation patterns (idempotency, replay, audit)
 
-**Concrete implementation reference:** `elt_lake/ai_context`
+**Concrete implementation reference:** none governed (`elt_lake` left PCO governance on 2026-10-20).
 
 ### 4) Platform Governance (ai_agent_pco)
 
