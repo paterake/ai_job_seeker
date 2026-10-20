@@ -1,10 +1,12 @@
 ---
-description: Assurance and eval governance rules. Loaded when editing Python or YAML in any governed repo.
+description: Assurance and eval governance rules. Loaded when editing eval code, eval datasets or audit records.
 globs:
-  - "**/*.py"
-  - "**/*.yaml"
-  - "**/*.yml"
+  - "**/eval*/**"
+  - "**/*eval*.py"
+  - "**/*eval*.yaml"
+  - "audit/**"
 basis: operational-experience
+spoke: assurance
 paths:
   - "**/eval*/**"
   - "**/*eval*.py"
@@ -17,6 +19,15 @@ applyTo: "**/eval*/**,**/*eval*.py,**/*eval*.yaml,audit/**"
 
 # Assurance and Evaluation Rules
 
+## Error Analysis Before Gates
+
+- Before building an eval gate, read real traces and failures and name the failure modes. The first suite is
+  20–50 tasks drawn from those failures, scored by binary pass/fail checks, not generic metrics.
+- Keep capability evals (new behaviour, expected to start low) separate from regression evals (expected to stay
+  passing). An LLM judge is validated against human labels before it gates.
+- **Consequence:** a suite built before any failure is seen measures guesses, so it passes while real failures ship.
+  *Source: GenAI research record (Anthropic "Demystifying evals for AI agents"; hamel.dev evals FAQ); basis: research-derived.*
+
 ## Eval as a Gate (Non-Negotiable)
 
 - Evals are blocking gates, not advisory reporting. Metrics that do not gate real outcomes are metrics theatre.
@@ -26,11 +37,12 @@ applyTo: "**/eval*/**,**/*eval*.py,**/*eval*.yaml,audit/**"
 
 ## Evaluation Units
 
-A passing output-level eval while taking an unsafe or wasteful tool trajectory is a failure mode, not a pass. Evaluation is required at three levels:
+A passing output-level eval while taking an unsafe or wasteful tool trajectory is a failure mode, not a pass. Evaluation is required at each level that applies:
 
-- **Output-level**: score the final artefact against explicit criteria
-- **Trajectory-level**: score the sequence of tool calls and decisions, not just the final output
-- **Thread-level**: score multi-turn coherence, not only individual turns
+- **Output-level** (always): score the final artefact against explicit criteria
+- **Trajectory-level** (agents and tool loops): score the sequence of tool calls and decisions, not just the final output
+- **Thread-level** (multi-turn products only): score multi-turn coherence, not only individual turns.
+  *Source: GenAI research record (benchmark: thread-level stronger than typical); basis: research-derived.*
 
 ## Dataset Governance
 

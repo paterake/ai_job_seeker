@@ -1,10 +1,15 @@
 ---
-description: Governance rules for config purity, reuse, and safe publishing posture. Loaded when editing code or configuration.
+description: Architecture rules for code — config purity, driver selection, simplest pattern first, reuse and shared-code homes, file structure, native-first integration. Loaded when editing code or configuration.
 globs:
   - "**/*.py"
+  - "**/*.sh"
+  - "**/*.js"
+  - "**/*.ts"
   - "**/*.yaml"
   - "**/*.yml"
+  - "**/*.toml"
 basis: operational-experience
+spoke: architecture
 paths:
   - "**/*.py"
   - "**/*.sh"
@@ -16,7 +21,7 @@ paths:
 applyTo: "**/*.py,**/*.sh,**/*.js,**/*.ts,**/*.yaml,**/*.yml,**/*.toml"
 ---
 
-> Governance narrative: [integration spoke](../../integration/README.md)
+> Governance narrative: [architecture spoke](../../architecture/README.md)
 
 # Governance Rules — Config Purity, Driver Selection, and Reuse
 
@@ -42,6 +47,10 @@ Choose the driver that fits the task:
 - Semantic interpretation of content defaults to `AI-driven`.
 - AI-driven solutions still honour config purity: prompts, schemas, taxonomies, thresholds, and routing belong in configuration rather than code.
 - AI-driven is a governed peer, not a foreign exception. It carries its own obligations: evaluation, provenance, recorded non-determinism, and explicit review of model use.
+- **Simplest pattern first.** An AI-driven solution starts as a single model call; it becomes a fixed workflow,
+  then an agent, only when evidence shows the simpler pattern fails the task. **Consequence:** an agent where a
+  call would do adds loops, cost and failure surface that its evals and bounds must then cover.
+  *Source: GenAI research record (Anthropic "Building effective agents"); basis: research-derived.*
 
 ### Explicit Answer vs Inference Test
 
@@ -169,7 +178,8 @@ For the full documentation contract (required doc set, segregation rules, PRD au
   skill, SDK, API, or the host platform's extension points (for example Claude Code skills, hooks
   and MCP). Do not build or maintain wrapper CLIs, adapter skills or glue layers to integrate it.
 - Use what the native integration offers; scope its use through the vendor's approval record, not
-  through extra layers. Platform controls (`operations.md`, `security-threat-model.md`) still apply.
+  through extra layers. Platform controls (`operations.md`, `observability.md`, `lineage.md`,
+  `security-threat-model.md`) still apply.
 - If no native path exists for a use, that use is not integrated: say so; do not build a bridge.
 - This does not ban the one shared, governed call surface per vendor that *AI Infrastructure
   Primitives* and `operations.md` require for product mechanism. Behaviour changes there are config,
@@ -178,14 +188,4 @@ For the full documentation contract (required doc set, segregation rules, PRD au
   the vendor and duplicates what already exists. Observed 2026-10-13, when a custom screening CLI, its
   skill and duplicate pipeline judge modes were built and then reverted.
 
-## Tool Selection Discipline
-
-Fewer, focused tools outperform a large overlapping toolset.
-
-- Every tool description populates every prompt; each additional tool adds cognitive load and increases the probability of tool confusion or misuse.
-- Before adding a new tool, confirm it is not a near-duplicate of an existing one.
-- Each MCP server is trusted text in the agent's execution context — a compromised or malicious MCP server is a prompt injection vector (see `security-threat-model.md`).
-
-**The test**: can you name the specific failure mode this tool prevents, and does no existing tool already cover it? If not, do not add it.
-
-**Consequence**: tool proliferation degrades prompt quality, expands MCP supply-chain attack surface, and makes tool schemas harder to reason about in long sessions.
+Adding a tool or MCP server: `security-threat-model.md` §4 (trust assessment and tool-selection test).

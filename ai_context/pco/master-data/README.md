@@ -105,12 +105,13 @@ Governance defines:
 ## Enforcement Rules
 
 Canonical enforcement:
-- Run identity recording, anonymous execution posture: [operations.md](../ai_harness/rules/operations.md)
+- Registry entries (tool/model identity, `risk_tier` → `requires_approval`), run identity recording, anonymous execution posture: [lineage.md](../ai_harness/rules/lineage.md)
+- Registry shape and the high-risk-tool approval check: `governed-repo-validate` (`scripts/distill_harness.py`)
 - Configuration non-compliance posture, additive-only strengthening: [CONTRACT.md](../governance/CONTRACT.md) and [governance.md](../ai_harness/rules/governance.md)
 
 ## Enforcement Points (where the control plane enforces)
 
-Canonical enforcement anchors: [operations.md](../ai_harness/rules/operations.md) and [CONTRACT.md](../governance/CONTRACT.md).
+Canonical enforcement anchors: [lineage.md](../ai_harness/rules/lineage.md) and [CONTRACT.md](../governance/CONTRACT.md).
 
 ## Evidence and Metrics (what observability measures)
 

@@ -8,6 +8,7 @@ globs:
   - "**/ingest*/**"
   - "**/settings.json"
 basis: research-derived
+spoke: security
 paths:
   - "**/agent*/**"
   - "**/tool*/**"
@@ -43,7 +44,10 @@ A RAG pipeline with tool use satisfies all three conditions by design.
 
 ### 1. Content source trust classification (non-negotiable)
 
-Every content source the agent can read must have an explicit trust tier:
+Every agent treats untrusted content as data, reads it in an isolated context, and never combines it with
+credential access or external write capabilities. A High/Critical solution also registers every content source
+it can read in the tier table below; for other solutions the table is optional.
+*Source: GenAI research record (benchmark: the principle is standard, the formal taxonomy stronger than typical).*
 
 | Tier | Examples | Permitted agent action |
 |------|----------|----------------------|
@@ -86,6 +90,12 @@ Before any tool or MCP server is permitted in the harness, assess:
 
 Hosted MCP servers that handle internal data without transparent data handling declarations
 are prohibited until assessed.
+
+Fewer, focused tools outperform a large overlapping toolset. Every tool description populates every
+prompt, so each extra tool adds load and raises the odds of tool confusion. Before adding a tool, name
+the specific failure mode it prevents and confirm no existing tool covers it; if you cannot, do not add it.
+**Consequence:** tool proliferation degrades prompt quality, expands the MCP supply-chain attack surface,
+and makes tool schemas harder to reason about in long sessions.
 
 ### 5. Non-impersonation rule (non-negotiable)
 

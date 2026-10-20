@@ -4,11 +4,14 @@ globs:
   - "ai_context/**/*.md"
   - "docs/**/*.md"
 basis: operational-experience
+spoke: assurance
 paths:
   - "ai_context/**/*.md"
   - "docs/**/*.md"
 applyTo: "ai_context/**/*.md,docs/**/*.md"
 ---
+
+> Governance narrative: [assurance spoke](../../assurance/README.md)
 
 # Governance Provenance and Scope of Validation
 

@@ -5,6 +5,7 @@ globs:
   - "**/ingest*/**"
   - "**/query*/**"
 basis: operational-experience
+spoke: knowledge
 paths:
   - "**/retriev*/**"
   - "**/ingest*/**"

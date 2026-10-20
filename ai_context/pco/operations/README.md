@@ -63,7 +63,7 @@ Governance defines what a "complete run" includes:
 
 ## Canonical Operational Anchors
 
-- Runtime execution invariants (run identity propagation, bounded budgets/retries/loops, input caps, telemetry/tracing posture, evidence artefacts, kill-switches): [operations.md](../ai_harness/rules/operations.md)
+- Runtime execution invariants (bounded budgets/retries/loops, input caps, degrade modes, human checkpoint for high-risk tools, kill-switches): [operations.md](../ai_harness/rules/operations.md); telemetry/tracing: [observability.md](../ai_harness/rules/observability.md); run identity and evidence artefacts: [lineage.md](../ai_harness/rules/lineage.md)
 - Identity and entitlements surfaces referenced by runtime rules: [master-data/README.md](../master-data/README.md)
 - Governance contract surfaces referenced by runtime rules: [CONTRACT.md](../governance/CONTRACT.md)
 
@@ -71,7 +71,7 @@ Governance defines what a "complete run" includes:
 
 Canonical enforcement: [operations.md](../ai_harness/rules/operations.md)
 
-Covers: bounded execution (timeouts, token/cost budgets), structured observability (run_id, latency, token counts), defined evaluation path, degrade mode on failure, run_id propagation through every call chain, spans closing in finally blocks, telemetry to structured sink, lineage manifest requirements, append-only evidence, kill-switch scoping, and post-run review artefact.
+Covers: bounded execution (timeouts, token/cost budgets, retries, loop stop conditions, input caps), structured observability baseline (run_id, latency, token counts), defined evaluation path, degrade mode on failure, the human checkpoint before a high-risk tool call, and kill-switch scoping. Tracing and telemetry detail: [observability.md](../ai_harness/rules/observability.md). Lineage manifest and append-only evidence: [lineage.md](../ai_harness/rules/lineage.md).
 
 Regulatory notification: an incident crossing an external-notification threshold records who notifies
 which authority, by when (the applicable statutory clock), and the notification sent — as run evidence,

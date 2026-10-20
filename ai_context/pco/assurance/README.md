@@ -119,7 +119,7 @@ Eval datasets are versioned artefacts with explicit structure.
 
 ## Enforcement Rules
 
-Canonical enforcement: [assurance.md](../ai_harness/rules/assurance.md) and [operations.md](../ai_harness/rules/operations.md)
+Canonical enforcement: [assurance.md](../ai_harness/rules/assurance.md) (error analysis before gates, eval levels, datasets, incidents), [governance-provenance.md](../ai_harness/rules/governance-provenance.md) (rule provenance), and [lineage.md](../ai_harness/rules/lineage.md) (run evidence)
 
 Covers: eval as a blocking gate (not advisory), three evaluation units (output/trajectory/thread), dataset governance (versioned artefacts, named splits, CI-pinned), evaluator calibration, online-to-offline feedback loop, and incident capture requirements.
 

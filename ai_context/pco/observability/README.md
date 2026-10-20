@@ -73,13 +73,13 @@ Governance defines a mechanism to surface emergent failure categories that no pr
 
 ## Enforcement Rules
 
-Canonical enforcement: [operations.md](../ai_harness/rules/operations.md)
+Canonical enforcement: [observability.md](../ai_harness/rules/observability.md)
 
-Covers: structured telemetry event contract (run_id, model identifier, input/output sizes/hashes, latency, token counts), tool call telemetry, privacy-safe defaults (no raw prompts/payloads/retrieved content in logs), and tracing invariants.
+Covers: structured telemetry event contract (run_id, model identifier, input/output sizes, latency, token counts; hashes where High/Critical or audit/replay need), tool call telemetry, privacy-safe defaults (no raw prompts/payloads/retrieved content in logs), tracing invariants, and the post-run review artefact.
 
 FinOps accountability: beyond per-run cost, each solution/pod declares budget ownership, chargeback
 attribution, and a cost-dispute path — cost with no named owner is cost nobody controls
-([operations.md](../ai_harness/rules/operations.md)).
+([ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)).
 
 ## Enforcement Points (where the control plane enforces)
 

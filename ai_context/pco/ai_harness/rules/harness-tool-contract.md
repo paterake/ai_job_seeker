@@ -3,8 +3,12 @@ description: Harness tool contract — edit-tool format as a capability floor, n
 globs:
   - ".claude/**"
   - ".trae/**"
+  - ".github/**"
   - "ai_context/**"
+  - "audit/**"
+  - "**/settings.json"
 basis: operational-experience
+spoke: integration
 paths:
   - ".claude/**"
   - ".trae/**"

@@ -37,7 +37,7 @@ rules, then use this file for ai_job_seeker-specific posture and routing.
 | Ingesting or parsing job postings (untrusted) | `ai_context/pco/ai_harness/rules/security-threat-model.md` (trifecta + trust tiers) |
 | Drafting a CV / application / recruiter message | Non-Negotiables above (non-impersonation, no fabrication) |
 | Submitting an application (outbound) | Submission approval gate — `ai_context/project/governance/` once authored |
-| Adding a tool or MCP server | `ai_context/pco/ai_harness/rules/governance.md` (Tool Selection Discipline) |
+| Adding a tool or MCP server | `ai_context/pco/ai_harness/rules/security-threat-model.md` §4 (trust assessment and tool-selection test) |
 
 ## Active Backlog / Current State
 

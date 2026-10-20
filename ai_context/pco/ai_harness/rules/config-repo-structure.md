@@ -1,13 +1,17 @@
 ---
 description: Structure discipline for configuration / use-case-realization repos — fixed homes for config, docs, backlog, and glue; no haphazard root accumulation. Loaded when creating or moving files in a config/use-case repo.
 globs:
-  - "**/*"
+  - "cfg/**"
+  - "**/cfg/**"
 basis: operational-experience
+spoke: architecture
 paths:
   - "cfg/**"
   - "**/cfg/**"
 applyTo: "cfg/**,**/cfg/**"
 ---
+
+> Governance narrative: [architecture spoke](../../architecture/README.md)
 
 # Config-Repo Structure
 

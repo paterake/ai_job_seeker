@@ -3,10 +3,13 @@ description: Sync trigger fired when any ai_context/ file is edited. Ensures pre
 globs:
   - "ai_context/**"
 basis: operational-experience
+spoke: knowledge
 paths:
   - "ai_context/**"
 applyTo: "ai_context/**"
 ---
+
+> Governance narrative: [knowledge spoke](../../knowledge/README.md)
 
 # ai_context → Human Docs Sync
 

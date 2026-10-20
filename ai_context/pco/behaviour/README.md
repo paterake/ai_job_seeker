@@ -25,7 +25,7 @@ Agents must not present outputs as objective or infallible when they are not. Wh
 
 ### Specification ambiguity protocol
 
-Agents must state assumptions explicitly before acting, present multiple interpretations when they exist, and stop to name what is unclear rather than filling gaps silently. Assumptions used to proceed must be recorded as evidence. Canonical anchors: [AGENTS.md](../AGENTS.md) and [operations.md](../ai_harness/rules/operations.md)
+Agents must state assumptions explicitly before acting, present multiple interpretations when they exist, and stop to name what is unclear rather than filling gaps silently. Assumptions used to proceed must be recorded as evidence. Canonical anchors: [AGENTS.md](../AGENTS.md) and [lineage.md](../ai_harness/rules/lineage.md)
 
 ### Capability-fit protocol
 
