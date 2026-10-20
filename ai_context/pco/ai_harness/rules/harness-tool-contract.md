@@ -30,6 +30,7 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 - The approval record must have a stable identifier and be bound to `run_id` (and referenced in run lineage when used).
 - Go-live gates for High/Critical solutions add effective-oversight and segregation-of-duties
   obligations: [ENTERPRISE_OBLIGATIONS.md](../../governance/ENTERPRISE_OBLIGATIONS.md).
+
 ## Capability-Decision Enforcement
 
 Prose guidance is not enough for recurring capability-fit failures. When a change introduces a new

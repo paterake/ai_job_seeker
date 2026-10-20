@@ -44,6 +44,7 @@ paths:
 - Every run must produce a lineage manifest recording: `run_id`, timestamps, project/workflow identity and versions, role/agent identity, tool versions, model identifier, policy versions, input/output fingerprints, and verification outcomes. Anonymous execution is prohibited.
 - Any approval, exception, or elevation used by a run must be bound to the run identity and referenced by stable identifier in the lineage manifest.
 - Evidence packages are append-only once a run is closed; rewriting or backfilling evidence after closure is prohibited.
+- These lineage and evidence obligations apply to runs of LLM-calling modules. Coding-agent sessions are evidenced by git commits, capability-decision records and anchor docs, not run records. **Consequence:** a per-session record duplicates git and goes unwritten (6 records fleet-wide in five months), so a requirement nobody meets teaches that the rules are optional.
 - Best-effort artefact writes must never fail silently; on write failure, emit a warning event visible in operational telemetry.
 - A post-run review artefact must summarise: budget usage, anomalies, errors by type, degrade modes used, and whether verification completed.
 - The control plane must support kill-switches scoped at least to: per-run and per-workflow; kill-switch activation must be recorded as evidence.

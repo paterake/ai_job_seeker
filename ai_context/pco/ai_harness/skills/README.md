@@ -13,6 +13,5 @@ Status is the skill's `stage` in [capability_registry.yaml](../../governance/cap
 | [backlog-continuity](backlog-continuity/SKILL.md) | Established | Creates/updates anchor-doc checkpoints for backlog continuity. Invoke when starting/continuing a backlog item or creating a TODO anchor doc. |
 | [capture-lessons](capture-lessons/SKILL.md) | Emerging | Capture lessons from implementation work into ai_context/ before they are lost. Enforces selectivity: most fixes do not belong here. |
 | [docs-alignment](docs-alignment/SKILL.md) | — | Validates and fixes a repo or implementation's docs against the platform documentation contract. Invoke when creating a new repo/implementation, before publishing, or when docs may have drifted. |
-| [evidence-package](evidence-package/SKILL.md) | — | Write and validate the append-only evidence record for the current governed run. Invoke at session end or when the Stop hook asks. |
 | [use-context](use-context/SKILL.md) | Established | Use AI context before starting tasks. Identifies which already-loaded rule files apply, via the deterministic router in ASSISTANTS.md. |
 

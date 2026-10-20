@@ -40,7 +40,7 @@ fi
 
 if [[ "$COUNT" -ge "$MAX_TOOL_CALLS" ]]; then
     printf 'limit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\n' "$COUNT" "$MAX_TOOL_CALLS" > "$HIT_FILE"
-    reason="$(printf 'GOVERNANCE STOP\nrisk_tier: high\ndenial_reason: execution_limit_hit\nlimit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\nnext_action: shell commands are denied for the rest of this session; start a new session (its count starts at 0) and run /evidence-package there to close the run (stop_condition.type: limit_hit)' \
+    reason="$(printf 'GOVERNANCE STOP\nrisk_tier: high\ndenial_reason: execution_limit_hit\nlimit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\nnext_action: shell commands are denied for the rest of this session; start a new session (its count starts at 0) and continue from the anchor doc' \
         "$COUNT" "$MAX_TOOL_CALLS")"
     jq -nc --arg reason "$reason" \
         '{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": $reason}}'

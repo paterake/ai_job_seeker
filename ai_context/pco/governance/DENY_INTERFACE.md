@@ -49,7 +49,7 @@ The PCO hooks `check_exception_expiry.sh`, `check_capability_decision.sh` and `c
 - Execution limits: silent when the limits file cannot be read. The count is per session, so the limit bounds one session, not a run spanning several sessions.
 - Capability decision: detection is a path/keyword heuristic over staged files; a content-interpretation change that matches neither passes silently.
 
-`gate_git_push.sh` was retired on 2026-10-11 by operator decision and is now a silent no-op: pushes to the operator's own repositories are pre-approved, and review before commit is enforced by the user-level commit gate. The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
+The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 
 ## Registration Surface
 
