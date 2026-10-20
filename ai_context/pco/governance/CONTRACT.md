@@ -68,6 +68,7 @@ Within `ai_context/pco/`, the allowed entries are:
 - `observability/`
 - `operations/`
 - `security/`
+- `templates/`
 
 Spoke folders may be empty or pointer-only, but they must exist so that project context can be filed deterministically.
 

@@ -2,7 +2,7 @@
 # check_guard.sh — PreToolUse hook (Bash, Edit, Write, MultiEdit, NotebookEdit). Refuses:
 #   - a file edit under ai_context/pco/ in any repo other than the PCO: that tree is PCO-owned, and sync
 #     overwrites a local edit, so the fix never reaches the other repos;
-#   - git push --force (or -f / --force-with-lease): it rewrites shared history.
+#   - git push --force (or -f / --force-with-lease / a +refspec): it rewrites shared history.
 # The PCO is recognised by its consumer manifest (ai_context/project/governance/consumers.yaml).
 # Pass: exit 0 with no output. Block: PreToolUse "deny" in hookSpecificOutput. No jq: exit 2 (fails closed).
 set -uo pipefail
@@ -21,7 +21,7 @@ deny() {
 
 cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')"
 if [[ -n "$cmd" ]] \
-    && printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+[^[:space:]]+)*[[:space:]]+push([[:space:]].*)?[[:space:]](--force(-with-lease)?(=[^[:space:]]*)?|-[a-zA-Z]*f[a-zA-Z]*)([[:space:]]|$)'; then
+    && printf '%s' "$cmd" | grep -Eq '(^|[;&|[:space:]])git([[:space:]]+-[cC][[:space:]]+[^[:space:]]+)*[[:space:]]+push([[:space:]][^;&|]*)?[[:space:]](--force(-with-lease)?(=[^[:space:]]*)?|-[a-zA-Z]*f[a-zA-Z]*|\+[^[:space:]]+)([[:space:]]|$)'; then
     deny "GOVERNANCE DENY
 denial_reason: force_push_refused
 next_action: push without --force; if history really must be rewritten, the operator does it"
