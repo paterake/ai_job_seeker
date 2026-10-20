@@ -64,7 +64,7 @@ CLAUDE.md and governance docs are guidance — they inform agent behaviour but c
 | Soft defaults, style, preferences | CLAUDE.md / governance docs |
 | Hard constraints that must hold unconditionally | Hooks in `settings.json` |
 
-Hooks are required (not docs) for:
+Use a hook, not docs, for:
 - Blocking destructive bash commands (force push, `rm -rf`, hard reset)
 - Running typecheck / lint / tests after file edits
 - Requiring approvals before commits or PRs are created
@@ -72,5 +72,14 @@ Hooks are required (not docs) for:
 - Any constraint where a single violation has irreversible consequences
 
 **The test**: if the constraint must hold even at the end of a long, saturated session — wire it as a hook.
+A constraint whose violation is reversible and caught by a validator (e.g. exception expiry) stays a validator check.
+
+The hooks the PCO ships, what each needs and what it does when a tool is missing: [hooks/README.md](../hooks/README.md).
+- A gate hook fails closed when it cannot run: it blocks a call it governs with a one-line reason (exit 2),
+  and never passes that call silently.
+  **Consequence:** a gate that passes when `jq` or `ruby` is missing is enforcement that silently does not
+  happen (observed 2026-10-20: every gate failed open with a tool off PATH).
+- Cloud sessions provision the gates' tools through the `setup_cloud_session.sh` SessionStart hook, which
+  every `.claude/settings.json` wires (`validate_harness_wiring.py` fails otherwise).
 
 **Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.

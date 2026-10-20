@@ -27,7 +27,6 @@ next_action:      <what the operator must do to unblock>
 | `exception_expired` | Exception invoked after its expiry date | Any |
 | `capability_experimental` | Capability in Experimental lifecycle stage invoked without a recorded adoption escalation | Any |
 | `supervision_required` | Action requires a fully supervised workflow; autonomous execution not permitted at this tier | Critical |
-| `expired_exceptions` | Emitted by the exception-expiry hook when a repo-local governance exception has expired (the hook's name for `exception_expired`) | Any |
 | `execution_limit_hit` | Emitted by the execution-limits hook when the tool-call budget is exhausted | Any |
 | `capability_decision_required` | Emitted by the capability-decision hook: parser-/extractor-shaped change staged without a capability-decision record | Any |
 | `capability_decision_invalid` | Emitted by the capability-decision hook: staged capability-decision record is missing required sections | Any |
@@ -43,10 +42,9 @@ next_action:      <what the operator must do to unblock>
 
 ## Current Enforcement Points
 
-The PCO hooks `check_exception_expiry.sh`, `check_capability_decision.sh` and `check_execution_limits.sh` return the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When a hook does not trip it exits 0 with no output and the call goes through the normal permission flow. Where each hook fails open:
+The PCO hooks `check_capability_decision.sh` and `check_execution_limits.sh` return the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When a hook does not trip it exits 0 with no output and the call goes through the normal permission flow. A hook that cannot run (a tool or its config is missing) fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape: [hooks/README.md](../ai_harness/hooks/README.md). Limits of each hook:
 
-- Exception expiry: silent when the repo has no `scripts/distill_harness.py`, so it enforces in the PCO repo only, not in consumer repos. It fails closed on any validator failure (malformed registry, missing expiry, `uv` unavailable), denying every shell command until the registry validates.
-- Execution limits: silent when the limits file cannot be read. The count is per session, so the limit bounds one session, not a run spanning several sessions.
+- Execution limits: the count is per session, so the limit bounds one session, not a run spanning several sessions.
 - Capability decision: detection is a path/keyword heuristic over staged files; a content-interpretation change that matches neither passes silently.
 
 The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.

@@ -128,7 +128,7 @@ As a result, its conformance declarations are not “additive only”. It must d
 - Policies are versioned and rolled out deliberately; unreviewed or “floating” governance changes are prohibited.
 - Tier 3/4 capability changes require a traceable approval record artefact; the record is stored in `audit/approvals/` (using `audit/templates/approval_record.md`) and referenced from the change evidence (e.g., capability registry `evidence` field or the change proposal).
 
-## Exceptions (Registry Contract; expiry checked by `governed-repo-validate`; the exception-expiry hook denies Bash calls while an exception has expired, in the PCO repo only — it fails open in consumer repos)
+## Exceptions (Registry Contract; expiry checked by `governed-repo-validate`, not by a hook)
 
 - Exceptions are time-bounded, attributable (owner + justification), and scoped; informal exceptions are prohibited.
 - Each governed repo maintains an exception registry at `ai_context/project/governance/exception_registry.yaml`.

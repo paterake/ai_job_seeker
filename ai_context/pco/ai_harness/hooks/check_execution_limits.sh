@@ -5,8 +5,19 @@
 # so every session starts at 0. Without a session_id it falls back to $REPO_ROOT/.claude/tool_call_count.
 # Under the limit: increments the counter and exits 0 with no output (normal permission flow applies).
 # At the limit: writes the hit file and emits a PreToolUse "deny" in hookSpecificOutput.
+# Fails closed: without jq or ruby, or without a readable positive max_tool_calls, it blocks the call (exit 2;
+# Claude Code shows the one-line reason), because a session it cannot count is unbounded.
 # Env overrides for testing: TOOL_CALL_COUNT_FILE, EXECUTION_LIMITS_FILE, EXECUTION_LIMIT_HIT_FILE
 set -euo pipefail
+
+fail_closed() {
+    printf 'GOVERNANCE STOP: check_execution_limits.sh cannot enforce max_tool_calls: %s\n' "$1" >&2
+    exit 2
+}
+for tool in jq ruby; do
+    command -v "$tool" >/dev/null 2>&1 \
+        || fail_closed "$tool not found on PATH (install it; cloud sessions: setup_cloud_session.sh)"
+done
 
 payload="$(cat)"
 session_id="$(printf '%s' "$payload" | jq -r '.session_id // empty' 2>/dev/null || true)"
@@ -23,13 +34,13 @@ LIMITS_FILE="${EXECUTION_LIMITS_FILE:-$REPO_ROOT/ai_context/pco/governance/execu
 HIT_FILE="${EXECUTION_LIMIT_HIT_FILE:-$REPO_ROOT/.claude/execution_limit_hit}"
 
 # Read max_tool_calls from config via ruby (matches distill_harness.py's YAML loader).
-# On any config error: fail-open (silent exit 0) to avoid blocking on a misconfigured limits file.
 MAX_TOOL_CALLS="$(ruby -ryaml -e "
 data = YAML.load_file(ARGV[0])
 v = data.dig('limits', 'max_tool_calls', 'value')
 abort 'not a positive int' unless v.is_a?(Integer) && v > 0
 puts v
-" "$LIMITS_FILE" 2>/dev/null)" || exit 0
+" "$LIMITS_FILE" 2>/dev/null)" \
+    || fail_closed "no positive limits.max_tool_calls.value in $LIMITS_FILE (fix it with the file-edit tool)"
 
 # Read current count (0 if file absent or contains non-integer)
 COUNT=0

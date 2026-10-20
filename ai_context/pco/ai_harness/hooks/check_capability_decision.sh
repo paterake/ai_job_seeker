@@ -5,6 +5,17 @@
 set -euo pipefail
 
 payload="$(cat)"
+if ! command -v jq >/dev/null 2>&1; then
+    # Fails closed without jq, but only for commit / PR-creation commands (exit 2; Claude Code shows the reason):
+    # it can neither parse the command nor emit a deny, and other shell calls are not this gate's concern.
+    case "$payload" in
+        *"git commit"*|*"gh pr create"*)
+            printf 'GOVERNANCE STOP: check_capability_decision.sh cannot check this commit / PR: jq not found on PATH (install it; cloud sessions: setup_cloud_session.sh)\n' >&2
+            exit 2
+            ;;
+    esac
+    exit 0
+fi
 cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')"
 
 case "$cmd" in

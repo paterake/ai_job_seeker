@@ -7,15 +7,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_exception_expiry.sh\""
-          },
-          {
-            "type": "command",
             "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_capability_decision.sh\""
           },
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/check_execution_limits.sh\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/ai_context/pco/ai_harness/hooks/setup_cloud_session.sh\""
           }
         ]
       }
