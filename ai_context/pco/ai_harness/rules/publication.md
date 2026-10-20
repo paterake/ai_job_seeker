@@ -13,6 +13,7 @@ paths:
   - "ai_context/**/*.json"
   - "scripts/**/*.py"
   - "scripts/**/*.md"
+applyTo: "publication/**/*.md,ai_context/**/*.md,ai_context/**/*.json,scripts/**/*.py,scripts/**/*.md"
 ---
 
 # Publishing Rules

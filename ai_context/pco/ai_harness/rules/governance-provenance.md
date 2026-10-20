@@ -7,6 +7,7 @@ basis: operational-experience
 paths:
   - "ai_context/**/*.md"
   - "docs/**/*.md"
+applyTo: "ai_context/**/*.md,docs/**/*.md"
 ---
 
 # Governance Provenance and Scope of Validation

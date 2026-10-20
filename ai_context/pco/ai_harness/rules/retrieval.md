@@ -9,6 +9,7 @@ paths:
   - "**/retriev*/**"
   - "**/ingest*/**"
   - "**/query*/**"
+applyTo: "**/retriev*/**,**/ingest*/**,**/query*/**"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

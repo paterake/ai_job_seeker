@@ -10,6 +10,7 @@ paths:
   - "**/*eval*.py"
   - "**/*eval*.yaml"
   - "audit/**"
+applyTo: "**/eval*/**,**/*eval*.py,**/*eval*.yaml,audit/**"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)

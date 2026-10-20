@@ -7,6 +7,7 @@ globs:
 basis: operational-experience
 paths:
   - "**/*.py"
+applyTo: "**/*.py"
 ---
 
 > Governance narrative: [operations spoke](../../operations/README.md)

@@ -13,6 +13,7 @@ paths:
   - "**/*.yaml"
   - "**/*.yml"
   - "**/*.toml"
+applyTo: "**/*.py,**/*.sh,**/*.js,**/*.ts,**/*.yaml,**/*.yml,**/*.toml"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)

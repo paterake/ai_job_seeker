@@ -12,6 +12,7 @@ paths:
   - "ai_context/**"
   - "audit/**"
   - "**/settings.json"
+applyTo: ".claude/**,.trae/**,.github/**,ai_context/**,audit/**,**/settings.json"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)

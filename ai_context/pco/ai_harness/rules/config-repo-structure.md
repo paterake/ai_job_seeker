@@ -6,6 +6,7 @@ basis: operational-experience
 paths:
   - "cfg/**"
   - "**/cfg/**"
+applyTo: "cfg/**,**/cfg/**"
 ---
 
 # Config-Repo Structure

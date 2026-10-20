@@ -3,6 +3,7 @@ description: Core posture — non-negotiable architectural pillars, PCO read-onl
 globs:
   - "**/*"
 basis: operational-experience
+applyTo: "**"
 ---
 
 # Core Posture

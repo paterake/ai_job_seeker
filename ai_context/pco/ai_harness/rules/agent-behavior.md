@@ -3,6 +3,7 @@ description: Agent coding behavior — pre-implementation posture, simplicity, s
 globs:
   - "**/*"
 basis: research-derived
+applyTo: "**"
 ---
 
 > Governance narrative: [behaviour spoke](../../behaviour/README.md)

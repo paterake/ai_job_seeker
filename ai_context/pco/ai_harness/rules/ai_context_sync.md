@@ -5,6 +5,7 @@ globs:
 basis: operational-experience
 paths:
   - "ai_context/**"
+applyTo: "ai_context/**"
 ---
 
 # ai_context → Human Docs Sync
