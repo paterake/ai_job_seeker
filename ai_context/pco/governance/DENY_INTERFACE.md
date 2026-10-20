@@ -28,8 +28,8 @@ next_action:      <what the operator must do to unblock>
 | `capability_experimental` | Capability in Experimental lifecycle stage invoked without a recorded adoption escalation | Any |
 | `supervision_required` | Action requires a fully supervised workflow; autonomous execution not permitted at this tier | Critical |
 | `execution_limit_hit` | Emitted by the execution-limits hook when the tool-call budget is exhausted | Any |
-| `capability_decision_required` | Emitted by the capability-decision hook: parser-/extractor-shaped change staged without a capability-decision record | Any |
-| `capability_decision_invalid` | Emitted by the capability-decision hook: staged capability-decision record is missing required sections | Any |
+| `capability_decision_required` | Emitted by the capability-decision hook: parser-/extractor-shaped change (staged, unstaged or untracked) without a capability-decision record | Any |
+| `capability_decision_invalid` | Emitted by the capability-decision hook: capability-decision record is missing required sections | Any |
 
 ## Per-Tier Denial Shapes
 
@@ -45,7 +45,7 @@ next_action:      <what the operator must do to unblock>
 The PCO hooks `check_capability_decision.sh` and `check_execution_limits.sh` return the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When a hook does not trip it exits 0 with no output and the call goes through the normal permission flow. A hook that cannot run (a tool or its config is missing) fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape: [hooks/README.md](../ai_harness/hooks/README.md). Limits of each hook:
 
 - Execution limits: the count is per session, so the limit bounds one session, not a run spanning several sessions.
-- Capability decision: detection is a path/keyword heuristic over staged files; a content-interpretation change that matches neither passes silently.
+- Capability decision: detection is a path/keyword heuristic over staged, unstaged and untracked files; a content-interpretation change that matches neither passes silently.
 
 The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 

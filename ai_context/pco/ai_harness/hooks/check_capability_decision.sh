@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # check_capability_decision.sh — PreToolUse hook: require a capability-decision record
-# before commit / PR creation when staged changes look like a new content-interpretation surface.
+# before commit / PR creation when changes the command can commit (staged, unstaged or untracked) look like a
+# new content-interpretation surface.
 # Pass: exit 0 with no output (normal permission flow applies). Block: PreToolUse "deny" in hookSpecificOutput.
 set -euo pipefail
 
@@ -29,11 +30,24 @@ esac
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$REPO_ROOT"
 
-STAGED_PATHS=()
+# core.quotePath=false: list non-ASCII paths as-is, not C-quoted, so they match the patterns and can be read.
+GIT=(git -c core.quotePath=false)
+
+# Paths the command can commit: staged, unstaged and untracked. The hook runs before the command, so
+# `git add … && git commit` and `git commit -a` stage their files only after this check.
+UNTRACKED=()
 while IFS= read -r line; do
-    [[ -n "$line" ]] && STAGED_PATHS+=("$line")
-done < <(git diff --cached --name-only --diff-filter=ACMR)
-if [[ "${#STAGED_PATHS[@]}" -eq 0 ]]; then
+    [[ -n "$line" ]] && UNTRACKED+=("$line")
+done < <("${GIT[@]}" ls-files --others --exclude-standard 2>/dev/null || true)
+CHANGED_PATHS=()
+while IFS= read -r line; do
+    [[ -n "$line" ]] && CHANGED_PATHS+=("$line")
+done < <(
+    { "${GIT[@]}" diff --cached --name-only --diff-filter=ACMR
+      "${GIT[@]}" diff --name-only --diff-filter=ACMR
+      printf '%s\n' "${UNTRACKED[@]}"; } 2>/dev/null | sort -u
+)
+if [[ "${#CHANGED_PATHS[@]}" -eq 0 ]]; then
     exit 0
 fi
 
@@ -44,7 +58,7 @@ CODE_DIR_RE='(^|/)(src|implementation|app|lib|packages|modules)/'
 require_record=0
 risky_paths=()
 
-for path in "${STAGED_PATHS[@]}"; do
+for path in "${CHANGED_PATHS[@]}"; do
     if [[ "$path" =~ $SOURCE_RE ]] && [[ "$path" =~ $SHAPE_RE ]]; then
         risky_paths+=("$path")
         require_record=1
@@ -53,16 +67,26 @@ done
 
 if [[ "$require_record" -eq 0 ]]; then
     new_source_count="$(
-        git diff --cached --name-status --diff-filter=A \
+        { "${GIT[@]}" diff --cached --name-only --diff-filter=A; printf '%s\n' "${UNTRACKED[@]}"; } 2>/dev/null \
+        | sort -u \
         | awk -v code_re="$CODE_DIR_RE" '
-            $2 ~ /\.(py|ts|tsx|js|jsx)$/ && $2 ~ code_re { c++ }
+            $0 ~ /\.(py|ts|tsx|js|jsx)$/ && $0 ~ code_re { c++ }
             END { print c + 0 }
         '
     )"
+    # Untracked files feed the keyword scan only if they are readable source files: the heuristic counts source
+    # files, and an unreadable path (broken symlink, nested repo) must not abort the hook. Only the first 1 MB of each
+# is read, so a huge file cannot stall the commit. Word boundaries are
+    # spelled out because mawk has no \b.
     keyword_hits="$(
-        git diff --cached --unified=0 -- . ':(exclude)audit/capability_decisions/*' \
+        { "${GIT[@]}" diff HEAD --unified=0 -- . ':(exclude)audit/capability_decisions/*' 2>/dev/null \
+            || "${GIT[@]}" diff --cached --unified=0 -- . ':(exclude)audit/capability_decisions/*' 2>/dev/null
+          for f in "${UNTRACKED[@]}"; do
+              if [[ "$f" =~ $SOURCE_RE && -f "$f" && -r "$f" ]]; then head -c 1000000 "$f" 2>/dev/null | sed 's/^/+/'; fi
+          done
+          true; } \
         | awk '
-            /^\+/ && $0 !~ /^\+\+\+/ && $0 ~ /\b(parse|parser|extract|distill|classif|semantic|infer|ground|facet|entity|relation)\b/ { c++ }
+            /^\+/ && $0 !~ /^\+\+\+/ && $0 ~ /(^|[^[:alnum:]_])(parse|parser|extract|distill|classif|semantic|infer|ground|facet|entity|relation)([^[:alnum:]_]|$)/ { c++ }
             END { print c + 0 }
         '
     )"
@@ -80,7 +104,7 @@ RECORDS=()
 while IFS= read -r line; do
     [[ -n "$line" ]] && RECORDS+=("$line")
 done < <(
-    printf '%s\n' "${STAGED_PATHS[@]}" \
+    printf '%s\n' "${CHANGED_PATHS[@]}" \
     | grep -E '^audit/capability_decisions/.*\.md$' \
     | grep -Ev '^audit/capability_decisions/README\.md$' || true
 )
@@ -91,7 +115,7 @@ GOVERNANCE DENY
 risk_tier: high
 denial_reason: capability_decision_required
 policy_set: pco-core/v1
-next_action: add a capability-decision record under audit/capability_decisions/ using audit/templates/capability_decision_record.md, stage it, then retry the commit / PR command
+next_action: add a capability-decision record under audit/capability_decisions/ using audit/templates/capability_decision_record.md, then retry the commit / PR command
 DENY
 )"
     jq -nc --arg reason "$reason" \
@@ -101,7 +125,8 @@ fi
 
 missing_fields=()
 for record in "${RECORDS[@]}"; do
-    staged_record="$(git show ":$record" 2>/dev/null || true)"
+    # The working-tree copy is what `git add` will commit; fall back to the index if it was deleted.
+    staged_record="$(cat "$record" 2>/dev/null || git show ":$record" 2>/dev/null || true)"
     for heading in \
         '**Task Type:**' \
         '**Chosen Driver:**' \
@@ -117,7 +142,7 @@ done
 
 if [[ "${#missing_fields[@]}" -gt 0 ]]; then
     detail="$(printf '%s\n' "${missing_fields[@]}" | paste -sd '; ' -)"
-    reason="$(printf 'GOVERNANCE DENY\nrisk_tier: high\ndenial_reason: capability_decision_invalid\npolicy_set: pco-core/v1\ndetail: %s\nnext_action: fill the required sections in the staged capability-decision record, then retry the commit / PR command' "$detail")"
+    reason="$(printf 'GOVERNANCE DENY\nrisk_tier: high\ndenial_reason: capability_decision_invalid\npolicy_set: pco-core/v1\ndetail: %s\nnext_action: fill the required sections in the capability-decision record, then retry the commit / PR command' "$detail")"
     jq -nc --arg reason "$reason" \
         '{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": $reason}}'
     exit 0
