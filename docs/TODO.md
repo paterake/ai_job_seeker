@@ -14,8 +14,7 @@ only open work, constraints, and verification.
 - **Next:** Stage 4 — Draft. No Stage-4 anchor exists yet; create `docs/todo/TODO_STAGE4_DRAFT.md`
   with the four required anchor sections (continuity header, Accumulated Active Constraints,
   per-item verification commands, Gotchas) before writing code.
-- **Before touching code, read:** [ai_context/project/ASSISTANTS.md](../ai_context/project/ASSISTANTS.md)
-  (then the platform [ai_context/pco/ASSISTANTS.md](../ai_context/pco/ASSISTANTS.md)),
+- **Before touching code, read:** [ai_context/project/ASSISTANTS.md](../ai_context/project/ASSISTANTS.md),
   [REPO_CONTRACT.md](../ai_context/project/governance/REPO_CONTRACT.md), the
   [PRD](../PRD.md), and `## Accumulated Active Constraints` below. Stage 4 builds on the
   phase-2 judge call pattern described in [AI.md](AI.md).
@@ -85,7 +84,6 @@ Covered by governance exception `EXC-2026-10-12-001` (expires 2027-10-12) in
 
 - Full test suite: `uv run python3 -m pytest -q` → 32 passed (2026-10-11).
 - PII + output not tracked: `git check-ignore implementation/job_seeker/config/profile/kiera.yaml implementation/job_seeker/config/output/latest_shortlist.html` → prints both paths.
-- Governance: `uv run python3 ../ai_agent_pco/scripts/distill_harness.py governed-repo-validate --repo .` and `... governance-audit --repo . --fail` → exit 0.
 - Every other operational command: [RUNNERS](RUNNERS.md).
 
 ---

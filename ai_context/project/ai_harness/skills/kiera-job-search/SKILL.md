@@ -167,7 +167,7 @@ Phase-2 is skipped in agent mode per the hardware constraint.
 
 **Step 5 — Auto-open Finder (output folder) + the shortlist HTML in the default browser.**
 
-Kiera already has a Finder shortcut to the output folder pinned. The output folder is intentionally kept CLEAN FOR KIERA — **only human-readable .html deliverables live at the top level** (e.g. `latest_shortlist.html`, one-off analysis `.html` files, that's it). Pipeline-internal JSON/MD cache artefacts live in `output/_pipeline/`; raw ingest pool JSONs live in `output/_pools/`; timestamped historical copies live in the hidden `output/_archive/` and are auto-deleted after 7 days. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside the Trae sandbox (they only call macOS `open`, no sandbox writes outside the repo):
+Kiera already has a Finder shortcut to the output folder pinned. The output folder is intentionally kept CLEAN FOR KIERA — **only human-readable .html deliverables live at the top level** (e.g. `latest_shortlist.html`, one-off analysis `.html` files, that's it). Pipeline-internal JSON/MD cache artefacts live in `output/_pipeline/`; raw ingest pool JSONs live in `output/_pools/`; timestamped historical copies live in the hidden `output/_archive/` and are auto-deleted after 7 days. Skip the `~/Downloads/` copy workaround (that was a sandbox hack). Instead, immediately after Step 4 completes, **run these two commands** — they work inside a sandboxed agent session (they only call macOS `open`, no sandbox writes outside the repo):
 
 ```bash
 # 1) Open a Finder window to the output folder (Kiera sees only .html files — clean, no noise)

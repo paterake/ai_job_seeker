@@ -1,6 +1,6 @@
 # AI Assistant Entry Point — ai_job_seeker
 
-**Read on demand.** The always-loaded core is the root `AGENTS.md`; this index routes to the rest.
+**Read on demand.** The always-loaded core is `pco/AGENTS.md`; this index routes to the rest.
 
 ## Two-layer structure
 

@@ -1,7 +1,7 @@
 """Extract candidate facts from a CV .docx into a dict matching the
 CandidateProfile YAML schema.
 
-Hard rules (from PCO no-fabrication / trace-to-profile):
+Hard rules (no fabrication):
   - Every value written to the output dict traces to exact text in the docx.
   - Inferred/missing target fields (roles, locations, salary_min_gbp) are
     explicitly LEFT EMPTY and marked as required-review fields in the CLI.

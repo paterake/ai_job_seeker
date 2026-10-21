@@ -1,7 +1,6 @@
 # PRD: ai_job_seeker
 
-> A contract, not a description of code. Authoring rules: the platform documentation contract
-> (`ai_context/pco/governance/DOCS_CONTRACT.md`). How it is built: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+> A contract, not a description of code. How it is built: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Problem
 

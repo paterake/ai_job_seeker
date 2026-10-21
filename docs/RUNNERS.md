@@ -7,7 +7,6 @@ Never use bare `python` or `pip`. What each one does in the full pipeline is in
 ## Setup
 
 ```bash
-# ../ai_agent_pco sibling checkout is needed for the validators only
 uv sync                       # resolve the workspace incl. the pinned ai_agent_core git tag
 uv run ai-job-seeker --help   # lists only profile + ingest (match/applied/draft register on demand)
 ```
@@ -125,15 +124,6 @@ uv run ai-job-seeker draft     # prints backend mode + CV location; "Stage 4 (dr
 ```bash
 uv run python3 -m pytest -q                                                    # all (32 collected)
 uv run python3 -m pytest -q implementation/job_seeker/tests/test_match.py      # one file
-```
-
-## Governance validators
-
-These need the sibling `../ai_agent_pco` checkout.
-
-```bash
-uv run python3 ../ai_agent_pco/scripts/distill_harness.py governed-repo-validate --repo .
-uv run python3 ../ai_agent_pco/scripts/distill_harness.py governance-audit --repo . --fail
 ```
 
 ## Diagnostics

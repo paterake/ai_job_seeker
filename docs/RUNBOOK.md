@@ -9,8 +9,7 @@ This covers running and recovering the pipeline. Exact commands and flags are in
 1. This repo, synced with `uv sync`, which fetches the pinned `ai_agent_core` git tag (network
    access to the `ai_agent_core` repo is needed on first sync). **Every subcommand needs
    `ai_agent_core` installed**, profile and ingest included (see
-   [Missing ai_agent_core](#missing-ai_agent_core)). `../ai_agent_pco` is needed only for the
-   governance validators.
+   [Missing ai_agent_core](#missing-ai_agent_core)).
 2. `uv` installed. Run everything through `uv run` from the repo root. Never install into the
    system Python.
 3. Board API keys installed (see [Installing API keys](#installing-api-keys)).

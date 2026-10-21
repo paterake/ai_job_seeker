@@ -33,7 +33,7 @@ The backlog and the next step are in [docs/TODO.md](docs/TODO.md).
 ## Entry chain for AI agents
 
 1. This README.
-2. [CLAUDE.md](CLAUDE.md), or [TRAE.md](TRAE.md) for Trae. Each one points to step 3.
+2. [CLAUDE.md](CLAUDE.md). It points to step 3.
 3. [ai_context/ASSISTANTS.md](ai_context/ASSISTANTS.md): explains the two-layer context and the read order.
 4. [ai_context/pco/ASSISTANTS.md](ai_context/pco/ASSISTANTS.md) (platform rules), then
    [ai_context/project/ASSISTANTS.md](ai_context/project/ASSISTANTS.md) (repo posture and non-negotiables).
