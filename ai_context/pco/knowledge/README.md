@@ -4,7 +4,7 @@
 ## Governs
 
 - Policy content as a single source of truth: the PCO owns `ai_context/pco/`, consumers receive it by sync
-- Keeping human docs in step with `ai_context/`
+- Keeping docs in step with `ai_context/`
 - Retrieval and RAG in governed repos, chosen by the hierarchy below
 - Publishing: safety gates and claim scoping; output ownership and source licensing
 - Concern profiles: a repo's context reflects its dominant concern ([CONCERNS.md](../governance/CONCERNS.md))
@@ -27,7 +27,7 @@
 - Contradicting rules across `ai_context/`: validator `governance-audit --fail`, run from `ai_agent_pco` (a heuristic token-overlap check;
   it finds some contradictions, not all).
 - Retrieval rules, claim scoping, output ownership, source licensing and concern profiles: human review.
-- Human docs kept in step with `ai_context/` ([ai_context_sync.md](../ai_harness/rules/ai_context_sync.md)), and
+- Docs kept in step with `ai_context/` ([ai_context_sync.md](../ai_harness/rules/ai_context_sync.md)), and
   the Rule Authoring Standard and Workflow Gates ([publication.md](../ai_harness/rules/publication.md)): human
   review.
 

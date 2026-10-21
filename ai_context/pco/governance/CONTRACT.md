@@ -97,7 +97,7 @@ A consumer references the PCO only from its agent layer, in three ways:
   `ai_context/project/` may name the PCO doc its task needs.
 - Wiring: the agent configuration's links into `ai_context/pco/ai_harness/`.
 
-Product artefacts (code, config, tests, implementation docs, PRDs, `docs/TODO.md`) state their own reasoning and
+Product artefacts (code, config, tests, `docs/`, `docs/TODO.md`) state their own reasoning and
 do not cite PCO paths. Exempt: dated audit and decision records; an upstream gap report until it is lodged; and
 anchor docs under `docs/todo/`, which are session records of agent work and are deleted when their initiative
 closes.

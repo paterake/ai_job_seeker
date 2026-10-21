@@ -60,7 +60,7 @@ descriptive/spec sections (e.g. one `### Item N` per module) for a full backlog 
 |---|---|
 | Cross-repo or cross-module work | `docs/todo/<tracker>.md` in the affected root repo |
 | Single-module backlog | `<module>/docs/TODO.md` (delete when exhausted) |
-| Contract/maturity gaps | the module's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Core Doc Set); the PRD's Known Limitations references it |
+| Contract/maturity gaps | the module's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Required Set); `INTENT.md` → Known Limitations references it |
 
 ## Constraint Inheritance Rule
 

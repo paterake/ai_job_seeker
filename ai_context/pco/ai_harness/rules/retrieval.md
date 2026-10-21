@@ -14,7 +14,7 @@ paths:
 
 ## Chunking
 
-- Do not introduce multiple chunkers without an explicit design decision recorded in the human docs.
+- Do not introduce multiple chunkers without an explicit design decision recorded in `INTENT.md` → Decisions.
 - Keep chunking parameters in configuration, not code.
 - **Consequence:** a second chunker splits the same corpus two ways, so retrieval quality changes with no recorded
   decision to explain it.

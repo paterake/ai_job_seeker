@@ -30,7 +30,7 @@ The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.m
 | Anti-drift / "no duplication" questions | [ANTI_DRIFT.md](governance/ANTI_DRIFT.md) |
 | Repo concern profile / what belongs in ai_context | [CONCERNS.md](governance/CONCERNS.md) |
 | Backlog / multi-session work (anchor docs) | [AI_ASSISTANT_BACKLOG_CONTINUITY.md](governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md) |
-| Module docs and PRDs | [DOCS_CONTRACT.md](governance/DOCS_CONTRACT.md) |
+| Module docs and intent | [DOCS_CONTRACT.md](governance/DOCS_CONTRACT.md) |
 | Enterprise go-live (residency, data-subject rights, vendors, retention, FinOps, oversight) | [ENTERPRISE_OBLIGATIONS.md](governance/ENTERPRISE_OBLIGATIONS.md) |
 | Shape of a denial and its reason codes | [DENY_INTERFACE.md](governance/DENY_INTERFACE.md) |
-| Approval, capability-decision and incident records; PRD shape | [templates/](templates/) |
+| Approval, capability-decision and incident records; intent shape | [templates/](templates/) |
