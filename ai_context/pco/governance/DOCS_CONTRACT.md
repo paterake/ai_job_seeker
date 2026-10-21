@@ -31,8 +31,17 @@ drift defect are indistinguishable to `docs-alignment`.
 
 A root `README.md` is not required; a repo may keep one as a pointer to its entrypoint.
 
+**`INTENT.md`, not `PRD.md`.** A PRD is a build input: before code exists it holds everything, and once the
+code exists most of it restates the code. Modules here are built by agents from anchor docs and the session, so
+a `PRD.md` would be written after the code to fit convention: a second copy from its first line. `INTENT.md`
+keeps only what survives the build. The name is deliberate: an agent given a `PRD.md` fills it from the common
+template (features, stack, file layout). A build spec written before code is a temporary input, like an anchor
+doc: when the code lands, move what passes the Derivability Test into `INTENT.md` and delete the spec.
+Rejected: keeping the name `PRD.md` for familiarity.
+
 **Any other doc is a finding.** `PRD.md`, `docs/ARCHITECTURE.md`, `docs/AI.md`, `docs/EXECUTIVE-SUMMARY.md`,
-`docs/use-cases/`, extension docs and legacy command docs (`docs/RUNNERS.md`, `docs/ops/CLI.md`) are retired:
+`docs/use-cases/`, extension docs, legacy command docs (`docs/RUNNERS.md`, `docs/ops/CLI.md`) and a `README.md`
+inside a code module or package directory are retired:
 apply the [Derivability Test](#derivability-test), move what remains to its owner in this set, then delete the
 doc ([Retrospective Refactor Safety](#retrospective-refactor-safety)). Until migrated, it is a finding, not a
 blocker.

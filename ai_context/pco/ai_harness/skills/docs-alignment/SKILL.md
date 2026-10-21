@@ -40,7 +40,7 @@ For each failing check:
 
 1. **Required file missing (greenfield)**: create it; `INTENT.md` from the template shape. No inventory is needed.
 2. **Doc outside the required set** (`PRD.md`, `docs/ARCHITECTURE.md`, `docs/AI.md`, `docs/EXECUTIVE-SUMMARY.md`,
-   `docs/use-cases/`, extension or legacy command docs): inventory it; for each item, confirm the code, config
+   `docs/use-cases/`, extension or legacy command docs, a module or package `README.md`): inventory it; for each item, confirm the code, config
    or `--help` shows it and drop it, or move it to its owner (intent, guarantees, decisions, outside
    constraints, limitations → `INTENT.md`; when to run what and recovery → `docs/RUNBOOK.md`; config rationale
    → `docs/CONFIGURATION.md`); fix links to it; then delete it. The commit history keeps it.
@@ -68,4 +68,5 @@ ls docs/ ai_context/project/
 ls docs/todo/ 2>/dev/null
 find . -name "TODO*.md" -not -path "*/todo/*" -not -path "*/.venv/*"
 find . \( -name "PRD.md" -o -name "ARCHITECTURE.md" -o -name "AI.md" -o -name "EXECUTIVE-SUMMARY.md" \) -not -path "*/.venv/*"
+git ls-files '*README.md' | grep -v -e '^README.md$' -e '^ai_context/'
 ```
