@@ -2,73 +2,23 @@
 
 ## Purpose
 
-Prevent documentation drift and stale duplication across:
+Prevent documentation drift and stale duplication in a governed repo, across:
 - assistant-facing context (`ai_context/`)
 - human-facing docs (`docs/`)
 - operational scripts (`scripts/`)
 
-This is a governance contract for the agent harness.
+## Rules
 
-## Canonical Sources (what is authoritative)
+- Each behavioural contract has exactly one canonical home. Every other mention is a link or a one-line pointer.
+- Where each related rule lives:
+  - an `ai_context/` change that alters a human doc: `ai_harness/rules/ai_context_sync.md`;
+  - a code or config change that alters a doc: `ai_harness/rules/code-architecture.md` → Docs Currency;
+  - which doc owns which kind of fact: [DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Segregation Rules;
+  - product artefacts never cite PCO paths: [CONTRACT.md](CONTRACT.md) → Downstream Conformance Contract;
+  - `ai_context/pco/` is read-only in a consumer: [AGENTS.md](../AGENTS.md) → Governance changes.
 
-### Operational semantics
-
-- `ai_context/pco/governance/CONTRACT.md` is the canonical source for:
-  - what the harness manages
-  - what “sync” means (scope, non-destructive defaults, pruning)
-  - what a target repo must look like to be harness-wired
-
-### Commands
-
-- `docs/RUNBOOK.md` is the canonical source for the commands an agent or operator runs, organised by task.
-- `docs/RUNBOOK.md` must not restate behavioural semantics; it links to `ai_context/pco/governance/CONTRACT.md`.
-
-### Documentation contract
-
-- `ai_context/pco/governance/DOCS_CONTRACT.md` is the canonical source for:
-  - the required doc set per repo/implementation
-  - segregation rules (what each doc owns)
-  - PRD authoring standard
-  - extension contract (when and how to add docs beyond the core set)
-  - TODO file structure
-- `ai_context/pco/templates/PRD_TEMPLATE.md` is the canonical PRD shape — referenced by `DOCS_CONTRACT.md`.
-- Temporal currency (keep docs in sync with code changes) is a thin ambient rule in `ai_context/pco/ai_harness/rules/code-architecture.md`.
-- `ai_context/pco/ai_harness/skills/docs-alignment/SKILL.md` is the procedural skill for validating a repo against this contract.
-
-### Human model
-
-- `ai_context/pco/` contains the canonical governance narratives: spoke READMEs per domain + hub at `ai_context/pco/governance/HUB.md`.
-- `docs/README.md` is an index; it must not duplicate the operating model.
-
-### Assistant-facing posture
-
-- The always-loaded core is the root `AGENTS.md` (source `ai_context/pco/AGENTS.md`). `ai_context/ASSISTANTS.md`
-  is the on-demand router to `pco/ASSISTANTS.md` and `project/ASSISTANTS.md`.
-- It should link to deeper files rather than duplicating their contents.
-
-## Edit Rules (what must update together)
-
-### If you change a script under `scripts/`
-
-- If the change affects how the system is run, update `docs/RUNBOOK.md` in the same change set.
-- If the change affects sync semantics or target repo shape, update `ai_context/pco/governance/CONTRACT.md` in the same change set.
-
-### If you change `ai_context/pco/governance/CONTRACT.md`
-
-- Update `docs/RUNBOOK.md` only if commands changed.
-- Otherwise keep `docs/RUNBOOK.md` unchanged and rely on linking to avoid drift.
-
-### If you change `ai_context/pco/governance/DOCS_CONTRACT.md`
-
-- If the PRD template shape changes, update `ai_context/pco/templates/PRD_TEMPLATE.md` in the same change.
-- If validation steps change, update `ai_context/pco/ai_harness/skills/docs-alignment/SKILL.md` in the same change.
-
-### If you change anything under `ai_context/`
-
-- `ai_context/` is prescriptive and assistant-facing. `docs/` is narrative and human-facing. A rule change with no corresponding doc update leaves humans and assistants out of sync.
-- Identify which governance area the change impacts (Agent Management wheel domain).
-- Update the corresponding spoke narrative under `ai_context/pco/<spoke>/README.md` to reflect the change.
-- If the change alters posture or operating model, also update `PRD.md` in the same response.
+**Consequence:** a second copy of a contract drifts the next time either copy changes, and an agent reading the
+stale one acts on it.
 
 ## Drift Tests
 

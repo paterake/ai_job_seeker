@@ -1,8 +1,7 @@
 # Agent Core — governed repo
 
-Always loaded by Claude Code through `CLAUDE.md` (`@AGENTS.md`).
-The PCO syncs this file from `ai_context/pco/AGENTS.md`; never edit the root copy. Everything else loads on
-demand: path-scoped rules arrive with matching files, and the DMBOK spoke index is `ai_context/pco/ASSISTANTS.md`.
+Always loaded at session start, from the synced layer.
+Everything else loads on demand: path-scoped rules arrive with matching files, and the DMBOK spoke index is `ai_context/pco/ASSISTANTS.md`.
 The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 
 ## Before you start
@@ -38,7 +37,7 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 ## Governance changes
 - Changes to rules, hooks, skills, settings or governance contracts need the operator's explicit approval in
   that session. Never self-approve. *A governed entity approving its own rules is not governance.*
-- In a consumer repo, `ai_context/pco/` and `AGENTS.md` are read-only. Stop, and report the gap upstream:
+- In a consumer repo, `ai_context/pco/` (this core included) is read-only. Stop, and report the gap upstream:
   the file, what is wrong, the consequence and the suggested fix. The PCO applies it and re-syncs. *A local edit
   is overwritten on the next sync and never reaches the other repos.*
 - Turn every agent failure into a structural fix (a rule, hook, test or check) and remove a constraint only on

@@ -133,7 +133,7 @@ inline variations accumulate inconsistency.
 ### Common PRD Failure Modes (Prohibited)
 
 - Listing files, classes, or tests instead of describing behaviours and contracts.
-- Duplicating shared platform primitives (AIOps/LLMOps plumbing) inside module PRDs — inherit and reference.
+- Duplicating shared platform primitives (AIOps/LLMOps plumbing) inside module PRDs — name the shared primitive the module uses and state only this module's values.
 - Making claims without their conditions ("deterministic" without defining the determinism conditions).
 - Mixing dataset or use-case specifics into domain-neutral module PRDs.
 - "Verified against code" language — PRDs state intent; code is the verification.

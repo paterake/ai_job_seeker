@@ -1,6 +1,6 @@
 # Per-Tier Deny Interface
 
-> Canonical deny response schema for governed agent runs. All hook denials, and denials by a future control plane (target, not implemented: [HUB.md](HUB.md) → Not enforced), must produce a response conforming to this shape. This is the observable interface — enforcement wiring (hook scripts, detection logic, allowlists) is not disclosed here.
+> Canonical deny response schema for governed agent runs. All hook denials, and denials by a future control plane ([HUB.md](HUB.md) → Not enforced), must produce a response conforming to this shape. This is the observable interface — enforcement wiring (hook scripts, detection logic, allowlists) is not disclosed here.
 
 ## Deny Response Shape
 
@@ -20,14 +20,17 @@ next_action:      <what the operator must do to unblock>
 
 | Reason code | Trigger condition | Applicable tiers |
 |---|---|---|
-| `approval_required` | Tier 3/4 change (High/Critical) attempted without a traceable approval record | High, Critical |
+| `approval_required` | A Tier 3/4 capability change attempted without a traceable approval record | High, Critical |
 | `entitlement_exceeded` | Tool not in the role's entitlement set for the current risk tier | Medium, High, Critical |
 | `exception_expired` | Exception invoked after its expiry date | Any |
-| `capability_experimental` | Capability in Experimental lifecycle stage invoked without a recorded adoption escalation | Any |
+| `capability_experimental` | A Tier 3/4 capability in the experimental stage adopted without a recorded escalation ([CONTRACT.md](CONTRACT.md) → Capability Lifecycle) | Any |
 | `supervision_required` | Action requires a fully supervised workflow; autonomous execution not permitted at this tier | Critical |
-| `execution_limit_hit` | Emitted by the execution-limits hook when the tool-call budget is exhausted | Any |
-| `force_push_refused` | Emitted by the guard hook on a force push (`--force`, `-f`, `--force-with-lease`, a `+refspec`) | Any |
-| `synced_pco_edit_refused` | Emitted by the guard hook on a file edit under `ai_context/pco/` in a repo other than the PCO | Any |
+| `execution_limit_hit` | Emitted by the execution-limits gate when the session's shell-call budget is exhausted | Any |
+| `force_push_refused` | Emitted by the guard gate on a force push (what it matches: [hooks/README.md](../ai_harness/hooks/README.md)) | Any |
+| `synced_pco_edit_refused` | Emitted by the guard gate on a file edit to the synced layer outside the PCO ([hooks/README.md](../ai_harness/hooks/README.md)) | Any |
+
+"Applicable tiers" are a solution's risk tiers (low to critical). They are distinct from capability tiers (1–4,
+[HUB.md](HUB.md) → Capability-tiered governance) and from a tool's own `risk_tier` (`lineage.md`).
 
 ## Per-Tier Denial Shapes
 
@@ -40,13 +43,13 @@ next_action:      <what the operator must do to unblock>
 
 ## Current Enforcement Points
 
-The PCO hooks `check_execution_limits.sh` and `check_guard.sh` return the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When a hook does not trip it exits 0 with no output and the call goes through the normal permission flow. If it cannot run (a tool or its config is missing), it fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape: [hooks/README.md](../ai_harness/hooks/README.md). The execution-limit count is per session, so it bounds one session, not a run spanning several sessions.
+The PCO gates `check_execution_limits.sh` and `check_guard.sh` emit the structured reason; the agent adapter carries it into the harness's pre-tool-use deny decision. How they deny, pass and fail closed: [hooks/README.md](../ai_harness/hooks/README.md).
 
 The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 
 ## Registration Surface
 
-`master-data/tool_registry.yaml` is the complementary artefact: it enumerates governed tools with their risk tiers and entitlements, so a control plane (target, not implemented) could know which tools can trigger which denial conditions.
+`master-data/tool_registry.yaml` is the complementary artefact: it enumerates governed tools with their risk tiers and entitlements, so a control plane ([HUB.md](HUB.md) → Not enforced) could know which tools can trigger which denial conditions.
 
 ## References
 
@@ -54,4 +57,4 @@ The `approval_required` reason code and the High-tier row above remain the shape
 - Tool entitlement policy: [master-data/README.md](../master-data/README.md)
 - Hooks vs guidance enforcement semantics: [ai_harness/rules/harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
 - Tool registry: [master-data/tool_registry.yaml](../master-data/tool_registry.yaml)
-- Enforcement feedback loop (Tool denial event): [HUB.md — Enforcement feedback loop](HUB.md)
+- Enforcement feedback loop (Tool denial event): [HUB.md — Enforcement feedback loop](HUB.md#enforcement-feedback-loop)

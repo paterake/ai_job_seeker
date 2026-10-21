@@ -17,6 +17,7 @@ paths:
 - Telemetry writes to a structured sink; avoid stdout in production paths.
 - Tracing instrumentation must never attach raw text to span attributes; only identifiers, counts, and operational state.
 - Workflows that perform multi-stage retrieval and synthesis must be traceable end-to-end (request → stages → tool calls → model calls).
+- **Consequence:** a run whose call chain cannot be followed cannot be debugged or audited after the fact.
 
 ## Telemetry Event Contract (Privacy-Safe by Default)
 
@@ -25,8 +26,11 @@ paths:
 - Input/output hashes are added to both events where the solution is High/Critical risk or declares an audit or
   replay need.
 - Default operational logs and telemetry must not contain raw prompts, raw tool payloads, or raw retrieved content; only hashes, sizes, identifiers, and controlled metadata are permitted by default.
+- **Consequence:** raw content in telemetry leaks it to every log reader and retention store; missing fields leave
+  cost and failures unattributable.
 
 ## Run Review
 
 - Best-effort artefact writes must never fail silently; on write failure, emit a warning event visible in operational telemetry.
 - A post-run review artefact must summarise: budget usage, anomalies, errors by type, degrade modes used, and whether verification completed.
+- **Consequence:** a silent write failure, or a run with no review, looks verified without the evidence to show it.

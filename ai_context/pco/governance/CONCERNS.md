@@ -2,20 +2,19 @@
 
 ## Why This Exists
 
-The harness wiring is the same everywhere (the same `ai_harness` paths and the same `.claude` symlink pattern), but the **dominant risk surface** differs by repo.
+The harness wiring is the same everywhere (the same `ai_harness` paths and the same agent wiring pattern), but the **dominant risk surface** differs by repo.
 
 If the context layer does not reflect those differences, assistants will behave like generic tools:
 - they will over-focus on irrelevant constraints
 - they will miss the real failure modes for the repo
 - they will drift the repo away from its intended operating model
 
-This file explains the “why” and defines the concern profiles that shape what belongs in each repo’s `ai_context/`.
+This file explains the “why” and defines the concern profiles that shape what a repo puts in its `ai_context/project/`.
+A repo names its profile, and the failure modes specific to it, in its own project layer.
 
-## The Four Primary Concern Profiles
+## Primary Concern Profiles
 
-The governed repos themselves are listed in the PCO's consumer manifest (in ai_agent_pco only); the profiles below name an example repo where one exists.
-
-### 1) LLM Systems (ai_platform)
+### 1) LLM Systems
 
 **Primary risk:** silent quality regressions and uncontrolled execution.
 
@@ -30,9 +29,7 @@ The governed repos themselves are listed in the PCO's consumer manifest (in ai_a
 - retrieval correctness (hybrid search, provenance, quality gates)
 - evaluation and regression protection
 
-**Concrete implementation reference:** `ai_platform/ai_context`
-
-### 2) Publishing Systems (ai_publish)
+### 2) Publishing Systems
 
 **Primary risk:** information leakage and narrative drift from the real engineering record.
 
@@ -45,8 +42,6 @@ The governed repos themselves are listed in the PCO's consumer manifest (in ai_a
 - publication safety gates
 - evidence discipline (real run IDs, dated proof points)
 - workflow governance (what is human-owned vs assistant-owned)
-
-**Concrete implementation reference:** `ai_publish/ai_context`
 
 ### 3) Data and Document Engineering
 
@@ -62,33 +57,23 @@ The governed repos themselves are listed in the PCO's consumer manifest (in ai_a
 - structured outputs and formatting rules
 - safe automation patterns (idempotency, replay, audit)
 
-### 4) Platform Governance (ai_agent_pco)
+### 4) Platform Governance
 
-**Primary risk:** governance drift — rules, structure, or contracts diverge across the PCO and its consumer repos without anyone noticing.
-
-**Typical failure modes:**
-- a fix applied directly to a consumer repo's `pco/` content instead of the PCO (overwritten on next sync, never propagates to other repos)
-- PCO-specific skills or docs accidentally synced into consumer repos (consumers see irrelevant or misleading tooling)
-- `ai_context/pco/` and `ai_context/project/` boundaries blurred (platform artifact contaminated with repo-specific content)
-- CONTRACT.md or governance docs describing the old structure after a restructure (agents navigate from stale descriptions)
-- `distill_harness.py sync` not re-run after adding or moving a skill (`sync` re-wires the managed `skills/` directories; `wire` is only needed to repair `hooks`/`rules` symlinks)
+**Primary risk:** governance drift — rules, structure or contracts diverge across the governing repo and the
+repos it governs without anyone noticing.
 
 **Context emphasis:**
-- sync boundary discipline (what belongs in `pco/` vs `project/`)
-- PCO update protocol (surface gaps upstream; do not edit consumer `pco/` files directly)
-- distill_harness.py correctness (the sync and wire commands are the enforcement mechanism)
-- governance doc currency (CONTRACT.md, CONCERNS.md, ANTI_DRIFT.md must reflect the current structure)
-
-**Concrete implementation reference:** `ai_agent_pco/ai_context/project/`
+- sync boundary discipline (what is platform-owned vs repo-owned)
+- gaps surfaced upstream, never patched locally
+- governance doc currency after a restructure
 
 ---
 
-## What ai_agent_pco Provides (the Superset)
+## What the PCO Provides
 
-`ai_agent_pco/ai_context/pco/` provides:
+The synced `ai_context/pco/` provides:
 - a shared harness substrate (`pco/ai_harness/`)
-- a minimal cross-cutting ruleset (governance, operations discipline, context sync)
-- syncing tooling (`distill_harness.py`) that can *plan*, *validate*, and *wire* changes against a target repo before writing
+- a minimal cross-cutting ruleset (`ai_harness/rules/`, each rule owned by a spoke)
+- governance contracts, registries and record templates
 
 It is not intended to erase repo differences. It exists to centralise the reusable substrate and make variation intentional rather than accidental.
-

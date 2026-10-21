@@ -12,12 +12,11 @@
 
 ## Enforced
 
-- Shell (Bash) calls per session are capped at `max_tool_calls`; further shell calls are denied: hook
-  (`check_execution_limits.sh`, [hooks README](../ai_harness/hooks/README.md)). Every limit in
-  [execution_limits.yaml](../governance/execution_limits.yaml) is a positive integer with a rationale: validator
-  (`governed-repo-validate`).
-- A `high` risk tool entry declares `requires_approval: true`: validator (`governed-repo-validate`). It checks the
-  declaration, not the runtime stop.
+- Shell calls per session are capped at `max_tool_calls` in
+  [execution_limits.yaml](../governance/execution_limits.yaml); further shell calls are denied: hook
+  `check_execution_limits.sh` (`execution_limit_hit`; behaviour: [hooks README](../ai_harness/hooks/README.md)).
+  The limits file's shape and the `requires_approval` declaration on a high-risk tool: [master-data
+  spoke](../master-data/README.md) → Enforced.
 - Execution bounds, degrade modes, the defined evaluation path (→ Non-Negotiable Baseline), the runtime human
   checkpoint and kill switches in LLM-calling modules: human review against
   [operations.md](../ai_harness/rules/operations.md).

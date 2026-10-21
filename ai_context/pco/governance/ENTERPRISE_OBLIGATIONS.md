@@ -71,5 +71,5 @@ These extend the Approval Gates in `harness-tool-contract.md`.
   approval record captures a substantive decision, not a rubber-stamp. **Consequence:** a signature
   box is not oversight; nominal sign-off fails the AI Act's effectiveness bar while appearing compliant.
 - **Segregation of duties at go-live.** At the go-live gate, the approver must not be the author of
-  the change; author ≠ approver is enforced, not advisory. **Consequence:** self-approval at go-live
+  the change; author ≠ approver is a hard requirement, not advisory. **Consequence:** self-approval at go-live
   defeats the conformance gate — the one control the gate exists to provide is bypassed by one person.

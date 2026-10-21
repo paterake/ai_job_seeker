@@ -1,12 +1,10 @@
 ---
-description: Harness tool contract — edit-tool format as a capability floor, not a config detail. Loaded when changing harness, switching models, or modifying tool interfaces.
+description: Harness tool contract — approval gates, capability decisions reviewed rather than gated, hooks versus guidance (gates fail closed). Loaded when changing ai_context or audit records; edit-tool format and model-impact events are in the integration spoke.
 basis: operational-experience
 spoke: integration
 paths:
-  - ".claude/**"
   - "ai_context/**"
   - "audit/**"
-  - "**/settings.json"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)
@@ -22,7 +20,7 @@ In fully supervised workflows (and whenever a policy requires approval), the ass
 
 - Approval gates are named and must present explicit options and consequences.
 - Proceeding past an approval gate without an approval record is prohibited.
-- The approval record must have a stable identifier and be bound to `run_id` (and referenced in run lineage when used).
+- The approval record must have a stable identifier; its binding to the run: `lineage.md` → Lineage and Evidence.
 - Go-live gates for High/Critical solutions add effective-oversight and segregation-of-duties
   obligations: [ENTERPRISE_OBLIGATIONS.md](../../governance/ENTERPRISE_OBLIGATIONS.md).
 
@@ -36,12 +34,12 @@ right, so it adds a step to every commit without catching a wrong driver.
 
 ## Hooks: Guidance vs Enforcement
 
-CLAUDE.md and governance docs are guidance — they inform agent behaviour but cannot guarantee it under context saturation or instruction drift. Hooks are enforcement — they run deterministically at harness lifecycle points.
+Always-loaded instructions and governance docs are guidance — they inform agent behaviour but cannot guarantee it under context saturation or instruction drift. Hooks are enforcement — they run deterministically at harness lifecycle points.
 
 | Constraint type | Correct mechanism |
 |---|---|
-| Soft defaults, style, preferences | CLAUDE.md / governance docs |
-| Hard constraints that must hold unconditionally | Hooks in `settings.json` |
+| Soft defaults, style, preferences | Always-loaded instructions / governance docs |
+| Hard constraints that must hold unconditionally | Hooks in the harness settings |
 
 Use a hook, not docs, for any constraint where a single violation has irreversible consequences (e.g. force push, `rm -rf`, hard reset).
 
@@ -50,9 +48,8 @@ A constraint whose violation is reversible and caught by a validator (e.g. excep
 
 The hooks the PCO ships, what each blocks and misses, and what each does when a tool is missing:
 [hooks/README.md](../hooks/README.md).
-- A gate hook fails closed when it cannot run: it blocks a call it governs, never passes it silently.
-  A hook crash or a missing script does not meet this today (it does not block the call; per the hooks docs, not
-  tested here — [hooks/README.md](../hooks/README.md)); no PCO check.
+- A gate hook fails closed when it cannot run: it blocks a call it governs, never passes it silently. Where the
+  PCO hooks fall short: [integration spoke](../../integration/README.md) → Not enforced.
   **Consequence:** a gate that passes when it cannot run is enforcement that silently does not happen.
 - The context reaches every session as committed files; the PCO adds no session-environment setup.
 

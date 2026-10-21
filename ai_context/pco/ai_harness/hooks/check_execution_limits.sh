@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# check_execution_limits.sh — PreToolUse hook: count Bash tool calls per session and deny at the limit.
-# Governance: operations rule — every workflow must be bounded by explicit limits.
-# Counter is keyed by the hook payload's session_id: $REPO_ROOT/.claude/tool_calls/<session_id>,
-# so every session starts at 0. Without a session_id it falls back to $REPO_ROOT/.claude/tool_call_count.
-# Under the limit: increments the counter and exits 0 with no output (normal permission flow applies).
-# At the limit: writes the hit file and emits a PreToolUse "deny" in hookSpecificOutput.
-# Fails closed: without jq or ruby, or without a readable positive max_tool_calls, it blocks the call (exit 2;
-# Claude Code shows the one-line reason), because a session it cannot count is unbounded.
+# check_execution_limits.sh — gate for one shell call; agent-neutral. Counts shell calls per session and denies at
+# the limit. Governance: operations rule — every workflow must be bounded by explicit limits.
+# Usage: check_execution_limits.sh --state-dir <dir> [--session <id>]
+#   The agent's adapter names a state directory it owns. The counter is <dir>/tool_calls/<id>, so every session
+#   starts at 0; with no session id it is the single <dir>/tool_call_count.
+# Under the limit: increments the counter, exit 0, no output.
+# At the limit: writes <dir>/execution_limit_hit, exit 2, structured reason on stderr.
+# Fails closed (exit 2, one-line GOVERNANCE STOP): no --state-dir, no ruby, or no readable positive
+# max_tool_calls, because a session it cannot count is unbounded.
 # Env overrides for testing: TOOL_CALL_COUNT_FILE, EXECUTION_LIMITS_FILE, EXECUTION_LIMIT_HIT_FILE
 set -euo pipefail
 
@@ -14,24 +15,33 @@ fail_closed() {
     printf 'GOVERNANCE STOP: check_execution_limits.sh cannot enforce max_tool_calls: %s\n' "$1" >&2
     exit 2
 }
-for tool in jq ruby; do
-    command -v "$tool" >/dev/null 2>&1 \
-        || fail_closed "$tool not found on PATH (install it)"
-done
 
-payload="$(cat)"
-session_id="$(printf '%s' "$payload" | jq -r '.session_id // empty' 2>/dev/null || true)"
+state_dir=""
+session_id=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --state-dir | --session)
+            [[ $# -ge 2 ]] || fail_closed "$1 needs a value"
+            [[ "$1" == --state-dir ]] && state_dir="$2" || session_id="$2"
+            shift 2
+            ;;
+        *) fail_closed "unknown argument: $1" ;;
+    esac
+done
+[[ -n "$state_dir" ]] || fail_closed "no --state-dir (wire the agent adapter)"
+command -v ruby >/dev/null 2>&1 || fail_closed "ruby not found on PATH (install it)"
 session_id="$(printf '%s' "$session_id" | tr -cd 'A-Za-z0-9_-')"
 
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# The repo root is four levels above this script: <repo>/ai_context/pco/ai_harness/hooks/.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 if [[ -n "$session_id" ]]; then
-    DEFAULT_COUNT_FILE="$REPO_ROOT/.claude/tool_calls/$session_id"
+    DEFAULT_COUNT_FILE="$state_dir/tool_calls/$session_id"
 else
-    DEFAULT_COUNT_FILE="$REPO_ROOT/.claude/tool_call_count"
+    DEFAULT_COUNT_FILE="$state_dir/tool_call_count"
 fi
 COUNT_FILE="${TOOL_CALL_COUNT_FILE:-$DEFAULT_COUNT_FILE}"
 LIMITS_FILE="${EXECUTION_LIMITS_FILE:-$REPO_ROOT/ai_context/pco/governance/execution_limits.yaml}"
-HIT_FILE="${EXECUTION_LIMIT_HIT_FILE:-$REPO_ROOT/.claude/execution_limit_hit}"
+HIT_FILE="${EXECUTION_LIMIT_HIT_FILE:-$state_dir/execution_limit_hit}"
 
 # Read max_tool_calls from config via ruby (matches distill_harness.py's YAML loader).
 MAX_TOOL_CALLS="$(ruby -ryaml -e "
@@ -50,13 +60,12 @@ if [[ -f "$COUNT_FILE" ]]; then
 fi
 
 if [[ "$COUNT" -ge "$MAX_TOOL_CALLS" ]]; then
+    mkdir -p "$(dirname "$HIT_FILE")"
     printf 'limit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\n' "$COUNT" "$MAX_TOOL_CALLS" > "$HIT_FILE"
-    reason="$(printf 'GOVERNANCE STOP\nrisk_tier: high\ndenial_reason: execution_limit_hit\nlimit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\nnext_action: shell commands are denied for the rest of this session; start a new session (its count starts at 0) and continue from the anchor doc' \
-        "$COUNT" "$MAX_TOOL_CALLS")"
-    jq -nc --arg reason "$reason" \
-        '{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": $reason}}'
-else
-    mkdir -p "$(dirname "$COUNT_FILE")"
-    printf '%d\n' "$(( COUNT + 1 ))" > "$COUNT_FILE"
+    printf 'GOVERNANCE STOP\nrisk_tier: high\ndenial_reason: execution_limit_hit\nlimit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\nnext_action: shell commands are denied for the rest of this session; start a new session (its count starts at 0) and continue from the anchor doc\n' \
+        "$COUNT" "$MAX_TOOL_CALLS" >&2
+    exit 2
 fi
+mkdir -p "$(dirname "$COUNT_FILE")"
+printf '%d\n' "$(( COUNT + 1 ))" > "$COUNT_FILE"
 exit 0

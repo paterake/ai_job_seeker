@@ -58,15 +58,15 @@ choice between drivers, record it in the commit message or PR description (field
 - why the other driver was not chosen,
 - and whether a config/prompt solution was considered.
 
-No hook enforces this; the reviewer checks the driver choice at code review.
-A path or wiring change is not a driver decision and needs no record.
+The reviewer checks the driver choice at code review ([harness-tool-contract.md](harness-tool-contract.md) →
+Capability Decisions Are Reviewed, Not Gated). A path or wiring change is not a driver decision and needs no record.
 
 ## Python Tooling (UV Only)
 
 The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its scope:
 - This applies to every Python execution path: scripts, validators, one-liners, tests, and ad-hoc local commands.
 - Do not introduce `pip`/`requirements.txt`, Poetry, Pipenv, Conda, or ad-hoc virtualenv workflows.
-- If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock` and keep commands in `docs/RUNBOOK.md` (do not duplicate commands across multiple docs).
+- If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock`.
 
 ## Code Reuse Gate
 
@@ -129,18 +129,12 @@ accumulates until a single shared config change requires edits across multiple m
 
 ## Docs Currency
 
-Any code or config change must be reflected in the affected docs in the same response — do not wait to be asked.
-
-- **README.md** — navigation only; commands live in RUNBOOK.md
-- **RUNBOOK.md** — reflect current commands; remove stale ones
-- **ARCHITECTURE.md** — reflect current design, config values, file names, and behaviour
-- **CONFIGURATION.md** — every key used in code must be documented; no undocumented keys, no stale defaults
-- **TODO.md** — keep the backlog index current per `DOCS_CONTRACT.md` (Core Doc Set † note and → TODO File Structure)
-- **PRD.md** — update acceptance criteria and contracts when the module's obligations change
+Any code or config change must be reflected, in the same change and without being asked, in every doc that owns
+a fact the change alters: a command, a design decision, a config key or default, a backlog item, an obligation.
+Which doc owns which fact: `ai_context/pco/governance/DOCS_CONTRACT.md` → Segregation Rules (validate with the
+`docs-alignment` skill).
 
 **Stale documentation is a bug in the change, not a backlog item.**
-
-For the full documentation contract (required doc set, segregation rules, PRD authoring standard, extension contract, TODO structure) see `ai_context/pco/governance/DOCS_CONTRACT.md` or invoke `/docs-alignment`.
 
 **Before writing any new `.py` file, confirm:**
 - Does this contain strings/values a user might want to change without touching code? → YAML config
@@ -167,8 +161,8 @@ For the full documentation contract (required doc set, segregation rules, PRD au
 ## Native First
 
 - Integrate any vendor, model, tool or platform through its native integration: its own plugin or
-  skill, SDK, API, or the host platform's extension points (for example Claude Code skills, hooks
-  and MCP). Do not build or maintain wrapper CLIs, adapter skills or glue layers to integrate it.
+  skill, SDK, API, or the host platform's extension points (for example the agent harness's skills,
+  hooks and MCP). Do not build or maintain wrapper CLIs, adapter skills or glue layers to integrate it.
 - Use what the native integration offers; scope its use through the vendor's approval record, not
   through extra layers. Platform controls (`operations.md`, `observability.md`, `lineage.md`,
   `security-threat-model.md`) still apply.

@@ -15,7 +15,7 @@ paths:
 - Every tool must have a stable identifier, an owned schema, and a version. Unregistered tools are prohibited in governed execution.
 - Every tool carries `risk_tier` (`low`/`medium`/`high`), a rating of the tool's actions, distinct from a
   solution's risk tier. High is any irreversible, destructive, outbound or financial action; a high tool sets
-  `requires_approval: true` (`governed-repo-validate` fails otherwise) and runs behind the human checkpoint in
+  `requires_approval: true` and runs behind the human checkpoint in
   `operations.md`.
 - Every model endpoint must have a stable identifier and an allowlist entry; runs must record the model identifier used.
 - Tools, workflows, and policy packs shared across repos or teams use semantic versioning; breaking changes
@@ -28,5 +28,5 @@ paths:
 - Every run must produce a lineage manifest recording: `run_id`, timestamps, project/workflow identity and versions, role/agent identity, tool versions, model identifier, policy versions, and verification outcomes. Anonymous execution is prohibited. Input/output fingerprints are added under the same condition as the telemetry hashes (`observability.md`).
 - Any approval, exception, or elevation used by a run must be bound to the run identity and referenced by stable identifier in the lineage manifest.
 - Evidence packages are append-only once a run is closed; rewriting or backfilling evidence after closure is prohibited.
-- These lineage and evidence obligations apply to runs of LLM-calling modules. Coding-agent sessions are evidenced by git commits, capability-decision records and anchor docs, not run records. **Consequence:** a per-session record duplicates git and goes unwritten (6 records fleet-wide in five months), so a requirement nobody meets teaches that the rules are optional.
+- These lineage and evidence obligations apply to runs of LLM-calling modules. Coding-agent sessions are evidenced by git commits, capability-decision records and anchor docs, not run records. **Consequence:** a per-session record duplicates git and goes unwritten (6 records fleet-wide in the five months to 2026-10-20), so a requirement nobody meets teaches that the rules are optional.
 - Assumptions used to proceed in the face of missing inputs must be recorded as evidence and linked to `run_id`.

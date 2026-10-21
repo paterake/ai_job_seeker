@@ -60,7 +60,7 @@ descriptive/spec sections (e.g. one `### Item N` per module) for a full backlog 
 |---|---|
 | Cross-repo or cross-module work | `docs/todo/<tracker>.md` in the affected root repo |
 | Single-module backlog | `<module>/docs/TODO.md` (delete when exhausted) |
-| Contract/maturity gaps | module `PRD.md` |
+| Contract/maturity gaps | the module's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Core Doc Set); the PRD's Known Limitations references it |
 
 ## Constraint Inheritance Rule
 
@@ -98,7 +98,7 @@ without waiting to be asked:
    output (counts, pass/fail text) with the actual current output — a stale recorded
    output is itself a contradiction, not just a stale status sentence.
 4. Confirm Gotchas and Accumulated Active Constraints reflect this item's outcome.
-5. If this session wrote or updated a memory file (or a memory index such as `MEMORY.md`)
+5. If this session wrote or updated a memory file (or its index)
    about this item, confirm it agrees with the anchor doc's new status — memory is a second
    persistent surface outside the anchor doc, and the same drift this contract guards against
    inside one file can also open up between the anchor doc and memory.
@@ -131,6 +131,12 @@ failure mode this produces, and it is harder to catch after the fact than before
 ## Checkpoint Template
 
 ```text
+## Resume (start here)
+- From `docs/todo/<anchor-doc>.md`: Continue <item name> → “Still todo” step <n>
+
+## Session start prompt
+> <the prompt built as in Resume Prompt (One Line) above>
+
 Backlog Item: <name>
 
 Done

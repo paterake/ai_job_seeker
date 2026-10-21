@@ -3,7 +3,7 @@ tools:
   - name: harness-gov-audit
     description: Governance self-audit — detects contradictions between declared policy and required artefacts, missing mandatory registries, and expired exceptions
     owner: pco-owner
-    evidence: scripts/distill_harness.py
+    evidence: ai_agent_pco scripts/distill_harness.py
     schema_version: "1.0.0"
     risk_tier: low
     requires_approval: false
@@ -11,12 +11,12 @@ tools:
     entitlements:
       roles: [any]
       environments: [any]
-    invocation: "uv run python3 scripts/distill_harness.py governance-audit --repo ."
+    invocation: "from ai_agent_pco: uv run python3 scripts/distill_harness.py governance-audit --repo <repo>"
 
   - name: harness-gov-validate
-    description: PCO conformance and harness wiring validation — registries, exception expiry, markdown links (governed-repo-validate) plus dotfolder symlinks, settings hook wiring and entrypoints (validate_harness_wiring.py). The `validate` subcommand is consumer parity + REPO_CONTRACT shape (consumers only); on the PCO it compares the source with itself
+    description: PCO conformance and harness wiring validation (what each check covers is in the PCO repo's RUNBOOK → Checks)
     owner: pco-owner
-    evidence: scripts/distill_harness.py
+    evidence: ai_agent_pco scripts/distill_harness.py, scripts/validate_harness_wiring.py
     schema_version: "1.0.0"
     risk_tier: low
     requires_approval: false
@@ -24,6 +24,6 @@ tools:
     entitlements:
       roles: [any]
       environments: [any]
-    invocation: "uv run python3 scripts/distill_harness.py governed-repo-validate --repo . && uv run python3 scripts/validate_harness_wiring.py --target ."
+    invocation: "from ai_agent_pco: uv run python3 scripts/distill_harness.py governed-repo-validate --repo <repo> && uv run python3 scripts/validate_harness_wiring.py --target <repo>"
 
 mcp_servers: []

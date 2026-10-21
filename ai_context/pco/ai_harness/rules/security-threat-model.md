@@ -8,7 +8,6 @@ paths:
   - "**/*mcp*"
   - "**/retriev*/**"
   - "**/ingest*/**"
-  - "**/settings.json"
 ---
 
 > Governance narrative: [security spoke](../../security/README.md)
@@ -59,21 +58,21 @@ strictly requires for that phase:
 - **Research phase** (if required): isolated session, web/external access, no credentials,
   no write capabilities.
 - **Implementation phase**: codebase access, no external research, secrets brokered at point
-  of use only and never written to logs, telemetry, traces or run evidence. **Consequence:** a
-  logged secret reaches every log reader and retention store, a leak that needs no outbound call.
+  of use only. The core's no-secrets-in-logs rule ([AGENTS.md](../../AGENTS.md) → Security) also covers
+  telemetry.
 
 A single session that combines research (untrusted content) with implementation (credential
 access) is a trifecta condition. Separate them by design.
 
 ### 3. External destination allowlisting (non-negotiable)
 
-Scope: runtime agents built on the platform. Coding sessions have no sandbox or outbound allowlist today (target,
-not implemented); their rule is the trifecta ban in [AGENTS.md](../../AGENTS.md) → Security.
+Scope: runtime agents built on the platform. For coding sessions the rule is the trifecta ban in
+[AGENTS.md](../../AGENTS.md) → Security. What is in place for either: [security spoke](../../security/README.md) →
+Not enforced.
 
 - Block all outbound network calls except to explicitly allowlisted destinations.
 - Image loading from arbitrary URLs is an exfiltration channel — treat as external communication.
-- Allowlists are maintained by the control plane, not by individual agent configurations. The control plane is
-  target, not implemented ([HUB.md](../../governance/HUB.md) → Not enforced), so this control is an open gap.
+- Allowlists are maintained by the control plane, not by individual agent configurations.
 
 ### 4. Tool and MCP trust assessment (required before adoption)
 
@@ -94,25 +93,15 @@ and makes tool schemas harder to reason about in long sessions.
 
 ### 5. Non-impersonation rule (non-negotiable)
 
-Agents must not represent themselves as humans to users. Users have the right to know
-they are interacting with an AI system. This applies to:
-- Chat interfaces
-- Email composition
-- Comment posting
-- Any user-facing communication channel
-
-Violating this rule is an ethical non-negotiable, not a preference.
+The core states the rule ([AGENTS.md](../../AGENTS.md) → Security). It covers every channel an agent built on the
+platform speaks through: chat interfaces, email composition, comment posting and any other user-facing channel.
+Violating it is an ethical non-negotiable, not a preference.
 
 ### 6. Epistemic honesty (required)
 
-Agents must not present outputs as objective or infallible when they are not.
-When confidence is low or a request is outside the agent's reliable capability:
-- Signal uncertainty explicitly
-- Surface specification ambiguity before proceeding (do not fill gaps autonomously)
-- Return a structured low-confidence result, not a confident wrong answer
-
-"Genie risk": agents that exploit specification gaps without signalling them are a failure
-mode, not a feature. Require agents to surface ambiguity at the task boundary.
+The core states the rule ([AGENTS.md](../../AGENTS.md) → Security). For agents built on the platform, a request
+that is low-confidence or outside the agent's reliable capability returns a structured low-confidence result, not a
+confident wrong answer.
 
 ## External Research (Bounded)
 

@@ -12,8 +12,7 @@
 
 ## Enforced
 
-- Tool registry checks and the PCO hooks: see the [integration spoke](../integration/README.md) → Enforced. The
-  registry validator checks the file, not tool use.
+- Tool registry shape: [master-data spoke](../master-data/README.md) → Enforced.
 - Trifecta separation (§1), per-task privilege decomposition and secret brokering (§2), tool/MCP trust assessment
   (§4), non-impersonation (§5), epistemic honesty (§6), External Research (Bounded) and Multi-Agent Trust: human
   review against
@@ -21,11 +20,10 @@
 
 ## Not enforced
 
-- Use of an unregistered tool or MCP server: required by [lineage.md](../ai_harness/rules/lineage.md) →
-  Registries and Versioning; no PCO check (see the integration spoke → Not enforced).
+- Use of an unregistered tool or MCP server: [lineage spoke](../lineage/README.md) → Not enforced.
 - Outbound allowlisting for runtime agents: required by security-threat-model.md → §3; no PCO check. The control
-  plane that maintains the allowlists: target, not implemented.
-- Outbound allowlisting for coding sessions: no sandbox and no `permissions.deny` in `settings.json`. Target, not
+  plane meant to hold the allowlists: [governance/HUB.md](../governance/HUB.md) → Not enforced.
+- Outbound allowlisting for coding sessions: no sandbox and no deny list in the agent's harness settings. Target, not
   implemented (outside §3's scope).
 - Content source registration for High/Critical solutions and blocking of Prohibited sources: required by
   security-threat-model.md → §1; no PCO check.

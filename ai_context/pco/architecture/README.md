@@ -9,33 +9,32 @@
 - Code structure: config purity, reuse and shared-code home, one responsibility per file, modular entry points,
   UV-only Python
 - The boundary between the synced PCO layer and a repo's project-additive content
-- Independent review ([governance/HUB.md](../governance/HUB.md) → Independent review pattern)
 
 ## Enforced
 
-- No raw Python commands (UV only): validator `governance-audit --fail`, scope as in
-  [governance/HUB.md](../governance/HUB.md) → Enforced ([code-architecture.md](../ai_harness/rules/code-architecture.md) →
-  Python Tooling (UV Only)); pip, Poetry, Pipenv, Conda and venv use is not detected (human review).
+- No raw `python`/`python3` commands (UV only): validator `governance-audit --fail` (Python command scan, run from
+  `ai_agent_pco`) ([code-architecture.md](../ai_harness/rules/code-architecture.md) → Python Tooling (UV Only)).
 - A consumer's `REPO_CONTRACT.md` exists, has the required sections and maps only real spokes: validator
   `validate --scope governance|full` ([CONTRACT.md](../governance/CONTRACT.md)).
-- The synced PCO layer is not edited in a consumer: hook `check_guard.sh` (file-edit tools only) and validator
-  `validate` (reports drift after the fact; the default `--scope harness` covers `ASSISTANTS.md`, `AGENTS.md` and
-  `ai_harness/`, and only `--scope full` covers the whole synced tree)
-  ([hooks/README.md](../ai_harness/hooks/README.md)).
+- The synced PCO layer is not edited in a consumer: [knowledge spoke](../knowledge/README.md) → Enforced.
 - Driver choice: human review at code review ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
   → Capability Decisions Are Reviewed, Not Gated).
 - Config purity, code reuse gate and shared-code home, one responsibility per file, modular entry points: human
   review ([code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity, Code Reuse Gate, One Responsibility
   Per File, Modular Entry Points; [governance/HUB.md](../governance/HUB.md) → Platform Pillars).
-- Independent review: human review; no hook or validator checks independence
-  ([governance/HUB.md](../governance/HUB.md) → Independent review pattern).
 
 ## Not enforced
 
-- There is no orchestrator, tool broker or admission control: workflow pattern, topology and tool entitlements
-  are not checked before or during a run (target, not implemented).
+- Workflow pattern and topology are not checked before or during a run; no PCO check (the control plane that would
+  host such checks: [governance/HUB.md](../governance/HUB.md) → Not enforced).
 - Hard-coded domain strings and oversized multi-concern files: required by
   [code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity, One Responsibility Per File; no PCO check.
+- No `pip`, Poetry, Pipenv, Conda or ad-hoc virtualenv workflows: required by code-architecture.md → Python Tooling
+  (UV Only); no PCO check (the scan sees raw `python` commands only).
+- Reuse of the shared primitives layer (`ai_agent_core`) for LLM calls: required by code-architecture.md → AI
+  Infrastructure Primitives; no PCO check.
+- `ai_agent_core`'s Platform Contract Implementations declaration: required by
+  [CONTRACT.md](../governance/CONTRACT.md) → Special Case: `ai_agent_core`; no PCO check.
 
 ## Rules
 

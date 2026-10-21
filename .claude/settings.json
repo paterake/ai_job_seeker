@@ -1,1 +1,29 @@
-../ai_context/project/ai_harness/settings.json
+{
+  "_comment": "Repo-owned harness settings. The baseline hooks run the gate adapters that distill_harness.py wire installs in hooks/. Add project-specific hooks below the governed baseline.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check_execution_limits.sh"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check_guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check_guard.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

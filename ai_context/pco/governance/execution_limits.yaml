@@ -5,6 +5,7 @@ schema_version: 1
 # A value of 0 or an absent limit is a governance violation ("unbounded" is not permitted).
 
 limits:
+  # Counts shell calls only; other tool calls are not counted.
   max_tool_calls:
     value: 150
-    rationale: "Human-on-the-loop sessions need a defined review point. 150 tool calls is generous for focused work; a session exceeding this is accumulating context without a review checkpoint."
+    rationale: "Human-on-the-loop sessions need a defined review point. 150 shell calls is generous for focused work; a session exceeding this is accumulating context without a review checkpoint."

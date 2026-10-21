@@ -10,14 +10,12 @@
 
 ## Enforced
 
-- Tool and MCP registry shape (name, owner, evidence), `risk_tier` value, and `requires_approval: true` on a high-risk tool: validator, `governed-repo-validate` over [tool_registry.yaml](../master-data/tool_registry.yaml). Rule: [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning.
-- Model registry shape (name, owner, evidence): validator, `governed-repo-validate` over [model_registry.yaml](../master-data/model_registry.yaml).
-- Research citations behind a governance change: human review at change approval. Rule: [security-threat-model.md](../ai_harness/rules/security-threat-model.md) → External Research.
+- Tool and model registry shape, `risk_tier` and `requires_approval` on a high-risk tool: [master-data spoke](../master-data/README.md) → Enforced. Rule: [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning.
 
 ## Not enforced
 
-- Lineage manifest per run, approvals, exceptions and elevations bound to `run_id`, append-only evidence, recorded assumptions: required by [lineage.md](../ai_harness/rules/lineage.md) → Lineage and Evidence; no PCO check. The PCO has not audited `ai_agent_core` for a run-manifest implementation.
-- Tool schema and version, model allowlist entries, and the ban on unregistered tools: required by [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning; no PCO check (see [integration spoke](../integration/README.md) → Not enforced).
+- Lineage manifest per run, approvals, exceptions and elevations bound to `run_id`, append-only evidence, recorded assumptions: required by [lineage.md](../ai_harness/rules/lineage.md) → Lineage and Evidence; no PCO check. What is known of `ai_agent_core`'s runtime: [assurance spoke](../assurance/README.md) → Declared Scope of Validation.
+- Tool schema and version, model allowlist entries, and the ban on unregistered tools: required by [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning; no PCO check. Tool calls are not checked against the registry: an unregistered tool or MCP server is not blocked, and risk tier is not checked before execution; the registry validator checks the file, not tool use.
 - Version pinning and semantic versioning of shared surfaces: required by [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning; no PCO check (nothing reads consumers' pins).
 - Retention schedule and legal hold on run evidence: required by [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Records Retention & Legal Hold; no PCO check.
 

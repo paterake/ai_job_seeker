@@ -34,10 +34,10 @@ Maintain durable backlog state so each backlog item can be executed in a fresh s
    - Forward prior constraints and append any new invariants.
    - Record exact verification commands.
    - Append any gotchas discovered.
-4. Update the top-of-doc resume pointer to the next unfinished item + step (so it is correct for handover).
+4. Update the Resume (start here) line to the next unfinished item + step, and make sure the Session start prompt
+   section holds the prompt built as in the contract's § Resume Prompt (One Line).
 5. Run the contract's § Session-Close Self-Check.
-6. Output the next resume prompt:
-   - `From <anchor doc>: Continue <item name> → “Still todo” step <n>`
+6. Output the Session start prompt for the operator to paste into the next session.
 
 ## Reference
 

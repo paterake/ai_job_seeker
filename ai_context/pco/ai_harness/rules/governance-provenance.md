@@ -16,12 +16,9 @@ paths:
 - The PCO must declare the use-case scope its governance has been **validated** for. Extending
   governance to a use case outside that scope is an open workstream, not an inherited guarantee,
   and is unproven until re-validated against the new scope.
-- **Current validated scope:** the runtime-governance axis — source trust, lineage, bounded
-  execution, eval gates, multi-agent trust — is validated through production use.
-  The PCO does not check runtime conformance. A name-level read of `ai_agent_core` (2026-10-21, not a full
-  audit) found bounds, `run_id`, degrade paths, input caps and run manifests, and no kill switch or per-call
-  human approval.
-  The legal / procurement / organisational axis is a declared workstream, not yet independently validated.
+- The declaration is dated, names each axis as validated or as a workstream, and states the evidence for each; it
+  never implies coverage by omission (`publication.md` → Claim Scoping). The current declaration:
+  [assurance spoke](../../assurance/README.md) → Declared Scope of Validation.
 - **Consequence:** without a stated validated scope, governance proven for one use case is
   silently assumed general — the mechanism that let one axis's governance be treated as
   enterprise-complete. A named scope converts a hidden overclaim into a credible boundary.
@@ -40,7 +37,8 @@ paths:
 ## Independent Validation (of assistant-derived governance)
 
 Governance content derived from LLM/assistant research is **advisory until validated by a source
-that does not share the assistant's synthesis path** — a human domain expert or a primary standard —
+that does not share the assistant's synthesis path** ([HUB.md](../../governance/HUB.md) → Independent review
+pattern) — a human domain expert or a primary standard —
 before it is treated as authoritative. Tag such content `basis: research-derived` (see
 Rule Provenance above) and record the validation when it lands.
 

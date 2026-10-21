@@ -1,6 +1,6 @@
 # PRD — [Module Name]
 
-> A PRD is a contract, not documentation about code. See authoring contract: `ai_context/pco/governance/DOCS_CONTRACT.md`
+> A PRD is a contract, not documentation about code: it states what must exist and be true, not how it is built.
 
 ## Authoring Disciplines
 
@@ -66,8 +66,8 @@ What callers can rely on when something goes wrong:
 State only what applies. Common axes: throughput, latency, reliability, scale limits, security
 boundaries, data handling constraints. Performance targets require dates (see discipline 4 above).
 
-For LLM-calling modules, execution bounds (caps, retries, degrade modes) are governed by
-`ai_context/pco/ai_harness/rules/operations.md` — state the values here, not the rules.
+For LLM-calling modules, state the execution bound values (caps, retries, degrade modes) and why each sits
+where it does.
 
 ## Acceptance Criteria *(required — falsifiable only)*
 

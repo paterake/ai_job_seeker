@@ -1,7 +1,7 @@
 schema_version: 1
 policy_packs:
   - id: pco-core/v1
-    version: "1.1.0"
+    version: "1.2.1"
     owner: pco-owner
     evidence: ai_context/pco/ai_harness/rules/
     description: Core PCO governance — the AGENTS.md core plus every rule file under ai_harness/rules/

@@ -10,31 +10,17 @@
 
 ## Enforced
 
+Hub-owned controls only. Every other control is stated once, in the Enforced / Not enforced sections of the spoke
+that owns it ([Spokes](#spokes)); what each hook blocks and misses: [hooks/README.md](../ai_harness/hooks/README.md).
+Validators run when invoked; their commands are in the PCO repo's `docs/RUNBOOK.md` → Checks.
+
 | Control | Mechanism |
 |---|---|
-| No force push | Hook: `check_guard.sh` (`force_push_refused`) |
-| No edit of `ai_context/pco/` in a consumer repo (shell writes not checked) | Hook: `check_guard.sh` (`synced_pco_edit_refused`) |
-| Shell-call budget per session | Hook: `check_execution_limits.sh` (`execution_limit_hit`) |
-| Expired exceptions | Validators: `exception-registry-validate`, `governed-repo-validate`, `governance-audit` |
-| Tier 3/4 adoption while `experimental` without an escalation record, or `deprecated` | Validators: `capability-registry-validate --target`; `validate --scope governance\|full` ([CONTRACT.md](CONTRACT.md) → Capability Lifecycle) |
 | Tier 3/4 approval of a PCO-owned capability | Human review: operator review of its registry entry |
-| UV only: raw `python`/`python3` commands (pip, Poetry, Conda and venv use is not detected) | Validator: `governance-audit` (Python command scan) |
 | Rule, hook, skill and settings changes | Human review: operator approval (see Decision rights) |
-| Other pillars, driver choice, independent review | Human review |
-
-Hook details: [hooks/README.md](../ai_harness/hooks/README.md). Validators run when invoked; their commands, and
-what the Python command scan covers, are in the PCO repo's `docs/RUNBOOK.md` → Checks. Guidance vs enforcement:
-[harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement.
+| Independent review (whoever dispatches it sets its independence) | Human review |
 
 ## Not enforced
-
-Required by a rule or contract; no PCO check:
-- Blocking of `rm -rf` and hard reset: required by [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
-  → Hooks: Guidance vs Enforcement (irreversible means a hook); no PCO check. Only force push is hooked.
-- Reuse of the shared primitives layer (`ai_agent_core`) for LLM calls: required by
-  [code-architecture.md](../ai_harness/rules/code-architecture.md) → AI Infrastructure Primitives; no PCO check.
-- An approval record for a repo-owned Tier 3/4 capability: required by [CONTRACT.md](CONTRACT.md) → Change
-  Control; no PCO check (the `governance-audit` check sees only PCO-owned entries).
 
 Target, not implemented:
 - A governance board, a standing red-team function, content safety oversight and transparency reporting. The
@@ -42,19 +28,16 @@ Target, not implemented:
 - A periodic (quarterly) rule review cadence.
 - Collection of enforcement signals (deny events, injection attempts, exception volume); review is ad hoc.
 - A control plane (tool broker, secret brokering, admission control).
-- Assignment or checking of a workflow's autonomy level, and capability stage progression.
+- Assignment or checking of a workflow's autonomy level.
 
 ## Rules
 
-- Core: [AGENTS.md](../AGENTS.md)
-- [code-architecture.md](../ai_harness/rules/code-architecture.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md),
-  [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
-- Per-spoke rules: [ASSISTANTS.md](../ASSISTANTS.md)
+- Core: [AGENTS.md](../AGENTS.md); every rule file belongs to a spoke ([ASSISTANTS.md](../ASSISTANTS.md)).
 
 ## Platform Pillars
 
-They apply to all governed repos. Pillar 1 is partly checked by a validator (see Enforced); the others are
-enforced by human review only.
+They apply to all governed repos. What is enforced for each: the [architecture](../architecture/README.md) and
+[behaviour](../behaviour/README.md) spokes.
 
 | # | Pillar | Rule | Consequence of violation |
 |---|---|---|---|
@@ -81,7 +64,7 @@ and the human review step (no hook): [behaviour spoke](../behaviour/README.md) �
 
 - Rule, hook, skill, settings and governance-contract changes: the operator, explicitly, in that session
   ([AGENTS.md](../AGENTS.md) → Governance changes).
-- `ai_context/pco/` and `AGENTS.md`: changed only in the PCO. A consumer does not override or contradict a
+- `ai_context/pco/` (the core included): changed only in the PCO. A consumer does not override or contradict a
   platform rule locally (its `REPO_CONTRACT.md` included); it reports the gap upstream.
 - Exceptions: time-bounded registry entries ([CONTRACT.md](CONTRACT.md) → Exceptions).
 
@@ -95,7 +78,7 @@ and the human review step (no hook): [behaviour spoke](../behaviour/README.md) �
 | **Fully autonomous** | No routine human review; only for narrow, well-characterised workflows |
 
 Placement is a human decision, independent of security risk tier: a low-risk workflow may still need high
-supervision when novelty or ambiguity is high. No mechanism assigns or checks it.
+supervision when novelty or ambiguity is high.
 
 ### Capability-tiered governance (model/agent capability)
 
@@ -105,7 +88,7 @@ The tier is the `tier` field in [capability_registry.yaml](capability_registry.y
 |---|---|---|
 | **Tier 1** | Narrow scope, constrained tools, low autonomy | Human review |
 | **Tier 2** | Broader toolset, works across domains | Human review |
-| **Tier 3** | Strong general problem-solving, higher autonomy | Operator approval and adoption gate (see Enforced) |
+| **Tier 3** | Strong general problem-solving, higher autonomy | Operator approval; adoption gate ([CONTRACT.md](CONTRACT.md) → Capability Lifecycle) |
 | **Tier 4** | High-leverage tools, novel behaviour risk | As Tier 3 |
 
 ### Independent review pattern
@@ -122,8 +105,6 @@ separation:
 - Same-model self-review may be used as advisory signal only; it does not satisfy an independent
   review requirement.
 
-No hook or validator checks independence; whoever dispatches the review sets it.
-
 ## PCO Evolution Model
 
 ### What triggers a rule review
@@ -137,7 +118,7 @@ No hook or validator checks independence; whoever dispatches the review sets it.
 ### Cadence and ownership
 
 - **Accountable owner**: the operator.
-- **Cadence**: a periodic review is target, not implemented; reviews run on the triggers above.
+- **Cadence**: reviews run on the triggers above (a periodic review: see Not enforced).
 
 ### Change process
 
@@ -147,7 +128,7 @@ No hook or validator checks independence; whoever dispatches the review sets it.
    requires independent review (see Independent review pattern).
 3. **Approve and record**: operator approval; the commit names the trigger and source. Breaking changes are
    marked `breaking:` in the commit.
-4. **Communicate downstream**: `distill_harness.py sync` to consumers.
+4. **Communicate downstream**: sync to consumers (the PCO repo's sync tooling).
 
 ### Rollback procedure (governance-of-governance)
 
@@ -159,12 +140,12 @@ Human review; nothing triggers it automatically.
 
 ### Enforcement feedback loop
 
-No mechanism collects these signals; the operator reviews them when they surface.
+The operator reviews these signals when they surface (collection: see Not enforced).
 
 | Signal | Human action |
 |---|---|
 | Tool denial event | Was the denied action legitimate? False positive: loosen the rule. Correct block: keep it. |
-| Sensor silence | Check the sensor can detect what it claims; silence is not evidence of quality. |
+| Sensor silence | Trigger 4 above. |
 | High exception volume | The rule may be wrong; review it before escalating. |
 
 ### The AI's role in evolution
@@ -177,41 +158,31 @@ No mechanism collects these signals; the operator reviews them when they surface
 
 ## Capability Lifecycle
 
-New capabilities are tracked in [capability_registry.yaml](capability_registry.yaml). Stages, progression criteria,
-the registry contract and what is checked: [CONTRACT.md](CONTRACT.md) → Capability Lifecycle.
+New capabilities are tracked in [capability_registry.yaml](capability_registry.yaml). Stages, progression criteria
+and the registry contract: [CONTRACT.md](CONTRACT.md) → Capability Lifecycle; what is checked:
+[master-data spoke](../master-data/README.md).
 
 ## `ai_agent_core` Relationship (Governed Implementation Substrate)
 
 `ai_agent_core` is a governed repo and the shared implementation substrate that downstream repos pin as a
 dependency, not vendor or modify. Because its changes reach every consumer, breaking changes need explicit
-release signalling. The PCO does not check that consumers use it (see Not enforced); position and conformance
-declarations: [CONTRACT.md](CONTRACT.md) → Special Case: `ai_agent_core`.
+release signalling. Whether consumers use it: [architecture spoke](../architecture/README.md) → Not enforced.
+Position and conformance declarations: [CONTRACT.md](CONTRACT.md) → Special Case: `ai_agent_core`.
 
 ## Harness Rule Enforcement Lifecycle (session-snapshot model)
 
 ### How rules are loaded
 
-- The core (`AGENTS.md`, synced from `ai_context/pco/AGENTS.md`) loads at session start through `CLAUDE.md`.
-  Every rule under `.claude/rules/` is `paths:`-scoped and loads when the agent first reads or edits a matching
+- The core (`ai_context/pco/AGENTS.md`) loads at session start through the repo's agent entrypoint.
+  Every rule under `ai_harness/rules/` is `paths:`-scoped and loads when the agent first reads or edits a matching
   file. Docs that need an explicit read are listed in [ASSISTANTS.md](../ASSISTANTS.md).
 - A rule written mid-session does not apply to the running session; it takes effect at the next session start.
 - **Consequence:** an agent writing a weaker rule is not caught by the harness, only by human review. Automated
   checks cannot detect semantic contradictions between rules, so human review is the governance sensor.
-- `distill_harness.py sync` propagates changes to consumers; they take effect at each consumer's next session start.
+- The PCO repo's sync propagates changes to consumers; they take effect at each consumer's next session start.
 
 ## Spokes
 
-One spoke per DAMA knowledge area; each README states what the area governs, what is enforced and the named gaps:
-
-| DAMA Knowledge Area | Agent Harness Equivalent | Canonical document |
-|---|---|---|
-| Data Architecture | Agent Architecture | [architecture/](../architecture/README.md) |
-| Data Modelling & Design | Agent Behaviour Modelling & Design | [behaviour/](../behaviour/README.md) |
-| Data Storage & Operations | Agent Runtime & Operations | [operations/](../operations/README.md) |
-| Data Security | Agent Security & Safety | [security/](../security/README.md) |
-| Data Integration & Interoperability | Tooling & Integration | [integration/](../integration/README.md) |
-| Document & Content Management | Knowledge & Content Management | [knowledge/](../knowledge/README.md) |
-| Reference & Master Data | Identity, Policy & Configuration Master Data | [master-data/](../master-data/README.md) |
-| Data Warehousing & Business Intelligence | Observability, Analytics & FinOps | [observability/](../observability/README.md) |
-| Metadata Management | Registries, Versioning & Lineage | [lineage/](../lineage/README.md) |
-| Data Quality Management | Assurance, Evals & Continuous Improvement | [assurance/](../assurance/README.md) |
+One spoke per DAMA-DMBOK knowledge area, mapped to its agent-harness equivalent. Each spoke README opens with its
+DAMA mapping and states what the area governs, what is enforced and the named gaps. The list of spokes, with the
+rules each one owns, is the spoke index: [ASSISTANTS.md](../ASSISTANTS.md).

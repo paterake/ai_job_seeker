@@ -11,15 +11,13 @@
 
 ## Enforced
 
-- Bash calls per session are capped: hook, `check_execution_limits.sh`, limit in [execution_limits.yaml](../governance/execution_limits.yaml) ([hooks/README.md](../ai_harness/hooks/README.md)).
-- The synced core is read-only in a consumer: hook, `check_guard.sh` denies a file edit under `ai_context/pco/` outside the PCO; a shell write is not checked ([hooks/README.md](../ai_harness/hooks/README.md)).
-- Root `AGENTS.md` is an exact copy of the core: `wire`/`sync` write it and `validate` reports drift ([CONTRACT.md](../governance/CONTRACT.md)).
-- UV only, for raw `python`/`python3` commands: validator, `governance-audit` (Python command scan; [HUB.md](../governance/HUB.md) → Enforced).
+- The checked parts of the core are owned by other spokes: the shell-call budget ([operations](../operations/README.md)),
+  the read-only synced core and its load by the agent entrypoint ([knowledge](../knowledge/README.md)), UV only
+  ([architecture](../architecture/README.md)).
 - Everything else in the core, including the driver choice and governance-change approval: human review (operator, at code review).
 
 ## Not enforced
 
-- No `pip`, Poetry, Pipenv, Conda or ad-hoc virtualenv workflows: required by [code-architecture.md](../ai_harness/rules/code-architecture.md) → Python Tooling (UV Only); no PCO check.
 - Evals of whether the rules change agent behaviour: no rule requires them; target, not implemented.
 
 ## Rules
@@ -44,7 +42,7 @@ Config purity is the main token-economy lever: code reused through a config chan
 Every agent failure is a permanent signal, not a one-off incident. For each one:
 1. Name the failure class (assumption filling, false success signal, scope creep, format mismatch, ...).
 2. Engineer a structural fix: a rule, a hook, a test or a verification step.
-3. Record the fix in the governing file; if the constraint must hold unconditionally, wire it as a hook in settings.json ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement).
+3. Record the fix in the governing file; if the constraint must hold unconditionally, wire it as a hook ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement). When the governing file or hook is under `ai_context/pco/` and you are in a consumer, report the gap upstream instead ([AGENTS.md](../AGENTS.md) → Governance changes).
 4. Remove a constraint only when the model demonstrably no longer triggers that failure class.
 
 **The ratchet**: rules are added from evidence and removed by capability evidence, not by preference.
@@ -52,7 +50,7 @@ Every agent failure is a permanent signal, not a one-off incident. For each one:
 
 ### Agent Behaviour Failure Taxonomy
 
-The root-cause classes that the [incident template](../templates/incident_report.md) records. System error
+The behaviour classes among the root causes the [incident template](../templates/incident_report.md) records. System error
 sensors do not detect them; run review or human review at the task boundary does:
 
 - **Overeagerness**: unrequested features, or business logic inferred from domain terms.

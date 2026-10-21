@@ -5,13 +5,13 @@
 
 - Eval gates for LLM-calling modules: error analysis first, explicit thresholds, regression protection
 - Eval datasets: versions, provenance, named splits
-- Evaluator calibration and independence ([HUB.md](../governance/HUB.md) → Independent review pattern)
+- Evaluator calibration (independence: [HUB.md](../governance/HUB.md) → Independent review pattern)
 - Incident capture and the link from an incident to the governance change it causes
 - Rule provenance (`basis:`) and the declared scope of validation
 
 ## Enforced
 
-- A governed repo declares its sensors in `REPO_CONTRACT.md`: validator, `validate --scope governance|full` checks that the Sensor Layer Declaration and Guide/Sensor Coherence Map sections exist, not their content ([CONTRACT.md](../governance/CONTRACT.md) → Downstream Conformance Contract).
+- A governed repo declares its sensors in `REPO_CONTRACT.md` (Sensor Layer Declaration, Guide/Sensor Coherence Map): section presence is checked as in the [architecture spoke](../architecture/README.md) → Enforced; content is human review.
 - Error analysis, eval levels, dataset provenance and splits, evaluator calibration and required-suite records: human review against [assurance.md](../ai_harness/rules/assurance.md) (no check).
 - Rule provenance tag on each rule file, the declared validated scope, and independent validation of `research-derived` content: human review at change approval. Rule: [governance-provenance.md](../ai_harness/rules/governance-provenance.md) → Scope of Validation, Rule Provenance, Independent Validation.
 
@@ -25,3 +25,14 @@
 
 - [assurance.md](../ai_harness/rules/assurance.md)
 - [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
+
+## Canonical
+
+### Declared Scope of Validation
+
+As of 2026-10-21 ([governance-provenance.md](../ai_harness/rules/governance-provenance.md) → Scope of Validation):
+
+| Axis | Status | Evidence |
+|---|---|---|
+| Runtime governance: source trust, lineage, bounded execution, eval gates, multi-agent trust | Declared validated by the operator through production use | Production use, not an independent audit. The PCO checks no runtime conformance. A name-level read of `ai_agent_core` (2026-10-21, not a full audit) found bounds, `run_id`, degrade paths, input caps and run manifests, and no kill switch or per-call human approval; its retrieval defaults were not read |
+| Legal, procurement, organisational | Workstream, not independently validated | Wording advisory until Legal/DPO sign-off ([ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)) |

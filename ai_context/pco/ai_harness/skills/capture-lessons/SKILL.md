@@ -29,9 +29,9 @@ If neither is true, do not add anything.
 
 | Content type | Target file |
 |---|---|
-| A governance rule (what must hold and why) | In the PCO: `ai_context/pco/ai_harness/rules/<domain>.md`. In a consumer: report the gap upstream (`AGENTS.md` → Governance changes) |
-| A non-obvious gotcha for a specific spoke | `ai_context/project/<spoke>/README.md` — append to its `Non-Obvious Gotchas` section (`ai_context/pco/` is platform-synced and read-only) |
-| A repeatable trap in this repo's own operations | `ai_context/project/ASSISTANTS.md` — add a `Gotcha:` line next to the section it concerns (the file has no separate Gotchas section) |
+| A governance rule (what must hold and why) | In the PCO, with the operator's explicit approval: `ai_context/pco/ai_harness/rules/<domain>.md`. In a consumer: report the gap upstream. Both: `AGENTS.md` → Governance changes |
+| A non-obvious gotcha for a specific spoke | `ai_context/project/<spoke>/README.md`, under a `Non-Obvious Gotchas` heading (create the file or heading if absent; `ai_context/pco/` is platform-synced and read-only) |
+| A repeatable trap in this repo's own operations | `ai_context/project/ASSISTANTS.md` — a `Gotcha:` line next to the section it concerns |
 
 Do not add to `ai_context/pco/ASSISTANTS.md` — it is a static router; it must not accumulate lessons.
 
