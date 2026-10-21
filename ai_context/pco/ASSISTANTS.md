@@ -11,7 +11,7 @@ The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.m
 
 | Spoke (narrative) | Area | Rules (what to do) |
 |---|---|---|
-| [architecture/](architecture/README.md) | Repo layout, module boundaries, config placement | `governance.md` |
+| [architecture/](architecture/README.md) | Repo layout, module boundaries, config placement | `code-architecture.md` |
 | [behaviour/](behaviour/README.md) | Agent behaviour, sessions, token economy, Failure Harvest | — (core: `AGENTS.md`) |
 | [operations/](operations/README.md) | LLM-calling modules: bounds, budgets, degrade modes, human checkpoint, kill switches | `operations.md` |
 | [security/](security/README.md) | Untrusted content, tools/MCP, agents | `security-threat-model.md` |

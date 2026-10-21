@@ -39,7 +39,7 @@
   [retrieval.md](../ai_harness/rules/retrieval.md) → Quality Gate and
   [observability.md](../ai_harness/rules/observability.md); no PCO check. The PCO has not audited the retrieval
   defaults in `ai_agent_core`.
-- Stale docs, runbooks included: required by [governance.md](../ai_harness/rules/governance.md) → Docs Currency; no
+- Stale docs, runbooks included: required by [code-architecture.md](../ai_harness/rules/code-architecture.md) → Docs Currency; no
   PCO check.
 - A periodic review cadence for policy content (target, not implemented;
   [governance/HUB.md](../governance/HUB.md) → Cadence and ownership).

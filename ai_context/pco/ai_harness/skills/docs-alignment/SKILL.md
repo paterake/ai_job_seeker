@@ -25,7 +25,7 @@ Check the repo against each DOCS_CONTRACT.md section in this order. A failure is
 2. **Conditional Required**: check each trigger.
 3. **TODO File Structure**.
 4. **Segregation Rules**: apply "the test" to each doc.
-5. **PRD Authoring Contract**: the shape is `ai_context/pco/governance/templates/PRD_TEMPLATE.md`.
+5. **PRD Authoring Contract**: the shape is `ai_context/pco/templates/PRD_TEMPLATE.md`.
 6. **CONFIGURATION.md Code-Blind Definition**.
 7. **Config Master-Data Is Referenced, Never Copied**.
 8. **Extension Contract**: the discoverability rule.

@@ -31,8 +31,8 @@ This is a governance contract for the agent harness.
   - PRD authoring standard
   - extension contract (when and how to add docs beyond the core set)
   - TODO file structure
-- `ai_context/pco/governance/templates/PRD_TEMPLATE.md` is the canonical PRD shape — referenced by `DOCS_CONTRACT.md`.
-- Temporal currency (keep docs in sync with code changes) is a thin ambient rule in `ai_context/pco/ai_harness/rules/governance.md`.
+- `ai_context/pco/templates/PRD_TEMPLATE.md` is the canonical PRD shape — referenced by `DOCS_CONTRACT.md`.
+- Temporal currency (keep docs in sync with code changes) is a thin ambient rule in `ai_context/pco/ai_harness/rules/code-architecture.md`.
 - `ai_context/pco/ai_harness/skills/docs-alignment/SKILL.md` is the procedural skill for validating a repo against this contract.
 
 ### Human model
@@ -60,7 +60,7 @@ This is a governance contract for the agent harness.
 
 ### If you change `ai_context/pco/governance/DOCS_CONTRACT.md`
 
-- If the PRD template shape changes, update `ai_context/pco/governance/templates/PRD_TEMPLATE.md` in the same change.
+- If the PRD template shape changes, update `ai_context/pco/templates/PRD_TEMPLATE.md` in the same change.
 - If validation steps change, update `ai_context/pco/ai_harness/skills/docs-alignment/SKILL.md` in the same change.
 
 ### If you change anything under `ai_context/`

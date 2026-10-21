@@ -32,7 +32,7 @@ Required by a rule or contract; no PCO check:
 - Blocking of `rm -rf` and hard reset: required by [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
   → Hooks: Guidance vs Enforcement (irreversible means a hook); no PCO check. Only force push is hooked.
 - Reuse of the shared primitives layer (`ai_agent_core`) for LLM calls: required by
-  [governance.md](../ai_harness/rules/governance.md) → AI Infrastructure Primitives; no PCO check.
+  [code-architecture.md](../ai_harness/rules/code-architecture.md) → AI Infrastructure Primitives; no PCO check.
 - An approval record for a repo-owned Tier 3/4 capability: required by [CONTRACT.md](CONTRACT.md) → Change
   Control; no PCO check (the `governance-audit` check sees only PCO-owned entries).
 
@@ -47,7 +47,7 @@ Target, not implemented:
 ## Rules
 
 - Core: [AGENTS.md](../AGENTS.md)
-- [governance.md](../ai_harness/rules/governance.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md),
+- [code-architecture.md](../ai_harness/rules/code-architecture.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md),
   [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
 - Per-spoke rules: [ASSISTANTS.md](../ASSISTANTS.md)
 
@@ -58,12 +58,12 @@ enforced by human review only.
 
 | # | Pillar | Rule | Consequence of violation |
 |---|---|---|---|
-| 1 | UV only for Python | `governance.md` → Python Tooling | Environments diverge; no reproducible execution path |
-| 2 | Config drives code | `governance.md` → Config Purity | Domain changes need code changes; code cannot be reused |
-| 3 | Low-code / OSS preference | `governance.md` → Low-Code / OSS Preference | Custom code reimplements tested paths and accrues maintenance |
+| 1 | UV only for Python | `code-architecture.md` → Python Tooling | Environments diverge; no reproducible execution path |
+| 2 | Config drives code | `code-architecture.md` → Config Purity | Domain changes need code changes; code cannot be reused |
+| 3 | Low-code / OSS preference | `code-architecture.md` → Low-Code / OSS Preference | Custom code reimplements tested paths and accrues maintenance |
 | 4 | Context minimisation | `AGENTS.md` → Sessions and memory | Earlier constraints lose weight; work becomes non-resumable |
 | 5 | Token management | `AGENTS.md` → Sessions and memory | Cost grows non-linearly; regeneration replaces reuse |
-| 6 | No domain context in code | `governance.md` → Config Purity | Near-identical implementations proliferate per domain |
+| 6 | No domain context in code | `code-architecture.md` → Config Purity | Near-identical implementations proliferate per domain |
 
 Pillars 2 and 6 are one rule (code is mechanism; domain context is config); so are 4 and 5 (short sessions with
 durable state).
@@ -72,7 +72,7 @@ durable state).
 
 Governance does not privilege deterministic mechanism by default; it asks which of three peer drivers
 (config-, data- or AI-driven) fits the task. The rule and the explicit-vs-inference test:
-[governance.md](../ai_harness/rules/governance.md) → Driver Selection. The recurring failure class it answers
+[code-architecture.md](../ai_harness/rules/code-architecture.md) → Driver Selection. The recurring failure class it answers
 and the human review step (no hook): [behaviour spoke](../behaviour/README.md) → Capability-Fit Review.
 
 ## Governance Scope (what the hub owns)
@@ -177,22 +177,8 @@ No mechanism collects these signals; the operator reviews them when they surface
 
 ## Capability Lifecycle
 
-New capabilities are tracked in [capability_registry.yaml](capability_registry.yaml); the registry contract and
-what is checked: [CONTRACT.md](CONTRACT.md) → Capability Lifecycle.
-
-| Stage | Meaning |
-|---|---|
-| **Experimental** | Exists; not yet governed. Anything not in the registry is treated as experimental. |
-| **Emerging** | A provisional rule exists; not yet tested against adversarial cases |
-| **Established** | A rule tested against adversarial cases covers it; available to all governed repos |
-| **Deprecated** | Being retired; no new adoption; existing uses need a migration path and timeline ([CONTRACT.md](CONTRACT.md) → Capability Lifecycle) |
-
-### Progression criteria
-
-Human review; stage progression is not enforced.
-- **Experimental → Emerging**: a rule exists and the risk is understood
-- **Emerging → Established**: tested against adversarial cases; no open named gap for it in the covering spoke
-- **Established → Deprecated**: superseded, unacceptable risk, or no longer used
+New capabilities are tracked in [capability_registry.yaml](capability_registry.yaml). Stages, progression criteria,
+the registry contract and what is checked: [CONTRACT.md](CONTRACT.md) → Capability Lifecycle.
 
 ## `ai_agent_core` Relationship (Governed Implementation Substrate)
 

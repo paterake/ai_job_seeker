@@ -3,7 +3,7 @@
 
 ## Governs
 
-- Driver and pattern choice, simplest first ([governance.md](../ai_harness/rules/governance.md) → Driver Selection)
+- Driver and pattern choice, simplest first ([code-architecture.md](../ai_harness/rules/code-architecture.md) → Driver Selection)
 - Workflow patterns: prompt chaining, routing, parallelisation, orchestrator–workers and evaluator–optimizer are
   common patterns, not a closed list; autonomous agents are within Driver Selection
 - Code structure: config purity, reuse and shared-code home, one responsibility per file, modular entry points,
@@ -14,7 +14,7 @@
 ## Enforced
 
 - No raw Python commands (UV only): validator `governance-audit --fail`, scope as in
-  [governance/HUB.md](../governance/HUB.md) → Enforced ([governance.md](../ai_harness/rules/governance.md) →
+  [governance/HUB.md](../governance/HUB.md) → Enforced ([code-architecture.md](../ai_harness/rules/code-architecture.md) →
   Python Tooling (UV Only)); pip, Poetry, Pipenv, Conda and venv use is not detected (human review).
 - A consumer's `REPO_CONTRACT.md` exists, has the required sections and maps only real spokes: validator
   `validate --scope governance|full` ([CONTRACT.md](../governance/CONTRACT.md)).
@@ -25,7 +25,7 @@
 - Driver choice: human review at code review ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
   → Capability Decisions Are Reviewed, Not Gated).
 - Config purity, code reuse gate and shared-code home, one responsibility per file, modular entry points: human
-  review ([governance.md](../ai_harness/rules/governance.md) → Config Purity, Code Reuse Gate, One Responsibility
+  review ([code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity, Code Reuse Gate, One Responsibility
   Per File, Modular Entry Points; [governance/HUB.md](../governance/HUB.md) → Platform Pillars).
 - Independent review: human review; no hook or validator checks independence
   ([governance/HUB.md](../governance/HUB.md) → Independent review pattern).
@@ -35,11 +35,11 @@
 - There is no orchestrator, tool broker or admission control: workflow pattern, topology and tool entitlements
   are not checked before or during a run (target, not implemented).
 - Hard-coded domain strings and oversized multi-concern files: required by
-  [governance.md](../ai_harness/rules/governance.md) → Config Purity, One Responsibility Per File; no PCO check.
+  [code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity, One Responsibility Per File; no PCO check.
 
 ## Rules
 
-- [governance.md](../ai_harness/rules/governance.md)
+- [code-architecture.md](../ai_harness/rules/code-architecture.md)
 - [AGENTS.md](../AGENTS.md) → Before you start
 - [CONTRACT.md](../governance/CONTRACT.md)
 - [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)

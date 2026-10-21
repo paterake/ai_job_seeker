@@ -22,7 +22,7 @@ other non-zero exit, or a script that cannot start, does not block the call; no 
 - `check_execution_limits.sh`: counts Bash calls per session in `.claude/tool_calls/<session_id>` (falls back to `.claude/tool_call_count` when the payload has no `session_id`) and denies (`execution_limit_hit`) once the count reaches `max_tool_calls`, writing `.claude/execution_limit_hit`. Every session starts at 0.
 
 Not hooks:
-- **Capability decisions** are guidance (`governance.md` → Driver Selection), reviewed at code review
+- **Capability decisions** are guidance (`code-architecture.md` → Driver Selection), reviewed at code review
   (`harness-tool-contract.md` → Capability Decisions Are Reviewed, Not Gated).
 - **Exception expiry:** `exception-registry-validate` (run by `governed-repo-validate`) fails on an
   expired exception. An expired exception can be renewed or removed, so it is not a must-never-fail gate.

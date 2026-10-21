@@ -19,13 +19,13 @@
 
 ## Not enforced
 
-- No `pip`, Poetry, Pipenv, Conda or ad-hoc virtualenv workflows: required by [governance.md](../ai_harness/rules/governance.md) → Python Tooling (UV Only); no PCO check.
+- No `pip`, Poetry, Pipenv, Conda or ad-hoc virtualenv workflows: required by [code-architecture.md](../ai_harness/rules/code-architecture.md) → Python Tooling (UV Only); no PCO check.
 - Evals of whether the rules change agent behaviour: no rule requires them; target, not implemented.
 
 ## Rules
 
 - The always-loaded core: [AGENTS.md](../AGENTS.md)
-- [governance.md](../ai_harness/rules/governance.md) (Config Purity, Driver Selection, Capability-Decision Record, Python Tooling)
+- [code-architecture.md](../ai_harness/rules/code-architecture.md) (Config Purity, Driver Selection, Capability-Decision Record, Python Tooling)
 - [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) (Capability Decisions Are Reviewed, Not Gated; Hooks: Guidance vs Enforcement)
 - [security-threat-model.md](../ai_harness/rules/security-threat-model.md) §6 Epistemic honesty
 - Anchor docs: [AI_ASSISTANT_BACKLOG_CONTINUITY.md](../governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md); automated-decision safeguards: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
@@ -37,7 +37,7 @@
 Session boundaries are in the core ([AGENTS.md](../AGENTS.md) → Sessions and memory). A long session that
 resolves one ask by accumulating context is an anti-pattern: work in chapters, one anchor-doc item per session.
 Config purity is the main token-economy lever: code reused through a config change is never regenerated
-([governance.md](../ai_harness/rules/governance.md) → Config Purity).
+([code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity).
 
 ### Failure Harvest
 
@@ -86,4 +86,4 @@ A recurring class, not a one-off:
 6. Agents did not self-reframe; the correction came from repeated human challenge, so structure must carry the fix.
 
 The structural response is Driver Selection and the Capability-Decision Record in
-[governance.md](../ai_harness/rules/governance.md), screened by the review above.
+[code-architecture.md](../ai_harness/rules/code-architecture.md), screened by the review above.

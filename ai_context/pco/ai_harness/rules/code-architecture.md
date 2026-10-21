@@ -14,7 +14,7 @@ paths:
 
 > Governance narrative: [architecture spoke](../../architecture/README.md)
 
-# Governance Rules — Config Purity, Driver Selection, and Reuse
+# Code Architecture Rules — Config Purity, Driver Selection, and Reuse
 
 ## Config Purity
 

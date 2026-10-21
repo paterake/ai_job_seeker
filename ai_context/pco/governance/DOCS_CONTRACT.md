@@ -127,7 +127,7 @@ to reconstruct the module's behaviour from the PRD alone, without reading source
 
 ### Shape
 
-Follow the template at `ai_context/pco/governance/templates/PRD_TEMPLATE.md`. The template is the canonical shape;
+Follow the template at `ai_context/pco/templates/PRD_TEMPLATE.md`. The template is the canonical shape;
 inline variations accumulate inconsistency.
 
 ### Common PRD Failure Modes (Prohibited)

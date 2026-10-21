@@ -12,7 +12,7 @@ policy_packs:
       - ai_context/pco/ai_harness/rules/operations.md
       - ai_context/pco/ai_harness/rules/observability.md
       - ai_context/pco/ai_harness/rules/lineage.md
-      - ai_context/pco/ai_harness/rules/governance.md
+      - ai_context/pco/ai_harness/rules/code-architecture.md
       - ai_context/pco/ai_harness/rules/retrieval.md
       - ai_context/pco/ai_harness/rules/assurance.md
       - ai_context/pco/ai_harness/rules/harness-tool-contract.md

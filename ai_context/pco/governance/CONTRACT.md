@@ -94,6 +94,11 @@ Minimum required sections:
 
 The Additive Content Map must include a markdown table whose first column is `Spoke`. Each `Spoke` value must map to a canonical platform spoke (one of the `ai_context/` spoke folder names) or `harness`.
 
+A consumer references the PCO only from its agent layer (`AGENTS.md`, `ai_context/`, `.claude/`).
+Product artefacts (code, implementation docs, PRDs, product backlogs) state their own reasoning and do not
+cite PCO paths. Exempt: dated audit and decision records, and an upstream gap report until it is lodged.
+**Consequence:** a PCO rename or restructure breaks every consumer doc that cites it (dozens of consumer files on 2026-10-21).
+
 ## Sync Behaviour
 
 The sync tool is `scripts/distill_harness.py` in the PCO repo.
@@ -151,6 +156,18 @@ Minimum registry fields:
 - Capabilities are tracked in a registry with lifecycle stage and supporting evidence.
 - Tier 3/4 capabilities must not be adopted while `stage` is `experimental` unless the adopting repo records a capability adoption escalation in `ai_context/project/governance/REPO_CONTRACT.md` under `## Capability Adoption Escalations`.
 - Deprecated capabilities must not be newly adopted; existing uses must be paired with an explicit migration path and timeline in `ai_context/project/governance/REPO_CONTRACT.md`.
+
+| Stage | Meaning |
+|---|---|
+| **Experimental** | Exists; not yet governed. Anything not in the registry is treated as experimental. |
+| **Emerging** | A provisional rule exists; not yet tested against adversarial cases |
+| **Established** | A rule tested against adversarial cases covers it; available to all governed repos |
+| **Deprecated** | Being retired; no new adoption; existing uses need a migration path and timeline |
+
+Progression is by human review; it is not enforced.
+- **Experimental → Emerging**: a rule exists and the risk is understood
+- **Emerging → Established**: tested against adversarial cases; no open named gap for it in the covering spoke
+- **Established → Deprecated**: superseded, unacceptable risk, or no longer used
 
 Minimum registry fields:
 

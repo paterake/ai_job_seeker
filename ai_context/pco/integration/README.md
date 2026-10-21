@@ -23,7 +23,7 @@
   ([lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning).
 - Tool and MCP trust assessment and the tool-selection test before adoption, native first, OSS preference,
   approval gates: human review ([security-threat-model.md](../ai_harness/rules/security-threat-model.md) §4,
-  [governance.md](../ai_harness/rules/governance.md) → Native First, Low-Code / OSS Preference,
+  [code-architecture.md](../ai_harness/rules/code-architecture.md) → Native First, Low-Code / OSS Preference,
   [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Approval Gates).
 
 ## Not enforced
@@ -51,7 +51,7 @@
 
 - [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
 - [security-threat-model.md](../ai_harness/rules/security-threat-model.md) §4
-- [governance.md](../ai_harness/rules/governance.md) → Native First, Low-Code / OSS Preference
+- [code-architecture.md](../ai_harness/rules/code-architecture.md) → Native First, Low-Code / OSS Preference
 - [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning
 - [observability.md](../ai_harness/rules/observability.md) (telemetry for tool calls)
 - Vendor third-party risk assessment: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)

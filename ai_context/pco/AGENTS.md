@@ -10,7 +10,7 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
   exists, say so. Skip this only for a change whose meaning is uniquely determined (a typo, a rename, a one-liner).
   *Silent gap-filling is the leading cause of rework.*
 - Before adding code that interprets content, choose the driver (config-, data- or AI-driven) with the
-  explicit-vs-inference test in `governance.md` → Driver Selection. *Defaulting builds parsers for semantic
+  explicit-vs-inference test in `code-architecture.md` → Driver Selection. *Defaulting builds parsers for semantic
   problems, or models for exact derivations.*
 - Define how you will verify before you start. Finish with the proof (commands and results), not "done".
   *Weak success criteria produce false success signals.*
