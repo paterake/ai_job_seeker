@@ -1,9 +1,8 @@
 # ai_job_seeker — Backlog (index + anchor)
 
-Single backlog file for the repo. How the system works lives in the core docs
-([README](../README.md) → [PRD](../PRD.md), [ARCHITECTURE](ARCHITECTURE.md), [AI](AI.md),
-[CONFIGURATION](CONFIGURATION.md), [RUNNERS](RUNNERS.md), [RUNBOOK](RUNBOOK.md)); this file holds
-only open work, constraints, and verification.
+Single backlog file for the repo. Intent and guarantees live in
+[INTENT.md](../ai_context/project/INTENT.md), operation in [RUNBOOK](RUNBOOK.md) and config in
+[CONFIGURATION](CONFIGURATION.md); this file holds only open work, constraints, and verification.
 
 ---
 
@@ -15,9 +14,9 @@ only open work, constraints, and verification.
   with the four required anchor sections (continuity header, Accumulated Active Constraints,
   per-item verification commands, Gotchas) before writing code.
 - **Before touching code, read:** [ai_context/project/ASSISTANTS.md](../ai_context/project/ASSISTANTS.md),
-  [REPO_CONTRACT.md](../ai_context/project/governance/REPO_CONTRACT.md), the
-  [PRD](../PRD.md), and `## Accumulated Active Constraints` below. Stage 4 builds on the
-  phase-2 judge call pattern described in [AI.md](AI.md).
+  [REPO_CONTRACT.md](../ai_context/project/governance/REPO_CONTRACT.md),
+  [INTENT.md](../ai_context/project/INTENT.md), and `## Accumulated Active Constraints` below. Stage 4 builds
+  on the phase-2 judge call pattern (its guarantees are in INTENT.md).
 
 ---
 
@@ -25,10 +24,10 @@ only open work, constraints, and verification.
 
 | # | Item | Status | Pointer |
 |---|---|---|---|
-| 1 | Stage 4 — Draft: tailored cover letter + CV per shortlisted job; every claim traces to the profile | ⬜ not started | [PRD → Acceptance Criteria](../PRD.md#acceptance-criteria) |
-| 2 | Stage 5 — Packet: ready-to-send folder per job; submission is a human-approval gate, no auto-send | ⬜ not started | [PRD → Acceptance Criteria](../PRD.md#acceptance-criteria) |
+| 1 | Stage 4 — Draft: tailored cover letter + CV per shortlisted job; every claim traces to the profile | ⬜ not started | [INTENT → Acceptance](../ai_context/project/INTENT.md#acceptance) |
+| 2 | Stage 5 — Packet: ready-to-send folder per job; submission is a human-approval gate, no auto-send | ⬜ not started | [INTENT → Acceptance](../ai_context/project/INTENT.md#acceptance) |
 | 3 | User action: review the candidate profile with Kiera — confirm `target.roles` / `remote` and the audit-role end date | ⬜ open (user) | [CONFIGURATION → Candidate profile](CONFIGURATION.md#candidate-profile-profilecandidateyaml) |
-| 4 | Defects and gaps found in the 2026-10-11 docs audit (salary key mismatch, empty shortlist exits 0, silent exclusions disable, hard-coded cohort keywords, `cli.py` size, no capability-decision record for the CV extractor, no phase-2 eval) | ⬜ open — triage | [PRD → Known Limitations](../PRD.md#known-limitations) |
+| 4 | Defects and gaps found in the 2026-10-11 docs audit (salary key mismatch, empty shortlist exits 0, silent exclusions disable, hard-coded cohort keywords, `cli.py` size, no capability-decision record for the CV extractor, no phase-2 eval, whole profile incl. contact details in the phase-2 prompt) | ⬜ open — triage | [INTENT → Known Limitations](../ai_context/project/INTENT.md#known-limitations) |
 
 ## Completed
 
@@ -75,16 +74,16 @@ Covered by governance exception `EXC-2026-10-12-001` (expires 2027-10-12) in
 - **Submission is a human-approval gate.** The pipeline prepares packets; a person sends them. No silent auto-submit.
 - **Trifecta isolation.** The ingest phase (untrusted web postings) must not share context with credentials or the submission channel; posting text is data, never instructions.
 - **LLM backend is a 3-way switch, agent-authored is the default.** Cloud is opt-in only (both `--llm-provider` and `--llm-model`); never defaulted. Consumed from `ai_agent_core.execution` — no local copy of provider-switch logic.
-- **Config purity.** Domain/candidate strings live in `implementation/job_seeker/config/` YAML, not code. Secrets never live in code or tracked config. Preferred secret source: `~/Documents/__cfg/apikey/<service>/<filename>` (outside the repo). Fallback: environment variables, optionally from a gitignored `.env` in the directory the command runs from (the repo root per [RUNNERS](RUNNERS.md)).
+- **Config purity.** Domain/candidate strings live in `implementation/job_seeker/config/` YAML, not code. Secrets never live in code or tracked config. Preferred secret source: `~/Documents/__cfg/apikey/<service>/<filename>` (outside the repo). Fallback: environment variables, optionally from a gitignored `.env` in the directory the command runs from (the repo root per [RUNBOOK](RUNBOOK.md)).
 - **uv only** for Python env/deps. One responsibility per file; thin `main()` over importable modules.
 
 ---
 
 ## Verification
 
-- Full test suite: `uv run python3 -m pytest -q` → 32 passed (2026-10-11).
+- Full test suite: `uv run python3 -m pytest -q` → 32 passed (2026-10-21).
 - PII + output not tracked: `git check-ignore implementation/job_seeker/config/profile/kiera.yaml implementation/job_seeker/config/output/latest_shortlist.html` → prints both paths.
-- Every other operational command: [RUNNERS](RUNNERS.md).
+- Every other operational command: [RUNBOOK](RUNBOOK.md) and each command's `--help`.
 
 ---
 

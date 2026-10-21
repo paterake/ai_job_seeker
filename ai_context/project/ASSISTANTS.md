@@ -7,7 +7,7 @@ rules, then use this file for ai_job_seeker-specific posture and routing.
 
 - `ai_job_seeker` is an **AI job-search agent**: it searches postings and ranks them against a
   candidate profile; drafting is planned (Stage 4); submission is out of scope and any future
-  outbound packet needs human approval (see [PRD.md](../../PRD.md)). Built on the shared
+  outbound packet needs human approval (see [INTENT.md](INTENT.md)). Built on the shared
   `ai_agent_core` LLMOps substrate.
 - The agent acts on behalf of a real person against real employers. Every outbound artefact
   (application, message, CV) is a real-world action with reputational consequences — treat it
@@ -33,6 +33,7 @@ rules, then use this file for ai_job_seeker-specific posture and routing.
 
 | Task | Mandatory reads (ai_job_seeker) |
 |---|---|
+| Changing behaviour, scope or guarantees | `ai_context/project/INTENT.md` |
 | Any work touching LLM calls / retrieval | `ai_context/pco/ai_harness/rules/operations.md` + the `ai_agent_core` primitives index |
 | Ingesting or parsing job postings (untrusted) | `ai_context/pco/ai_harness/rules/security-threat-model.md` (trifecta + trust tiers) |
 | Drafting a CV / application / recruiter message | Non-Negotiables above (non-impersonation, no fabrication) |
@@ -43,10 +44,9 @@ rules, then use this file for ai_job_seeker-specific posture and routing.
 
 - **Current state:** Profile → live ingest (two pools) → dual-cohort match + rank → one HTML
   shortlist is operational; Draft and Packet are not built (**no auto-send** — any packet needs human
-  approval before leaving the machine). Design, scorer, cohorts and output layout:
-  [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md). Phase-2 judge: [docs/AI.md](../../docs/AI.md).
-  Config keys and secret locations: [docs/CONFIGURATION.md](../../docs/CONFIGURATION.md). Commands:
-  [docs/RUNNERS.md](../../docs/RUNNERS.md). Recovery: [docs/RUNBOOK.md](../../docs/RUNBOOK.md).
+  approval before leaving the machine). Intent, guarantees, decisions and limitations:
+  [INTENT.md](INTENT.md). Config keys and secret locations: [docs/CONFIGURATION.md](../../docs/CONFIGURATION.md).
+  Run, output layout and recovery: [docs/RUNBOOK.md](../../docs/RUNBOOK.md); flags: each command's `--help`.
 - **Default invocation (skill):** `ai_context/project/ai_harness/skills/kiera-job-search/SKILL.md` (symlinked into the agent configuration folder's skills by the PCO `wire` step) — triggers on user phrases like "Hi, I am Kiera, perform the job search", "perform job search for Kiera Patel", "run a job search for Kiera", "find jobs for Kiera Patel", "do/run the job search" (in-repo context). Canonical flow in every harness.
 - **Hard non-negotiables captured in skill's Hard rules:** (i) Section A `--top` never <25, (ii) Section B must be creative across 10 categories (never narrow to just libraries, user said they're mostly closed), (iii) No fabrication, (iv) No auto-send / no unapproved outbound, (v) No PII in git (profile/output dirs gitignored, secrets external under `~/Documents/__cfg/apikey/`), (vi) No OS Python pollution (always `uv run …` from repo root, never global `pip install`), (vii) Hardware lock: 8GB M3 Air → match always runs in `agent` mode (phase-1 deterministic scoring only, no Ollama/LLM judge).
 - **Anchor doc for TODO:** `docs/TODO.md`. Resume from its `## Resume (start here)` section.
@@ -58,6 +58,6 @@ rules, then use this file for ai_job_seeker-specific posture and routing.
 - **Job board API "what" param:** never comma-separate terms on Adzuna (AND logic across commas → zero results). Single concept = single term; multi-concept = space-join (e.g. `"graduate research"`).
 - **Section B historian score suppression fix applied in `match/deterministic.py`:** The base role-overlap component uses `profile.target.roles` (marketing-heavy 34-term list) which caused research-only roles to score 0 on role-overlap even with the +22 history bonus, pushing them below top-25. Fixed with an `if cohort == "history":` guard that AUGMENTS the role-overlap token set with all HISTORY_COHORT_KEYWORDS tokens BEFORE computing role-overlap. This augmentation ONLY runs for the history cohort — Section A's marketing-ordering is never affected. Remove / change this guard only if you understand the suppression effect.
 - **`--marketing-ingest-json latest_listings.json` (prior run's single pool) vs `--marketing-ingest-json pool_marketing.json` (fresh marketing ingest).** The former matches today's Section A to the 15:00 backup (you want this on reruns within the same day). The latter re-ranks against today's fresh marketing pool (scores change slightly due to pool-size differences — only 1 tie-band swap expected, but if user explicitly says "dont reduce top 25", prefer latest_listings.json so the preserved-set guarantee is airtight).
-- **Timestamped output vs `latest_*` alias:** each writer puts a timestamped copy in an `_archive/` folder *beside its target* (so `output/_archive/`, `output/_pipeline/_archive/`, `output/_pools/_archive/`), byte-copies it to the stable `latest_*` alias, and prunes that `_archive/` to 7 days. Only Kiera-facing `.html` sits at the top of `output/`; the `_pipeline/`/`_pools/` split is a convention set by the paths the skill passes, not enforced by code. Details: [docs/ARCHITECTURE.md → Output folder layout](../../docs/ARCHITECTURE.md#output-folder-layout).
+- **Timestamped output vs `latest_*` alias:** each writer puts a timestamped copy in an `_archive/` folder *beside its target* (so `output/_archive/`, `output/_pipeline/_archive/`, `output/_pools/_archive/`), byte-copies it to the stable `latest_*` alias, and prunes that `_archive/` to 7 days. Only Kiera-facing `.html` sits at the top of `output/`; the `_pipeline/`/`_pools/` split is a convention set by the paths the skill passes, not enforced by code. Layout: [docs/RUNBOOK.md → Output folders](../../docs/RUNBOOK.md#output-folders).
 - **8GB M3 Air hardware limit:** Never run with `--ollama-model`, `--llm-provider`, or phase-2 LLM judge in the default skill flow — it will OOM. Default `--mode agent` is correct.
 - **Adzuna deduplication note:** Adzuna returns identical roles via multiple search terms. The dedup key is `(title.lower(), company.lower())` first-seen wins in `_merge_listings_pools`. If a role appears in both marketing pool AND research pool, the marketing-pool copy (longer description) is kept in the merged deduped pool.

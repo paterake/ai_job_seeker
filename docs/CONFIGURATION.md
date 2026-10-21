@@ -1,8 +1,8 @@
 # Configuration: ai_job_seeker
 
-This doc covers config files, keys, defaults and rationale only. Commands are in
-[RUNNERS.md](RUNNERS.md) and design is in [ARCHITECTURE.md](ARCHITECTURE.md). Every config file
-lives in `implementation/job_seeker/config/`.
+This doc covers config files, keys, defaults and rationale only. When to run what is in
+[RUNBOOK.md](RUNBOOK.md); intent and limitations are in [INTENT.md](../ai_context/project/INTENT.md). Every
+config file lives in `implementation/job_seeker/config/`.
 
 | File | Tracked in git | Owns |
 |---|---|---|
@@ -19,7 +19,7 @@ CV folder path and CV file stems, which identify the candidate. That is a known 
 
 | Key | Default if absent | Meaning and rationale |
 |---|---|---|
-| `default_mode` | `agent` | `agent` / `local` / `cloud`. Keep it at `agent`: the reference machine has 8 GB of RAM and local models can run it out of memory. See [AI.md](AI.md). |
+| `default_mode` | `agent` | `agent` / `local` / `cloud`. Keep it at `agent`: the reference machine has 8 GB of RAM and local models can run it out of memory. |
 | `local.model` | empty | Used only when `default_mode: local`. Fills in the local model if none was requested at run time. |
 | `local.base_url` | the substrate's default | Endpoint of the local model server. |
 | `local.timeout_s` | the substrate's default | Request timeout for the local model, in seconds. |
@@ -64,7 +64,8 @@ missing or malformed file disables every exclusion without any error.**
 
 The current list contents are in [exclusions.yaml](../implementation/job_seeker/config/exclusions.yaml).
 The catch-all title tokens (engineer, engineering, architect, tester, devops, sre) and both
-cohort keyword sets are code constants, not config (gap, see [ARCHITECTURE.md](ARCHITECTURE.md)).
+cohort keyword sets are code constants, not config (gap, see
+[INTENT.md → Known Limitations](../ai_context/project/INTENT.md#known-limitations)).
 
 ## Candidate profile (`profile/<candidate>.yaml`)
 
@@ -104,4 +105,4 @@ Cloud-LLM API keys are resolved by `ai_agent_core`, not by this repo. See that r
 - Output root: `implementation/job_seeker/config/output/` (gitignored).
 - Applied-jobs store default: `output/_pipeline/applied_jobs.json`.
 - Archive retention is 7 days. That is a code constant, not config.
-- The full layout convention is in [ARCHITECTURE.md](ARCHITECTURE.md#output-folder-layout).
+- The full layout convention is in [RUNBOOK.md → Output folders](RUNBOOK.md#output-folders).

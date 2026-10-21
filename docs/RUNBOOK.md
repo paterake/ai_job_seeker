@@ -1,8 +1,9 @@
 # Runbook: ai_job_seeker
 
-This covers running and recovering the pipeline. Exact commands and flags are in
-[RUNNERS.md](RUNNERS.md), config keys in [CONFIGURATION.md](CONFIGURATION.md), and design in
-[ARCHITECTURE.md](ARCHITECTURE.md).
+This covers running and recovering the pipeline. Intent and guarantees:
+[INTENT.md](../ai_context/project/INTENT.md). Config keys: [CONFIGURATION.md](CONFIGURATION.md). Every flag:
+`uv run ai-job-seeker <command> --help`. Only `profile` and `ingest` appear in the top-level help; `match`,
+`applied` and `draft` show their help when named.
 
 ## Prerequisites
 
@@ -14,6 +15,9 @@ This covers running and recovering the pipeline. Exact commands and flags are in
    system Python.
 3. Board API keys installed (see [Installing API keys](#installing-api-keys)).
 4. The candidate's CV `.docx` at the location set in the backend config, outside the repo.
+
+**Upgrading `ai_agent_core`:** bump both the git tag and the `==` version pin, re-lock with `uv sync`, and run
+the tests.
 
 ## Default run (the job-search skill)
 
@@ -29,7 +33,8 @@ which any harness triggers from a chat request. It runs these steps:
    role overlap and location score zero for every listing.
 4. **Ingest two pools.** The marketing pool uses the search term `marketing`; the research pool
    uses `graduate research`. Both run against all three boards and are written under
-   `output/_pools/`. If any source prints `SKIP`, tell the operator; do not carry on silently.
+   `output/_pools/`. If any source prints `SKIP`, tell the operator; do not carry on silently. Search with one
+   concept or a space-joined phrase, never comma-separated concepts.
 5. **Match in dual-cohort mode** in agent mode: Section A top 25 from the marketing pool only,
    Section B top 25 from the marketing and research pools merged. The applied-jobs store is
    passed explicitly. This writes the JSON/MD files to `output/_pipeline/` and
@@ -41,14 +46,30 @@ which any harness triggers from a chat request. It runs these steps:
 Section A pool, so that a same-day re-run reproduces an earlier Section A exactly. **None of
 the skill's own steps writes that file.** It only exists if an earlier run wrote it with an
 ingest `--json` pointing there. If it is missing, match exits 1 with "ingest JSON not found".
-In that case use this run's fresh marketing pool instead, as [RUNNERS.md](RUNNERS.md) shows.
-Expect at most a tie-band swap compared with an earlier run.
+In that case pass this run's fresh marketing pool (`output/_pools/pool_marketing.json`) as
+`--marketing-ingest-json` instead. Expect at most a tie-band swap compared with an earlier run.
+
+**Pool order.** When several pools are merged, the first pool given wins a duplicate, so put the pool with the
+richer descriptions first.
 
 **Recording applications.** When the candidate says which roles she has applied for (by section
 and position), use the
 [log-applied-jobs skill](../ai_context/project/ai_harness/skills/log-applied-jobs/SKILL.md). It
 writes to the local store, which the next match run filters on, and it mirrors the rows to the
 tracker sheet through the browser.
+
+## Output folders
+
+The output root is `implementation/job_seeker/config/output/` (gitignored). Only the applied-jobs store defaults
+there (`output/_pipeline/applied_jobs.json`); every other path is the one the caller passes, and the job-search
+skill passes these:
+
+| Location | Contents |
+|---|---|
+| `output/` (top level) | Candidate-facing `.html` only, e.g. `latest_shortlist.html` |
+| `output/_pipeline/` | JSON/MD caches: `latest_shortlist{,_marketing,_history}.json`, `latest_shortlist.md`, `latest_listings.json`, `applied_jobs.json` |
+| `output/_pools/` | Raw ingest pools: `pool_marketing.json`, `pool_research.json`, plus exploration pools |
+| `<folder>/_archive/` | Timestamped copies `<stem>_YYYYMMDD_HHMM<ext>` of what was written to that folder |
 
 ## Installing API keys
 
@@ -60,6 +81,8 @@ tracker sheet through the browser.
   folder is local-only. Its contents and the script are not in git and are unverified here.
 - Check: run a live ingest. Every source should report a count, not `SKIP`.
 - Never paste key values into docs, commits, issue text or chat logs.
+- For a cloud LLM key, prefer the key-file or key-folder flags to the inline key flag, which puts the key in
+  shell history.
 
 ## Recovery
 
@@ -95,8 +118,9 @@ temp directory; the paths are printed. Two ways out:
 
 - Re-run in agent mode (no LLM flags) to get a phase-1-only shortlist. This is the default and
   the only safe option on 8 GB.
-- Author the JSON as instructed. There is currently no match option that reads the result file
-  back in (see [AI.md](AI.md#agent-handoff)), so this path is incomplete.
+- Author the JSON as instructed. No match option reads the result file back in (see
+  [INTENT.md → Known Limitations](../ai_context/project/INTENT.md#known-limitations)), so this path is
+  incomplete.
 
 ### Out of memory, or the machine freezes during match
 A local model was used on the 8 GB machine. Kill it, stop the local model server, and re-run
@@ -106,7 +130,7 @@ A local model was used on the 8 GB machine. Kill it, stop the local model server
 ### Missing ai_agent_core
 Symptoms: `uv sync` cannot fetch the pinned `ai_agent_core` git tag, or any command fails with an
 `ai_agent_core` import error. That includes `profile` and `ingest`, because the CLI imports the LLM judge at
-load time (verified 2026-10-11). The CLI's error message gives the same `uv sync` fix. Fix: check network/GitHub access to the
+load time. The CLI's error message gives the same `uv sync` fix. Fix: check network/GitHub access to the
 `ai_agent_core` repo and that the pinned tag exists, then run `uv sync`.
 
 ### Profile errors
@@ -123,6 +147,8 @@ are deleted automatically the next time that folder is written to.
 
 ## Health checks
 
-- The test suite passes (32 tests, 2026-10-11).
-- `git check-ignore` confirms that the profile and output folders are ignored.
-- The governance validators run clean.
+| Command | Run it when | Fix |
+|---|---|---|
+| `uv run python3 -m pytest -q` | After any code change (32 passed, 2026-10-21) | The failing test's module. Some tests write a stub profile to the default profile path if none exists |
+| `git check-ignore implementation/job_seeker/config/profile/kiera.yaml implementation/job_seeker/config/output/` | Before committing | Must print both paths; restore the `.gitignore` entries |
+| The governance validators, run against this repo | After editing docs or `ai_context/` | The named file |
