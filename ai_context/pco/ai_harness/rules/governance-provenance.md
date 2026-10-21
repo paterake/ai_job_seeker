@@ -18,7 +18,9 @@ paths:
   and is unproven until re-validated against the new scope.
 - **Current validated scope:** the runtime-governance axis — source trust, lineage, bounded
   execution, eval gates, kill switches, multi-agent trust — is validated through production use.
-  The PCO does not check runtime conformance; `ai_agent_core` has not been audited against it.
+  The PCO does not check runtime conformance. A name-level read of `ai_agent_core` (2026-10-21, not a full
+  audit) found bounds, `run_id`, degrade paths, input caps and run manifests, and no kill switch or per-call
+  human approval.
   The legal / procurement / organisational axis is a declared workstream, not yet independently validated.
 - **Consequence:** without a stated validated scope, governance proven for one use case is
   silently assumed general — the mechanism that let one axis's governance be treated as
