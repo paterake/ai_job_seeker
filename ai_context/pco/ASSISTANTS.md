@@ -1,23 +1,23 @@
 # Spoke Index — Platform (PCO)
 
 **Read on demand.** The always-loaded core is the root `AGENTS.md` (source: [AGENTS.md](AGENTS.md)).
-Rules under `ai_harness/rules/` are all path-scoped: the harness loads each one when you read or edit
-a matching file, so do not read them pre-emptively. Use this index when a task needs a spoke's
-narrative or a governance doc.
+What to do: the core, the path-scoped rules (last column; the harness loads each on a matching file, so do not
+read them pre-emptively) and the governance docs below. Spokes are narrative (scope, what is enforced, named
+gaps); read one only when a task needs it.
 
 ## Spokes (DAMA-DMBOK wheel → agent harness)
 
 The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.md).
 
-| Spoke | Read when the task touches | Path-scoped rules |
+| Spoke (narrative) | Area | Rules (what to do) |
 |---|---|---|
-| [architecture/](architecture/README.md) | Repo layout, module boundaries, config placement | `governance.md`, `config-repo-structure.md` |
+| [architecture/](architecture/README.md) | Repo layout, module boundaries, config placement | `governance.md` |
 | [behaviour/](behaviour/README.md) | Agent behaviour, sessions, token economy, Failure Harvest | — (core: `AGENTS.md`) |
 | [operations/](operations/README.md) | LLM-calling modules: bounds, budgets, degrade modes, human checkpoint, kill switches | `operations.md` |
 | [security/](security/README.md) | Untrusted content, tools/MCP, agents | `security-threat-model.md` |
 | [integration/](integration/README.md) | Harness switch, model upgrade, hooks, edit-tool format | `harness-tool-contract.md` |
 | [knowledge/](knowledge/README.md) | Retrieval/RAG, docs, publishing, anti-drift | `retrieval.md`, `publication.md`, `ai_context_sync.md` |
-| [master-data/](master-data/README.md) | Model/tool registries, policy packs, exceptions | — (registry data; checked by `governed-repo-validate`) |
+| [master-data/](master-data/README.md) | Model/tool registries, policy packs, exceptions | — (registry data; checked by `governed-repo-validate` and `capability-registry-validate`) |
 | [observability/](observability/README.md) | Tracing, telemetry, run review, FinOps | `observability.md` |
 | [lineage/](lineage/README.md) | Tool/model registration, risk rating, versioning, run lineage | `lineage.md` |
 | [assurance/](assurance/README.md) | Evals, datasets, incidents, rule provenance | `assurance.md`, `governance-provenance.md` |

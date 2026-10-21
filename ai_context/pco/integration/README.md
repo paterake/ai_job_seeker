@@ -1,130 +1,85 @@
 # Tooling & Integration (Spoke)
 > DAMA mapping: Data Integration & Interoperability → Tooling & Integration
 
-## Purpose
+## Governs
 
-Make tool integrations safe, consistent, and swappable without weakening governance, so the harness can evolve without per-project reinvention.
+- Which tools and MCP servers a governed repo may adopt, and how they are assessed first
+- The tool and MCP registry: [master-data/tool_registry.yaml](../master-data/tool_registry.yaml)
+- Harness switches, model upgrades and tool-interface changes (model-impact events), including the edit-tool format
+- The Claude Code hooks the PCO ships and their wiring into a repo's `settings.json`
+- Native-first integration of vendors, models and tools
 
-## PCO Emphasis
+## Enforced
 
-- Policy: defines which tools exist, how they may be used, and risk rules
-- Control plane: brokers tool invocation through registries, schemas, and entitlements
-- Observability: records tool usage, failure patterns, and risk signals
+- A direct force-push command is denied (`force_push_refused`; matched on command text, so a quoted
+  form (`bash -c "git push -f"`, `eval "git push -f"`) or a git alias is not caught); a file edit under `ai_context/pco/` in a consumer is denied
+  (`synced_pco_edit_refused`; a shell command that writes there is not checked): hook `check_guard.sh`
+  ([hooks/README.md](../ai_harness/hooks/README.md)).
+- Shell calls per session are capped (`execution_limit_hit`): hook `check_execution_limits.sh`
+  ([hooks/README.md](../ai_harness/hooks/README.md)).
+- Both hooks are wired on PreToolUse in `settings.json`: validator `scripts/validate_harness_wiring.py`.
+- Registry entries are well formed (each tool has `owner`, `evidence`, `risk_tier`; a `high` tool sets
+  `requires_approval: true`; each MCP server has `owner` and `evidence`): validator `governed-repo-validate`
+  ([lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning).
+- Tool and MCP trust assessment and the tool-selection test before adoption, native first, OSS preference,
+  approval gates: human review ([security-threat-model.md](../ai_harness/rules/security-threat-model.md) §4,
+  [governance.md](../ai_harness/rules/governance.md) → Native First, Low-Code / OSS Preference,
+  [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Approval Gates).
 
-## Scope (what this spoke governs)
+## Not enforced
 
-### Tool registry and standardisation
+- Tool calls are not checked against the registry: an unregistered tool or MCP server is not blocked, and risk
+  tier is not checked before execution. Required by [lineage.md](../ai_harness/rules/lineage.md) → Registries and
+  Versioning; no PCO check. The registry validator checks the file, not tool use.
+- Schema validation at tool invocation (target, not implemented; control plane,
+  [governance/HUB.md](../governance/HUB.md) → Not enforced).
+- Regression evidence before merge for a model-impacting tool change: required by Canonical below (delegated by
+  [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)); no PCO check. The re-validation steps
+  under Canonical are human review.
+- A gate hook failing closed when it crashes or its script is missing or not executable: required by
+  [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement; no
+  PCO check. Per the hooks docs (not tested here), such a call passes.
+- Force push through indirection (a quoted `bash -c` or `eval` form, a git alias) and other irreversible shell
+  commands such as `rm -rf` or a hard reset: required by
+  [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement; no
+  PCO check. Only the direct force-push form is hooked.
+- Vendor third-party risk assessment before adoption: required by
+  [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Procurement & Access Lifecycle; no PCO
+  check.
 
-- Tool identity, ownership, and lifecycle
-- Tool schemas (inputs/outputs) and validation
-- Tool risk rating and allowed contexts
+## Rules
 
-### Interoperability
+- [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
+- [security-threat-model.md](../ai_harness/rules/security-threat-model.md) §4
+- [governance.md](../ai_harness/rules/governance.md) → Native First, Low-Code / OSS Preference
+- [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning
+- [observability.md](../ai_harness/rules/observability.md) (telemetry for tool calls)
+- Vendor third-party risk assessment: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
 
-- Standard connector patterns (auth, retries, timeouts)
-- Protocol boundaries (tool interface remains stable while implementations change)
-- Cross-agent consistency (tools behave the same regardless of which agent calls them)
+## Canonical
 
-### Dependency governance
-
-- What third-party dependencies are permitted
-- How new tools are introduced and reviewed
-- How breaking changes are rolled out safely
+[harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) cites this section for the edit-tool
+format and model-impact events.
 
 ### Model–harness co-evolution (governed risk)
 
-Models learn harness-specific behaviour through post-training and usage feedback loops. Tool and harness interfaces can become implicit dependencies.
+Models learn harness-specific behaviour through post-training and usage feedback, so tool and harness interfaces
+can become implicit dependencies. A tool or harness change is a model-impact event, not only an engineering change: it
+can degrade a capable model, and a harness tuned for one model may not transfer to another without regression
+evidence.
 
-- Changing a tool interface or behaviour can degrade model performance even if the model is "capable" in theory
-- A harness that is optimised for one model may not transfer cleanly to another without regression evidence
-- Governance treats tool/harness changes as model-impact events, not only engineering changes
+- A change to a tool's schema, argument semantics, output format or default behaviour is model-impacting.
+- A model-impacting change carries regression evidence (contract tests and eval runs) before merge, and ships with
+  a rollback path.
 
 ### Edit-tool contract (capability floor)
 
-The edit-tool format is a capability floor, not a configuration detail. Models are post-trained and RL'd against a specific harness's edit dialect (e.g. unified diff vs. search-and-replace block). This calibration is implicit.
+The edit-tool format is a capability floor, not a configuration detail. A model can be post-trained against a
+specific harness's edit dialect (e.g. unified diff vs. search-and-replace block). Governance transfers across
+harnesses; the edit-tool contract may not. A mismatched dialect can collapse success rate and create retry loops
+whatever the governance quality; restoring the expected format can recover it, with no model change.
 
-**The portability distinction**: governance transfers across harnesses; the edit-tool contract does not transfer automatically. A governance layer that is clean and portable does not guarantee that the tool format layer will work correctly on a different harness.
-
-A mismatched edit dialect collapses success rate and creates retry loops regardless of governance quality. Recovery is complete when the expected format is restored — with no model change.
-
-Practical implications:
-- When switching harnesses, identify and validate the edit-tool format before declaring the migration complete
-- When upgrading models, re-validate the edit-tool contract — forward compatibility is not guaranteed
-- Unexplained success rate drops after a harness or model change should be diagnosed as a potential format mismatch before concluding model regression
-
-## Governance Controls (hub decisions)
-
-### Tool onboarding policy
-
-Governance defines:
-- Minimum requirements for a tool to be registered (schema, owner, risk rating)
-- Review process for new tools (security, safety, operational impact)
-- Deprecation and migration rules
-
-Tool selection discipline — avoid near-duplicate tools; name the failure mode a tool prevents; treat MCP as supply-chain risk: [security-threat-model.md](../ai_harness/rules/security-threat-model.md) §4. Integrate vendors natively, never through home-grown wrappers: [governance.md](../ai_harness/rules/governance.md).
-
-### Entitlements and risk tiers
-
-Governance defines:
-- Which roles can invoke which tools
-- Which tools are restricted to sandbox environments
-- Which tools require explicit approvals and evidence
-
-### Interoperability standards
-
-Governance defines standard behaviour for:
-- Authentication patterns (token, brokering, delegation)
-- Error semantics and retry rules
-- Observability requirements (telemetry fields anchor: [observability.md](../ai_harness/rules/observability.md))
-
-### Tool/harness change control (model-impact events)
-
-Governance defines:
-
-- Which tool changes are treated as model-impacting (schema changes, argument semantics, output format, default behaviours)
-- Regression protection coverage for such changes (contract tests + eval suites tied to representative workflows)
-- Rollout approach (compatibility windows, dual-write/dual-read where applicable, canarying, rollback readiness)
-
-### Hook distribution
-
-The platform distributes hook scripts and the baseline `settings.json` template that consumer repos
-wire into their project-owned harness settings. Capability decisions are not gated by a hook; they are
-reviewed at code review (`harness-tool-contract.md` → Capability Decisions Are Reviewed, Not Gated).
-
-## Artefacts and Surfaces (examples)
-
-- Tool registry (tool ID, owner, schema version, risk rating)
-- Connector standards (timeouts, retries, idempotency, error taxonomy)
-- Entitlement matrix (role × tool × environment × risk tier)
-- Deprecation policy (compatibility windows, migration guidance)
-- Test harness for tools (contract tests, safety tests)
-
-## Enforcement Rules
-
-Canonical enforcement:
-- Edit-tool contract, approval gates (effective oversight — competent overseer, no rubber-stamp — and segregation of duties at go-live, author ≠ approver), hooks vs guidance: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
-- Tool selection discipline, MCP supply-chain risk: [security-threat-model.md](../ai_harness/rules/security-threat-model.md) §4
-- OSS preference; native first (integrate through the vendor's or platform's own plugin, SDK or extension points; no wrapper CLIs, adapter skills or glue): [governance.md](../ai_harness/rules/governance.md)
-- Vendor procurement / TPRM (completed third-party risk assessment before adoption) and access recertification: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
-- Telemetry contract for tool calls: [observability.md](../ai_harness/rules/observability.md); tool registry requirements and per-tool risk rating: [lineage.md](../ai_harness/rules/lineage.md)
-
-## Enforcement Points (where the control plane enforces)
-
-- Tool schemas are validated at invocation; unregistered tools are blocked
-- Risk-tier entitlements checked before tool execution
-- Model-impacting tool changes are flagged and require regression evidence before merge
-
-## Evidence and Metrics (what observability measures)
-
-- Tool usage distribution by risk tier and role
-- Contract test pass rate and schema violation rate
-- Tool failure rate, latency, timeout frequency
-- Shadow-tool attempts
-- Deprecation compliance (% calls to deprecated versions)
-
-## Common Failure Modes
-
-- Shadow tools: ad-hoc scripts bypassing governance and audit
-- Schema drift: tools change without versioning, breaking reproducibility
-- Vendor coupling: tool interfaces encode a specific agent/provider assumption
-- Unbounded capabilities: "utility" tools that accidentally become exfil paths
+- When switching harnesses, validate the edit-tool format before declaring the migration complete.
+- When upgrading models, re-validate the edit-tool contract; forward compatibility is not guaranteed.
+- Diagnose an unexplained success-rate drop after a harness or model change as a possible format mismatch before
+  concluding model regression.

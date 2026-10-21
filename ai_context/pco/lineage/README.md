@@ -1,91 +1,27 @@
 # Registries, Versioning & Lineage (Spoke)
 > DAMA mapping: Metadata Management → Registries, Versioning & Lineage
 
-## Purpose
+## Governs
 
-Provide traceability for every decision and action: who/what/when/why, with versioned artefacts and reproducible lineage.
+- Tool and model identity: a stable identifier, owned schema and version for each tool and MCP server, and an allowlist entry for each model
+- Per-tool risk rating (`risk_tier`) and the approval flag a high-risk tool carries
+- Versioning and pinning of shared surfaces and platform dependencies
+- Run lineage and evidence for LLM-calling modules (coding-agent sessions are evidenced by git, capability-decision records and anchor docs)
 
-## PCO Emphasis
+## Enforced
 
-- Policy: defines what is registered/versioned and what evidence is collected
-- Control plane: enforces version negotiation, pins policy/tool/model versions, and records run context
-- Observability: exposes lineage queries, audit trails, and drift detection over time
+- Tool and MCP registry shape (name, owner, evidence), `risk_tier` value, and `requires_approval: true` on a high-risk tool: validator, `governed-repo-validate` over [tool_registry.yaml](../master-data/tool_registry.yaml). Rule: [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning.
+- Model registry shape (name, owner, evidence): validator, `governed-repo-validate` over [model_registry.yaml](../master-data/model_registry.yaml).
+- Research citations behind a governance change: human review at change approval. Rule: [security-threat-model.md](../ai_harness/rules/security-threat-model.md) → External Research.
 
-## Scope (what this spoke governs)
+## Not enforced
 
-### Registries (canonical catalogues)
+- Lineage manifest per run, approvals, exceptions and elevations bound to `run_id`, append-only evidence, recorded assumptions: required by [lineage.md](../ai_harness/rules/lineage.md) → Lineage and Evidence; no PCO check. The PCO has not audited `ai_agent_core` for a run-manifest implementation.
+- Tool schema and version, model allowlist entries, and the ban on unregistered tools: required by [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning; no PCO check (see [integration spoke](../integration/README.md) → Not enforced).
+- Version pinning and semantic versioning of shared surfaces: required by [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning; no PCO check (nothing reads consumers' pins).
+- Retention schedule and legal hold on run evidence: required by [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Records Retention & Legal Hold; no PCO check.
 
-- Policy registry (pillars, security policy, workflow policy)
-- Tool registry (schemas, versions, risk ratings)
-- Model registry (allowed endpoints/configurations and safety posture)
-- Agent/role registry (behaviour contracts and entitlements)
-- Workflow registry (approved workflow types and versions)
-- Source registry (external research sources → trust tier → owner → review cadence → claim summaries)
+## Rules
 
-### Versioning rules
-
-- Semantic versioning of policies and workflows where applicable
-- Compatibility windows and deprecation timelines
-- Pinning and negotiation for projects consuming the platform
-
-### Lineage model
-
-- Run identity: project, workflow, role, model, policy versions
-- Inputs and sources: what data and content was used, with provenance
-- Decisions and approvals: why the run was allowed, by what rule
-- Actions and outputs: tool calls, changes made, verification results
-
-## Governance Controls (hub decisions)
-
-### What is registered
-
-Governance defines the minimum set of registered objects and the non-compliance posture for "anonymous" tools, policies, or workflows.
-
-### Evidence requirements by risk tier
-
-Governance defines what lineage is captured per tier, including:
-- Whether full trajectories are captured
-- Whether approvals are linked to runs
-- Whether outputs require additional attestation or review
-
-### Compatibility and rollout rules
-
-Governance defines:
-- How projects pin minimum versions
-- How breaking policy changes roll out
-- How migrations are executed and verified
-
-## Artefacts and Surfaces (examples)
-
-- Registries for tools, policies, models, roles, and workflows
-- A source registry for external research relied upon by governance decisions (trust tier, owner, review cadence, and claim summaries)
-- Versioning and deprecation policy (including compatibility windows)
-- Lineage schema for runs (fields, retention, access control)
-- Query surfaces (how audit/forensics is performed)
-
-## Enforcement Rules
-
-Canonical enforcement:
-- Tool/model/policy/workflow identity, per-tool risk rating, versioning, lineage/evidence invariants: [lineage.md](../ai_harness/rules/lineage.md)
-- Assurance artefact provenance requirements: [assurance.md](../ai_harness/rules/assurance.md)
-- Research citation requirements for governance changes: [security-threat-model.md](../ai_harness/rules/security-threat-model.md) → External Research and [CONTRACT.md](../governance/CONTRACT.md)
-- Records retention schedule and legal-hold override on run evidence and logs (append-only is a durability property, not a retention policy): [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
-
-## Enforcement Points (where the control plane enforces)
-
-Canonical enforcement anchors: [lineage.md](../ai_harness/rules/lineage.md) and [CONTRACT.md](../governance/CONTRACT.md).
-
-## Evidence and Metrics (what observability measures)
-
-- % runs with complete lineage captured
-- Time to answer governance questions ("why did it do that?")
-- Deprecated version usage rate and compliance with migration timelines
-- Unregistered invocation attempts
-- Incidents attributable to version drift or missing evidence
-
-## Common Failure Modes
-
-- Implicit versions: cannot reproduce behaviour because versions were not recorded
-- Registry drift: tools/policies exist without ownership or lifecycle
-- "He said / she said" post-mortems due to missing lineage
-- Breaking changes shipped without compatibility and migration
+- [lineage.md](../ai_harness/rules/lineage.md)
+- Registry data: [master-data spoke](../master-data/README.md)

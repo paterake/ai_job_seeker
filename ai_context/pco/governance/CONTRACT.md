@@ -28,7 +28,7 @@ For a target repo to be “harness-wired”, it must have a **two-layer `ai_cont
 
 ```
 <repo>/ai_context/
-  ASSISTANTS.md          ← repo-specific router and active backlog (repo-owned, never synced)
+  ASSISTANTS.md          ← router to the pco/ and project/ indexes (repo-owned, never synced)
   pco/                   ← synced wholesale from ai_agent_pco/ai_context/pco/ (platform-owned, read-only)
     ai_harness/          ← platform hooks, rules, skills
     governance/          ← platform governance contracts
@@ -56,6 +56,7 @@ To prevent interpretive “mapping” and drift, governed repos must match the *
 Within `ai_context/pco/`, the allowed entries are:
 
 - `ASSISTANTS.md`
+- `AGENTS.md`
 - `ai_harness/`
 - `governance/`
 - `architecture/`
@@ -101,8 +102,8 @@ Key principles:
 - Prune is **on by default**: within the selected scope, target-only files under `ai_context/pco/` are removed so the platform namespace is deterministic. Use `--no-prune` to disable pruning when explicitly instructed.
 - Sync target is `<repo>/ai_context/pco/` — the platform namespace only. `ai_context/project/` and `ai_context/ASSISTANTS.md` are repo-owned and are never touched by sync.
 - Sync is **scoped**:
-  - `--scope harness` (the CLI default) syncs `ai_context/pco/ASSISTANTS.md` and `ai_context/pco/ai_harness/`
-  - `--scope governance` syncs `ai_context/pco/ASSISTANTS.md` and `ai_context/pco/governance/` (the `master-data/` registries are not in this scope; use `--scope full`)
+  - `--scope harness` (the CLI default) syncs `ai_context/pco/ASSISTANTS.md`, `AGENTS.md` and `ai_harness/`
+  - `--scope governance` syncs `ai_context/pco/ASSISTANTS.md`, `AGENTS.md` and `governance/` (the `master-data/` registries are not in this scope; use `--scope full`)
   - `--scope full` syncs the full `ai_context/pco/` tree
 
 ## How This Applies Across Repos
@@ -122,11 +123,7 @@ As a result, its conformance declarations are not “additive only”. It must d
 
 ## Change Control (Policy Anchor)
 
-- A governance change without a traceable source is not accepted.
-- If external research justifies a governance change, the change proposal must record sources (URL + retrieval date) and claim summaries being relied on.
-- Enforcement anomalies (false positive/false negative) trigger review and an explicit governance decision, not just logging.
-- Rules are examined at a regular cadence regardless of triggers; the cadence record is part of governance evidence.
-- Policies are versioned and rolled out deliberately; unreviewed or “floating” governance changes are prohibited.
+- Traceable sources, review triggers, cadence and the change process: [HUB.md](HUB.md) → PCO Evolution Model.
 - Tier 3/4 capability changes require a traceable approval. A PCO-owned capability is approved by its entry in the PCO capability registry. A repo-owned one needs an approval record in that repo's `audit/approvals/` (template `ai_context/pco/templates/approval_record.md`), referenced from the change evidence.
 
 ## Exceptions (Registry Contract; expiry checked by `governed-repo-validate`, not by a hook)
@@ -148,7 +145,7 @@ Minimum registry fields:
 - `status` (`active` | `expired` | `revoked`)
 - `evidence` (link or pointer to the approval/evidence record)
 
-## Capability Lifecycle (Registry Contract; Tier 3/4 approvals checked by `governance-audit`, Tier 3/4 adoption gate checked by `capability-registry-validate --target`, stage progression not enforced)
+## Capability Lifecycle (Registry Contract; Tier 3/4 adoption gate checked by `capability-registry-validate --target`; Tier 3/4 approvals and stage progression not enforced)
 
 - New agent capabilities (new tool classes, new model capabilities, new harness patterns) enter the platform through a defined lifecycle.
 - Capabilities are tracked in a registry with lifecycle stage and supporting evidence.

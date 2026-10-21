@@ -15,7 +15,7 @@ paths:
 
 - **Bounded execution**: timeouts and a token/cost budget for every LLM call. No unbounded loops.
 - **Structured observability**: every call emits a correlation ID (`run_id`), latency, and token counts into structured telemetry.
-- **Defined evaluation path**: an evaluation harness exists or is explicitly planned; quality is proven, not assumed.
+- **Defined evaluation path**: an evaluation harness exists or is explicitly planned; quality is proven, not assumed (`assurance.md` → Error Analysis Before Gates).
 - **Degrade mode**: failures/timeouts return a structured error, not silent empties.
 
 ## Execution Bounds (Required)
@@ -29,5 +29,7 @@ paths:
 
 - A tool rated `risk_tier: high` in its registry (`lineage.md`) runs only after a human approves that call;
   the stop is enforced in the runtime, not requested in the prompt. **Consequence:** an irreversible or
-  outbound action taken on an injected or mistaken instruction cannot be undone afterwards.
-- The control plane must support kill-switches scoped at least to: per-run and per-workflow; kill-switch activation must be recorded as evidence.
+  outbound action taken on an injected or mistaken instruction cannot be undone afterwards. Which content is
+  untrusted and how to scope tools per task: `security-threat-model.md` → Required Controls §1-2.
+- Kill switches scoped at least to per-run and per-workflow are required, and each activation must be recorded as
+  evidence. Their intended host, the control plane, is target, not implemented ([HUB.md](../../governance/HUB.md) → Not enforced).

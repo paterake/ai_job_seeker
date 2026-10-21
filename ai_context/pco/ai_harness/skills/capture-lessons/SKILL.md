@@ -29,7 +29,7 @@ If neither is true, do not add anything.
 
 | Content type | Target file |
 |---|---|
-| A governance rule (what must hold and why) | `ai_context/pco/ai_harness/rules/<domain>.md` — add to the relevant rule file |
+| A governance rule (what must hold and why) | In the PCO: `ai_context/pco/ai_harness/rules/<domain>.md`. In a consumer: report the gap upstream (`AGENTS.md` → Governance changes) |
 | A non-obvious gotcha for a specific spoke | `ai_context/project/<spoke>/README.md` — append to its `Non-Obvious Gotchas` section (`ai_context/pco/` is platform-synced and read-only) |
 | A repeatable trap in this repo's own operations | `ai_context/project/ASSISTANTS.md` — add a `Gotcha:` line next to the section it concerns (the file has no separate Gotchas section) |
 

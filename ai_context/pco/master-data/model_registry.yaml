@@ -1,5 +1,4 @@
 schema_version: 1
-# On Azure deployment: add a cost_tier field to each model entry (models become fiscal controls).
 models:
   - name: claude-opus-5-5
     provider: anthropic

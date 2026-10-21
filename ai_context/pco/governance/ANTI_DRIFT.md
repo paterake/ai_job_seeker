@@ -20,8 +20,8 @@ This is a governance contract for the agent harness.
 
 ### Commands
 
-- `docs/RUNNERS.md` is the canonical source for commands a human should run.
-- `docs/RUNNERS.md` must not restate behavioural semantics; it links to `ai_context/pco/governance/CONTRACT.md`.
+- `docs/RUNBOOK.md` is the canonical source for the commands an agent or operator runs, organised by task.
+- `docs/RUNBOOK.md` must not restate behavioural semantics; it links to `ai_context/pco/governance/CONTRACT.md`.
 
 ### Documentation contract
 
@@ -42,20 +42,21 @@ This is a governance contract for the agent harness.
 
 ### Assistant-facing posture
 
-- `ai_context/ASSISTANTS.md` is the canonical assistant entrypoint (what to read first, what matters).
+- The always-loaded core is the root `AGENTS.md` (source `ai_context/pco/AGENTS.md`). `ai_context/ASSISTANTS.md`
+  is the on-demand router to `pco/ASSISTANTS.md` and `project/ASSISTANTS.md`.
 - It should link to deeper files rather than duplicating their contents.
 
 ## Edit Rules (what must update together)
 
 ### If you change a script under `scripts/`
 
-- If the change affects how a human runs the system, update `docs/RUNNERS.md` in the same change set.
+- If the change affects how the system is run, update `docs/RUNBOOK.md` in the same change set.
 - If the change affects sync semantics or target repo shape, update `ai_context/pco/governance/CONTRACT.md` in the same change set.
 
 ### If you change `ai_context/pco/governance/CONTRACT.md`
 
-- Update `docs/RUNNERS.md` only if commands or flags changed.
-- Otherwise keep `docs/RUNNERS.md` unchanged and rely on linking to avoid drift.
+- Update `docs/RUNBOOK.md` only if commands changed.
+- Otherwise keep `docs/RUNBOOK.md` unchanged and rely on linking to avoid drift.
 
 ### If you change `ai_context/pco/governance/DOCS_CONTRACT.md`
 

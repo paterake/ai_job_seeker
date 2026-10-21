@@ -27,43 +27,17 @@ Maintain durable backlog state so each backlog item can be executed in a fresh s
 ## Procedure
 
 1. Read the anchor doc.
-2. Locate the top-of-doc `## Resume (start here)` section and the backlog item checkpoint sections:
-   - Resume (start here)
-   - Done
-   - Still Todo
-   - Accumulated Active Constraints
-   - Verification
-   - Gotchas
-3. Update the checkpoint using the template below:
+2. Locate the sections the continuity contract requires (§ What the Anchor Doc Must Contain).
+3. Update the checkpoint in the shape of the contract's § Checkpoint Template:
    - Record concrete file-level changes and outcomes.
    - Move completed steps from Still Todo to Done.
    - Forward prior constraints and append any new invariants.
    - Record exact verification commands.
    - Append any gotchas discovered.
 4. Update the top-of-doc resume pointer to the next unfinished item + step (so it is correct for handover).
-5. Output the next resume prompt:
+5. Run the contract's § Session-Close Self-Check.
+6. Output the next resume prompt:
    - `From <anchor doc>: Continue <item name> → “Still todo” step <n>`
-
-## Checkpoint Template
-
-```text
-Backlog Item: <name>
-
-Done
-- <specific change + file(s) + verification result>
-
-Still todo (next actions)
-1) <next action>
-
-Accumulated Active Constraints (active for all remaining items)
-- <invariant — forward from prior items + any new ones this item established>
-
-Verification
-- <exact command>
-
-Gotchas
-- <environment/tooling/dependency note>
-```
 
 ## Reference
 

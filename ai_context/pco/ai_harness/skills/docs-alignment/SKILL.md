@@ -5,9 +5,9 @@ description: "Validates and fixes a repo or implementation's docs against the pl
 
 # Docs Alignment
 
-This skill validates documentation against the platform contract at:
-
-- `ai_context/pco/governance/DOCS_CONTRACT.md` — required doc set, segregation rules, PRD authoring standard, extension contract, TODO structure
+This skill validates documentation against the platform contract,
+`ai_context/pco/governance/DOCS_CONTRACT.md`. The contract owns every requirement; this skill only orders the
+checks and the fixes.
 
 ## When to Invoke
 
@@ -18,97 +18,48 @@ This skill validates documentation against the platform contract at:
 
 ## Validation Checklist
 
-### 1) Core Doc Set
+Check the repo against each DOCS_CONTRACT.md section in this order. A failure is a blocker.
 
-Confirm each required doc exists. Missing = blocker.
-
-- [ ] `README.md`
-- [ ] `PRD.md`
-- [ ] `docs/ARCHITECTURE.md`
-- [ ] `docs/RUNBOOK.md`
-- [ ] `docs/CONFIGURATION.md`
-- [ ] `docs/TODO.md` — required only while the module/repo has **open backlog**; permitted absent once the backlog is closed and `docs/TODO.md` removed (do not flag as a blocker in that case)
-- [ ] `docs/RUNNERS.md` (accepts `docs/ops/CLI.md` as a legacy alias)
-
-### 2) Conditional Required
-
-Check each trigger. If trigger is true and doc is absent = blocker.
-
-- [ ] Module owns AI-adjacent behaviour → `docs/AI.md` present?
-- [ ] Implementation is product/stakeholder-facing → `docs/EXECUTIVE-SUMMARY.md` present?
-
-### 3) TODO Structure
-
-- [ ] `docs/TODO.md` is the only TODO file in the docs root
-- [ ] Active initiative anchor docs are under `docs/todo/`
-- [ ] Completed anchor docs are deleted (no `docs/todo/archive/`) once their durable facts are in code or docs; each Completed row in `docs/TODO.md` cites the commit (`git show <hash>:<path>`)
-- [ ] No `TODO_<X>.md` files sitting in the docs root
-
-### 4) Segregation
-
-For each doc, verify content is in the right place:
-
-- [ ] Operational commands only in `docs/RUNNERS.md` (`docs/ops/CLI.md` accepted as a legacy alias; not inline in README or ARCHITECTURE)
-- [ ] Run/recovery steps only in `docs/RUNBOOK.md` (not in README or ARCHITECTURE)
-- [ ] Config keys only in `docs/CONFIGURATION.md` (not inline in code comments or ARCHITECTURE)
-- [ ] Design and boundaries only in `docs/ARCHITECTURE.md`
-- [ ] AI behaviour only in `docs/AI.md`
-- [ ] Dataset/domain specifics only in `docs/use-cases/`
-- [ ] Requirements and acceptance criteria only in `PRD.md`
-
-### 5) PRD Contract
-
-- [ ] PRD describes behaviours and contracts — not files, classes, or tests
-- [ ] PRD contains no implementation file paths or function names
-- [ ] PRD states what the module owns vs what it delegates
-- [ ] PRD follows the template shape (`ai_context/pco/governance/templates/PRD_TEMPLATE.md`)
-- [ ] Any determinism claims have explicit conditions stated
-- [ ] Trust posture is stated (caps, rejection, degrade, retry bounds)
-
-### 5b) CONFIGURATION.md Code-Blind
-
-- [ ] CONFIGURATION.md contains no script/tool file paths, function/method/macro names, or CLI flags — only config/data file paths, key names, and their meaning/rationale
-
-### 5c) Config Master-Data Referenced, Not Copied
-
-- [ ] Docs reference config-owned lists by link (ingest tabs/sheets, per-stage source-table lists, thresholds) rather than enumerating them as prose — only stable contract identifiers and dated snapshots are named inline
-
-### 6) Extension Docs
-
-- [ ] Every extension doc (`SOURCE_HANDLING.md`, `LINEAGE.md`, etc.) is linked from `docs/ARCHITECTURE.md` or `README.md`
-- [ ] No extension docs exist that are not reachable from an entry point
-
-### 7) Multi-Implementation Repos (if applicable)
-
-If the repo contains multiple named implementations:
-
-- [ ] Root `docs/RUNBOOK.md` is a routing surface — no implementation-specific run steps
-- [ ] Root `docs/CONFIGURATION.md` is a routing surface — no implementation-specific config keys
-- [ ] Each implementation has its own `<implementation>/docs/RUNBOOK.md` and `<implementation>/docs/CONFIGURATION.md`
+1. **Core Doc Set**, including the † rule (`docs/TODO.md` may be absent once the backlog is closed) and the
+   legacy command docs (`docs/RUNNERS.md`, `docs/ops/CLI.md`): a finding, not a blocker.
+2. **Conditional Required**: check each trigger.
+3. **TODO File Structure**.
+4. **Segregation Rules**: apply "the test" to each doc.
+5. **PRD Authoring Contract**: the shape is `ai_context/pco/governance/templates/PRD_TEMPLATE.md`.
+6. **CONFIGURATION.md Code-Blind Definition**.
+7. **Config Master-Data Is Referenced, Never Copied**.
+8. **Extension Contract**: the discoverability rule.
+9. **Multi-Implementation Repos** (if applicable): root RUNBOOK and CONFIGURATION are routing surfaces.
 
 ## Fix Strategy
 
-**Before any file operation on an existing doc: inventory its content in full.**
-See the Retrospective Refactor Safety section in `ai_context/pco/governance/DOCS_CONTRACT.md` for
-the required sequence. Skipping the inventory step produces silent information loss.
+**Before any file operation on an existing doc, inventory its content in full** (DOCS_CONTRACT.md →
+Retrospective Refactor Safety). Skipping the inventory step produces silent information loss.
 
 For each failing check:
 
-1. **Required doc missing (greenfield)** — create using the template shape (PRD: `ai_context/pco/governance/templates/PRD_TEMPLATE.md`; others: follow segregation rules). No inventory needed.
-2. **Required doc missing (content exists elsewhere in wrong doc)** — inventory the source doc first; extract and move the relevant content to the new doc; remove it from the source. Do not duplicate.
-3. **Content in the wrong doc** — inventory the doc; map each section to its correct destination; move sections one at a time; verify the source doc is empty of misplaced content before closing.
-4. **Superseded doc to retire** — read in full; confirm every section is either present in the canonical source or explicitly redundant. Only then delete it (no archive; the commit history keeps it).
-5. **TODO file misplaced** — move intact to `docs/todo/` if active; if completed, move its durable facts into code or docs and delete it, citing the commit in its `docs/TODO.md` Completed row; update `docs/TODO.md` index. Structural move — no inventory needed.
-6. **PRD references implementation files** — rewrite those references to contract language; preserve all non-implementation content.
-7. **Extension doc undiscoverable** — add a link from `ARCHITECTURE.md` or `README.md`; do not move the doc.
+1. **Required doc missing (greenfield)**: create it from the template shape. No inventory is needed.
+2. **Required doc missing, but its content is in the wrong doc**: inventory the source doc, move the content
+   to the new doc, and remove it from the source.
+3. **Content in the wrong doc**: inventory, map each section to its destination, move one section at a time,
+   and confirm the source no longer holds misplaced content.
+4. **Superseded doc to retire**: read it in full, and confirm every section is in the canonical source or
+   explicitly redundant. Then delete it; the commit history keeps it.
+5. **TODO file misplaced or completed**: apply TODO File Structure, and update the `docs/TODO.md` index.
+6. **PRD references implementation files**: rewrite those references as contract language.
+7. **Extension doc undiscoverable**: link it from `ARCHITECTURE.md` or `README.md`; do not move the doc.
+8. **Multi-implementation root docs too detailed**: move the implementation detail into each
+   implementation's own docs, and leave pointers at the root.
+9. **CONFIGURATION.md names code or CLI flags**: move the detail to its owning doc first if it exists nowhere
+   else, then reduce the CONFIGURATION.md reference to a behavioural description.
+10. **A doc copies a config-owned list**: replace the list with a link to its owning file.
+11. **Legacy command doc present** (`docs/RUNNERS.md` or `docs/ops/CLI.md`): inventory it, move each command
+    into `docs/RUNBOOK.md` under the task it serves (merging with any RUNBOOK text that already explains it),
+    drop flag listings that `--help` already gives, then delete the legacy doc.
 
-8. **Multi-implementation repo — root RUNBOOK/CONFIGURATION too detailed** — convert to routing surfaces: strip implementation-specific content from root docs; confirm that content exists in (or move it to) each implementation's own `docs/RUNBOOK.md` and `docs/CONFIGURATION.md`. Root docs may only contain pointers and brief routing context.
-9. **CONFIGURATION.md references script paths, function/method/macro names, or CLI flags** — distill the violating reference to a behavioural description, or replace it with a pointer to the doc that already owns that implementation detail (`ARCHITECTURE.md` for code structure, `RUNBOOK.md` for run/recovery steps, `RUNNERS.md` for CLI flags). Never delete the detail if it exists nowhere else — move it to its owning doc first, then distill the CONFIGURATION.md reference.
-10. **Doc copies a config-owned list instead of linking it** — replace the enumerated list (ingest tabs/sheets, per-stage source-table lists, thresholds) with a one-line relative link to its owning file (ingest JSON / `*_base.sql`); keep only the stable model description inline. Leave stable contract identifiers and dated point-in-time snapshots (paired with their regeneration command) as-is.
-
-**Surface to human (do not resolve unilaterally):**
+**Surface to the human (do not resolve unilaterally):**
 - Content that does not clearly belong in any contract doc
-- Content that appears in a superseded doc and has no obvious canonical counterpart
+- Content in a superseded doc that has no obvious canonical counterpart
 - Any section where the right destination is ambiguous
 
 ## Suggested Commands

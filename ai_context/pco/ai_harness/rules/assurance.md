@@ -33,12 +33,13 @@ paths:
 A passing output-level eval while taking an unsafe or wasteful tool trajectory is a failure mode, not a pass. Evaluation is required at each level that applies:
 
 - **Output-level** (always): score the final artefact against explicit criteria
-- **Trajectory-level** (agents and tool loops): score the sequence of tool calls and decisions, not just the final output
+- **Trajectory-level** (agents and tool loops): check the tool calls for safety violations and waste; do not require a particular path, because the outcome is what is graded
 - **Thread-level** (multi-turn products only): score multi-turn coherence, not only individual turns.
+- Where a task is run k times, reliability is pass^k: all k trials succeed; a pass@k (any-success) score hides flaky behaviour that fails in production.
 
 ## Dataset Governance
 
-- Eval datasets are versioned artefacts. CI must pin to a specific dataset version; floating latest is prohibited.
+- Eval datasets are versioned artefacts. The eval runner must pin to a specific dataset version; floating latest is prohibited.
 - Each dataset version that gates or scores behaviour declares its provenance: source, how cases were produced, and owner.
   **Consequence:** a gold set of unknown origin cannot be checked for leakage or for sharing the evaluated output's synthesis path, so the gate it drives proves nothing.
 - Named splits must be explicit (e.g. `ci_smoke`, `ci_regression`, `nightly`, `red_team`).
@@ -65,5 +66,3 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 - When an incident or near miss occurs, file an incident report in `audit/incidents/` using `ai_context/pco/templates/incident_report.md`.
 - If the incident produces a governance change, the incident report must cross-reference the affected governance surface(s): rule file(s) under `ai_context/pco/ai_harness/rules/` and/or registry entry IDs in `ai_context/pco/governance/*_registry.yaml`.
 - If a governance change is justified by an incident, the change record (approval, PR, or run evidence) must link back to the incident report.
-
-**Canonical reference:** [assurance spoke](../../assurance/README.md)

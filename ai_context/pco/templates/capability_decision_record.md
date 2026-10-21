@@ -17,7 +17,7 @@
 - Relevant config / prompt artefacts:
 
 ## Evidence / Review
-- Capability-fit review output:
+- Code-review verdict:
 - Reviewer / approver:
 
 ## Links

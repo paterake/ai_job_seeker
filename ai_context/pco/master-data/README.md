@@ -1,129 +1,36 @@
 # Identity, Policy & Configuration Master Data (Spoke)
 > DAMA mapping: Reference & Master Data → Identity, Policy & Configuration Master Data
 
-## Purpose
+## Governs
 
-Provide canonical identifiers, configurations, and entitlements so governance can be enforced consistently across projects without per-project reinvention.
+- The registry files that hold the PCO's canonical identifiers, listed below
+- Their minimum fields, which [CONTRACT.md](../governance/CONTRACT.md) and [lineage.md](../ai_harness/rules/lineage.md) define
+- Additive-only project policy: a governed repo may strengthen platform policy, never weaken it
 
-## PCO Emphasis
+| Registry | Holds | Checked by |
+|---|---|---|
+| [tool_registry.yaml](tool_registry.yaml) | Tools and MCP servers: owner, evidence, `risk_tier`, `requires_approval` | `governed-repo-validate` |
+| [model_registry.yaml](model_registry.yaml) | Model endpoints: owner, evidence | `governed-repo-validate` |
+| [policy_pack_registry.yaml](../governance/policy_pack_registry.yaml) | Policy packs: id, version, owner, evidence, `rule_files` | `governed-repo-validate` (every rule file listed in a pack, every listed file present) |
+| [exception_registry.yaml](../governance/exception_registry.yaml) | Exceptions: id, expiry | `governed-repo-validate`, `exception-registry-validate` (unique non-empty `id`; a missing, invalid or past `expires` fails) |
+| [capability_registry.yaml](../governance/capability_registry.yaml) | Capabilities: tier, lifecycle stage, owner, evidence | `capability-registry-validate` (Tier 3/4 approvals: human review) |
+| [execution_limits.yaml](../governance/execution_limits.yaml) | Session limits read by `check_execution_limits.sh` | `governed-repo-validate` (positive integer, rationale) |
 
-- Policy: defines what master data exists and what is authoritative
-- Control plane: enforces registration, entitlements, and version negotiation
-- Observability: records lineage and drift across projects and time
+## Enforced
 
-## Scope (what this spoke governs)
+- Registry shape and the fields named in the "Checked by" column: validators named there (`scripts/distill_harness.py`).
+- A high-risk tool sets `requires_approval: true`: validator, `governed-repo-validate`. Rule: [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning.
+- A governed repo declares the Additive-Only Acknowledgment in `REPO_CONTRACT.md`: validator, `validate --scope governance|full` checks the section exists, not its content ([CONTRACT.md](../governance/CONTRACT.md) → Downstream Conformance Contract).
 
-### Canonical identities
+## Not enforced
 
-- Projects, environments, workflows, roles, agents, models, tools, policies
-- Ownership and accountability for each identity class
+- Other exception minimum fields (`rule`, `justification`, `owner`, `granted_by`, `granted`, `scope`, `status`, `evidence`): required by [CONTRACT.md](../governance/CONTRACT.md) → Exceptions; no PCO check.
+- Policy-pack applicability, rollout state and rollout verification plan: required by [CONTRACT.md](../governance/CONTRACT.md) → Policy Packs; no PCO check.
+- Entitlements: [tool_registry.yaml](tool_registry.yaml) carries per-tool `entitlements.roles/environments`, but no validator reads them and no broker applies them; deny-by-default for side-effecting or network tools is target, not implemented.
+- Registries for workflows, roles, agents and environment baselines, including per-workflow output schemas, risk tier and required sensors: target, not implemented.
+- Stage progression in the capability lifecycle: target, not implemented ([governance/HUB.md](../governance/HUB.md) owns the progression criteria).
 
-### Canonical entitlements
+## Rules
 
-- Role × tool × environment × risk tier permissions
-- Time-bounded elevations and exception grants
-
-### Configuration baselines
-
-- Defaults and mandatory constraints per environment and risk tier
-- Version pinning and compatibility
-
-## Canonical Registries (Master-Data Artefacts)
-
-This spoke is substantiated by the first governance registries:
-- Capability lifecycle registry: [capability_registry.yaml](../governance/capability_registry.yaml)
-- Exception registry: [exception_registry.yaml](../governance/exception_registry.yaml)
-- Tool + MCP inventory registry: [tool_registry.yaml](tool_registry.yaml)
-- Model registry: [model_registry.yaml](model_registry.yaml)
-- Policy pack registry: [policy_pack_registry.yaml](../governance/policy_pack_registry.yaml)
-
-## Canonical Identity Classes
-
-The platform defines stable identifiers (and registry entries) for:
-- project
-- environment
-- workflow
-- role
-- agent
-- tool
-- model
-- policy pack
-
-Each identity class has an explicit owner and lifecycle policy (creation, modification, deprecation). Registry files live in this spoke and `governance/`; conformance checks are in the PCO tooling (`governed-repo-validate`). This spoke is the canonical policy anchor.
-
-## Entitlements (Policy Anchor)
-
-Tool usage is governed by an explicit entitlement model: role × tool × environment × risk tier.
-
-Elevations and exceptions are time-bounded, attributable (owner + justification), and recorded in run lineage when used.
-
-Role must be assigned and entitled for the requested workflow and risk tier.
-
-Default entitlement posture is deny-by-default for side-effecting tools and any tool with network egress.
-
-## Workflow Declarations (Policy Anchor)
-
-Workflow registry entries must declare required output schema identifiers per workflow version. Executions must select an output schema and record the selected schema identifier/version in run evidence.
-
-Each workflow version also declares its risk tier and its required sensors (eval suites and review gates). **Consequence:** a workflow with no declared tier or sensors cannot be gated; tier-keyed entitlements and eval gates have nothing to bind to.
-
-## Environment Baselines (Policy Anchor)
-
-Environment baselines must be explicit; "prod-like" constraints cannot be inferred implicitly from naming. Baselines are represented as registry/config entries with an owner and lifecycle policy.
-
-## Governance Controls (hub decisions)
-
-### Registration as the only onboarding path
-
-Governance defines:
-- What it means for a project to be "registered"
-- What minimum metadata and policy binding is expected
-- How registration changes are approved and audited
-
-### Policy segmentation
-
-Governance defines the policy segmentation model:
-- Core policy (non-negotiable)
-- Optional policy (explicit opt-in)
-- Project-additive policy (allowed only if it strengthens constraints)
-
-### Version negotiation
-
-Governance defines:
-- How platform versions are negotiated/pinned
-- How breaking changes are rolled out
-- What compatibility guarantees exist and how long they last
-
-## Artefacts and Surfaces (examples)
-
-- Project registry (project IDs, owners, bindings, opt-ins)
-- Policy catalogue (IDs, versions, scope, enforcement semantics)
-- Entitlement catalogue (role/tool/environment/risk tier)
-- Environment configuration baselines (defaults + mandatory constraints)
-- Exception register (owner, scope, expiry, justification, evidence)
-
-## Enforcement Rules
-
-Canonical enforcement:
-- Registry entries (tool/model identity, `risk_tier` → `requires_approval`), run identity recording, anonymous execution posture: [lineage.md](../ai_harness/rules/lineage.md)
-- Registry shape and the high-risk-tool approval check: `governed-repo-validate` (`scripts/distill_harness.py`)
-- Configuration non-compliance posture, additive-only strengthening: [CONTRACT.md](../governance/CONTRACT.md) and [governance.md](../ai_harness/rules/governance.md)
-
-## Enforcement Points (where the control plane enforces)
-
-Canonical enforcement anchors: [lineage.md](../ai_harness/rules/lineage.md) and [CONTRACT.md](../governance/CONTRACT.md).
-
-## Evidence and Metrics (what observability measures)
-
-- % projects registered and policy-bound
-- % projects on compliant platform versions
-- Policy override attempts (core overrides)
-- Exception volume, expiry compliance, and repeat exceptions
-- Entitlement denials and elevation frequency by tool/risk tier
-
-## Common Failure Modes
-
-- Identity sprawl: multiple names for the same thing across projects
-- Permanent "temporary" exceptions that silently become policy
-- Weak version discipline leading to irreproducible outcomes
-- Entitlements stored informally rather than enforced structurally
+- [lineage.md](../ai_harness/rules/lineage.md) (registry entries, run identity)
+- Registry contracts: [CONTRACT.md](../governance/CONTRACT.md) → Exceptions, Capability Lifecycle, Policy Packs

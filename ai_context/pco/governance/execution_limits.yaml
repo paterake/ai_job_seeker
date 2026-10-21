@@ -3,7 +3,6 @@ schema_version: 1
 # Mandatory execution limits for a governed session.
 # Every value must be a positive integer with a rationale.
 # A value of 0 or an absent limit is a governance violation ("unbounded" is not permitted).
-# On Azure deployment: these also become fiscal controls — calibrate conservatively.
 
 limits:
   max_tool_calls:

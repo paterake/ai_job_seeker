@@ -20,7 +20,7 @@
 
 ## Cross-references (required if a governance surface changed)
 - Rules changed: (e.g. `ai_context/pco/ai_harness/rules/operations.md#...`)
-- Registry entries changed: (e.g. `exception_registry.yaml: EXC-001`, `capability_registry.yaml: <name>` — capability ids are the `name` key, e.g. `harness_hook_gate_git_push`)
+- Registry entries changed: (e.g. `exception_registry.yaml: EXC-001`, `capability_registry.yaml: <name>` — capability ids are the `name` key, e.g. `skill_sync_pco`)
 - Evidence: (PR link, run_id(s), governance-audit output excerpt)
 
 ## Verification

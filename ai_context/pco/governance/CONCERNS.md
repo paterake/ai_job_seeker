@@ -13,7 +13,7 @@ This file explains the “why” and defines the concern profiles that shape wha
 
 ## The Four Primary Concern Profiles
 
-The governed repos themselves are listed in `ai_context/project/governance/consumers.yaml`; the profiles below name an example repo for each.
+The governed repos themselves are listed in the PCO's consumer manifest (in ai_agent_pco only); the profiles below name an example repo where one exists.
 
 ### 1) LLM Systems (ai_platform)
 

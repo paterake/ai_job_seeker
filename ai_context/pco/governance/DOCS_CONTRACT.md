@@ -23,16 +23,19 @@ Missing any of these is a blocker, not a backlog item.
 | `README.md` | Navigation and 2-minute orientation | No canonical entry point; agent reads code instead of contracts |
 | `PRD.md` | Intent, scope, contracts, acceptance criteria | No verifiable success criteria; implementation rework is undetectable |
 | `docs/ARCHITECTURE.md` | Components, data flow, design decisions, responsibility boundaries | Agent cannot rebuild functionality without reading source; boundaries become implicit |
-| `docs/RUNBOOK.md` | Installation, commands, diagnosis, recovery | Operator cannot run or recover the module without reading code |
+| `docs/RUNBOOK.md` | Every operational task, organised by task: when to do it, the exact commands, what a failure means and the fix; installation; recovery. Flag reference is each tool's `--help` | An agent or operator cannot run or recover the module without reading code |
 | `docs/CONFIGURATION.md` | Config keys, defaults, rationale — [code-blind](#configurationmd-code-blind-definition) | Domain values leak into code; reuse across datasets requires code changes |
 | `docs/TODO.md` † | Project backlog index — open initiatives with pointers to anchor docs, completed section | Backlog continuity breaks; completed items re-enter scope; sessions re-derive state |
-| `docs/RUNNERS.md` | Operational command reference — install, run, diagnose, utility commands (accepts `docs/ops/CLI.md` as a legacy alias) | No canonical command surface; humans and assistants derive commands from code or scattered notes, producing drift and support burden |
 
 † **`docs/TODO.md` is required only while the module (or repo) has open backlog.** Once
 the backlog is closed and `docs/TODO.md` removed, its absence is permitted and must not be treated
 as a blocker. A missing `docs/TODO.md` is a violation only when the module still has open backlog
 items (e.g. an Alpha module with open maturity gaps); otherwise an intentional retirement and a
 drift defect are indistinguishable to `docs-alignment`.
+
+**Legacy command docs.** `docs/RUNNERS.md` and `docs/ops/CLI.md` are retired: a command list split from its
+procedure made every command's meaning live in two docs. Where one exists, merge its commands into
+`docs/RUNBOOK.md` under the task they serve, then delete it. Until merged, it is a finding, not a blocker.
 
 ### Conditional Required
 
@@ -52,7 +55,7 @@ All other TODO files are filed under `docs/todo/`.
 |----------|---------|
 | `docs/TODO.md` | Open initiatives (pointer + status) and completed section. One file, root only. |
 | `docs/todo/<initiative>.md` | Active anchor docs for named multi-session initiatives. Session continuity artefacts. |
-| (no archive) | A completed anchor doc is deleted once its durable facts are moved into code or docs; its Completed row in `docs/TODO.md` cites the commit (`git show <hash>:<path>`). |
+| (no archive) | A completed anchor doc is deleted once its durable facts are moved into code or docs; its Completed row in `docs/TODO.md` cites the deleting commit (recover with `git show <hash>^:<path>`). |
 
 **Consequence**: named `TODO_<X>.md` files in the docs root make it impossible to distinguish the
 live backlog from session artefacts and historical records at a glance.
@@ -91,8 +94,8 @@ implementation? If yes, it has become a duplicate, not a routing surface.
 Hard boundaries. Content in the wrong doc forces readers to search multiple files for a single answer
 and produces invisible duplication that drifts independently.
 
-- **Operational commands** (install, run, diagnose, utility) → `docs/RUNNERS.md` only (`docs/ops/CLI.md` accepted as a legacy alias). Never inline in README or ARCHITECTURE.
-- **Run and recovery** → `docs/RUNBOOK.md` only. Never in README or ARCHITECTURE.
+- **Operational commands, when to run them, failure meaning and recovery** → `docs/RUNBOOK.md` only, each
+  command once, under its task. Never in README or ARCHITECTURE.
 - **Config keys and their rationale** → `docs/CONFIGURATION.md` only. Never inline in code comments or ARCHITECTURE.
 - **Technical design and module boundaries** → `docs/ARCHITECTURE.md` only. Never in README or RUNBOOK.
 - **AI behaviour** (LLM tuning, degrade modes, eval hooks, thresholds) → `docs/AI.md` only.
@@ -141,8 +144,8 @@ inline variations accumulate inconsistency.
 
 `CONFIGURATION.md` may reference config/data file paths (YAML, XLSX, config directories) and the
 config keys themselves. It must not reference source-code file paths, script names,
-function/method/macro names, or CLI flags — those belong in `ARCHITECTURE.md`, `RUNBOOK.md`, or
-`RUNNERS.md` respectively.
+function/method/macro names, or CLI flags — those belong in `ARCHITECTURE.md` (code) or `RUNBOOK.md`
+(scripts and flags).
 
 **Consequence if violated**: implementation detail embedded in the config doc drifts independently
 of the code it names, and the same detail duplicates across `CONFIGURATION.md` and its actual

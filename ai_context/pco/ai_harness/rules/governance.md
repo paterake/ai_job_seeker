@@ -18,11 +18,11 @@ paths:
 
 ## Config Purity
 
-- Domain strings, entity names, dataset identifiers, thresholds, and prompt text must not be hard-coded in source code.
+- Domain strings, entity names, dataset identifiers, thresholds, file paths, and prompt text must not be hard-coded in source code.
 - If a string would change when adopting a new dataset or domain, it belongs in configuration, not code.
 - Treat code as reusable mechanism. Treat domain context as configuration and context-layer inputs; do not bake domain assumptions into implementations.
 
-**Config directory structure (code repos; config repos use `cfg/`, see `config-repo-structure.md`):**
+**Config directory structure:**
 - `config/` — runtime config YAMLs (entity lists, thresholds, data paths, tuning params)
 - `config/prompts/` — LLM prompt YAMLs (one file per prompt, named by purpose)
 
@@ -58,16 +58,15 @@ choice between drivers, record it in the commit message or PR description (field
 - why the other driver was not chosen,
 - and whether a config/prompt solution was considered.
 
-No hook enforces this; correctness is screened by the capability-fit review sensor at task boundary / code review.
+No hook enforces this; the reviewer checks the driver choice at code review.
 A path or wiring change is not a driver decision and needs no record.
 
 ## Python Tooling (UV Only)
 
-- For Python dependency management, environments, and script execution, use `uv` only.
-- Never invoke raw `python` or `python3` in this governed workspace. Use `uv run python3 ...` instead.
+The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its scope:
 - This applies to every Python execution path: scripts, validators, one-liners, tests, and ad-hoc local commands.
 - Do not introduce `pip`/`requirements.txt`, Poetry, Pipenv, Conda, or ad-hoc virtualenv workflows.
-- If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock` and keep commands in `docs/RUNNERS.md` (do not duplicate runbooks across multiple docs).
+- If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock` and keep commands in `docs/RUNBOOK.md` (do not duplicate commands across multiple docs).
 
 ## Code Reuse Gate
 
@@ -132,10 +131,11 @@ accumulates until a single shared config change requires edits across multiple m
 
 Any code or config change must be reflected in the affected docs in the same response — do not wait to be asked.
 
-- **README.md** — reflect current commands; remove stale ones
+- **README.md** — navigation only; commands live in RUNBOOK.md
+- **RUNBOOK.md** — reflect current commands; remove stale ones
 - **ARCHITECTURE.md** — reflect current design, config values, file names, and behaviour
 - **CONFIGURATION.md** — every key used in code must be documented; no undocumented keys, no stale defaults
-- **TODO.md** — mark completed items done and move them to the Completed section
+- **TODO.md** — keep the backlog index current per `DOCS_CONTRACT.md` (Core Doc Set † note and → TODO File Structure)
 - **PRD.md** — update acceptance criteria and contracts when the module's obligations change
 
 **Stale documentation is a bug in the change, not a backlog item.**

@@ -1,12 +1,11 @@
----
 # Per-Tier Deny Interface
 
-> Canonical deny response schema for governed agent runs. All hooks and control-plane denials must produce a response conforming to this shape. This is the observable interface — enforcement wiring (hook scripts, detection logic, allowlists) is not disclosed here.
+> Canonical deny response schema for governed agent runs. All hook denials, and denials by a future control plane (target, not implemented: [HUB.md](HUB.md) → Not enforced), must produce a response conforming to this shape. This is the observable interface — enforcement wiring (hook scripts, detection logic, allowlists) is not disclosed here.
 
 ## Deny Response Shape
 
 The target shape for a denial event is these six fields. The current PCO hooks emit a subset:
-none emits `run_id` or `approval_record`, and `check_execution_limits.sh` also omits `policy_set` (see Current Enforcement Points):
+none emits `run_id`, `approval_record` or `policy_set`, and `check_guard.sh` also omits `risk_tier` (see Current Enforcement Points):
 
 ```
 run_id:           <stable run identifier propagated from entry point; "local" if outside a governed run>
@@ -27,6 +26,8 @@ next_action:      <what the operator must do to unblock>
 | `capability_experimental` | Capability in Experimental lifecycle stage invoked without a recorded adoption escalation | Any |
 | `supervision_required` | Action requires a fully supervised workflow; autonomous execution not permitted at this tier | Critical |
 | `execution_limit_hit` | Emitted by the execution-limits hook when the tool-call budget is exhausted | Any |
+| `force_push_refused` | Emitted by the guard hook on a force push (`--force`, `-f`, `--force-with-lease`, a `+refspec`) | Any |
+| `synced_pco_edit_refused` | Emitted by the guard hook on a file edit under `ai_context/pco/` in a repo other than the PCO | Any |
 
 ## Per-Tier Denial Shapes
 
@@ -34,18 +35,18 @@ next_action:      <what the operator must do to unblock>
 |---|---|---|---|---|
 | Low | Most Low-tier actions proceed without pre-approval | — | Not required | Proceed |
 | Medium | Tool not in role entitlements | `entitlement_exceeded` | Not required | Scope down to entitled tools, or request entitlement grant via the exception process |
-| High | Protected change attempted without approval record | `approval_required` | Required — missing | Request approval from governance board; record the approval before re-attempting |
+| High | Protected change attempted without approval record | `approval_required` | Required — missing | Request approval from the operator; record the approval before re-attempting |
 | Critical | Fully supervised workflow required; autonomous execution blocked | `supervision_required` | Required — missing | Initiate fully supervised workflow with explicit human approval at each step |
 
 ## Current Enforcement Points
 
-The PCO hook `check_execution_limits.sh` returns the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When it does not trip it exits 0 with no output and the call goes through the normal permission flow. If it cannot run (a tool or its config is missing), it fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape: [hooks/README.md](../ai_harness/hooks/README.md). Its limit: the count is per session, so it bounds one session, not a run spanning several sessions.
+The PCO hooks `check_execution_limits.sh` and `check_guard.sh` return the deny shape as a PreToolUse `"deny"` inside `hookSpecificOutput`, with the structured reason in `permissionDecisionReason`. Claude Code blocks the tool call on a `deny`. When a hook does not trip it exits 0 with no output and the call goes through the normal permission flow. If it cannot run (a tool or its config is missing), it fails closed with a one-line `GOVERNANCE STOP` and exit 2, not the full deny shape: [hooks/README.md](../ai_harness/hooks/README.md). The execution-limit count is per session, so it bounds one session, not a run spanning several sessions.
 
 The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 
 ## Registration Surface
 
-`master-data/tool_registry.yaml` is the complementary artefact: it enumerates governed tools with their risk tiers and entitlements, so the control plane knows which tools can trigger which denial conditions.
+`master-data/tool_registry.yaml` is the complementary artefact: it enumerates governed tools with their risk tiers and entitlements, so a control plane (target, not implemented) could know which tools can trigger which denial conditions.
 
 ## References
 

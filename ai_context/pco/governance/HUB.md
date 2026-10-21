@@ -1,102 +1,117 @@
 # Agent Governance (Hub)
 
-## Purpose
+## Governs
 
-Defines Agent Governance as the central hub of Agent Management: the strategy, oversight, decision rights, policies, and systemic accountability used to run agentic systems safely and repeatably at scale.
+- The platform pillars every governed repo follows
+- Who may change a rule, and how a change is proposed, approved and synced
+- Capability tiers and the supervision (autonomy) model
+- The independent review pattern
+- The spokes, one per DAMA knowledge area
 
-## Why this is the hub
+## Enforced
 
-Every spoke domain (security, operations, tooling, evals, etc.) can be implemented in isolation, but it will not be reliable unless governance defines:
-- Global rules (pillars/policies) and what is non-negotiable
-- Ownership and decision rights (who can change what)
-- Risk tiers and approvals (what needs escalation)
-- Evidence requirements (what is recorded into run artefacts)
-- Enforcement semantics (what is blocking vs advisory)
+| Control | Mechanism |
+|---|---|
+| No force push | Hook: `check_guard.sh` (`force_push_refused`) |
+| No edit of `ai_context/pco/` in a consumer repo (shell writes not checked) | Hook: `check_guard.sh` (`synced_pco_edit_refused`) |
+| Shell-call budget per session | Hook: `check_execution_limits.sh` (`execution_limit_hit`) |
+| Expired exceptions | Validators: `exception-registry-validate`, `governed-repo-validate`, `governance-audit` |
+| Tier 3/4 adoption while `experimental` without an escalation record, or `deprecated` | Validators: `capability-registry-validate --target`; `validate --scope governance\|full` ([CONTRACT.md](CONTRACT.md) → Capability Lifecycle) |
+| Tier 3/4 approval of a PCO-owned capability | Human review: operator review of its registry entry |
+| UV only: raw `python`/`python3` commands (pip, Poetry, Conda and venv use is not detected) | Validator: `governance-audit` (Python command scan) |
+| Rule, hook, skill and settings changes | Human review: operator approval (see Decision rights) |
+| Other pillars, driver choice, independent review | Human review |
 
-Without this hub, the harness becomes a collection of capabilities rather than a governed system.
+Hook details: [hooks/README.md](../ai_harness/hooks/README.md). Validators run when invoked; their commands, and
+what the Python command scan covers, are in the PCO repo's `docs/RUNBOOK.md` → Checks. Guidance vs enforcement:
+[harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement.
 
-## Platform Pillars (Non-Negotiable — Blocking)
+## Not enforced
 
-These pillars apply to all governed repos and all work performed within or by the harness.
-They are not advisory. Any work that violates a pillar is non-conformant regardless of other correctness.
+Required by a rule or contract; no PCO check:
+- Blocking of `rm -rf` and hard reset: required by [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
+  → Hooks: Guidance vs Enforcement (irreversible means a hook); no PCO check. Only force push is hooked.
+- Reuse of the shared primitives layer (`ai_agent_core`) for LLM calls: required by
+  [governance.md](../ai_harness/rules/governance.md) → AI Infrastructure Primitives; no PCO check.
+- An approval record for a repo-owned Tier 3/4 capability: required by [CONTRACT.md](CONTRACT.md) → Change
+  Control; no PCO check (the `governance-audit` check sees only PCO-owned entries).
 
-| # | Pillar | Consequence of violation |
-|---|---|---|
-| 1 | **UV only for Python** — all dependency management and script execution via `uv`; canonical command form is `uv run python3 ...`; never raw `python`/`python3`; no `pip install` to OS, no Poetry/Conda/venv workarounds | Reproducibility breaks; environment state diverges; no consistent execution path |
-| 2 | **Config drives code** — no domain strings, entity names, thresholds, file paths, or prompt text in `.py` files; all in YAML config | Code cannot be reused across domains; domain changes require code changes; config and code governance diverge |
-| 3 | **Low-code / OSS preference** — prefer an existing OSS library over custom code when one covers the requirement adequately | Custom code accumulates maintenance liability; reimplements tested paths poorly; blocks reuse |
-| 4 | **Context minimisation** — work spanning multiple sessions uses the anchor doc / backlog continuity pattern; sessions are scoped to one coherent slice | Context saturation erodes earlier constraints; invariants drift silently; work becomes non-resumable |
-| 5 | **Token management** — long sessions resolving a single ask by accumulating large context are an anti-pattern; design in chapters | Cost grows non-linearly; earlier architectural rules lose weight; regeneration replaces reuse |
-| 6 | **No domain context in code** — domain assumptions are not baked into implementations; domain context lives in config and context-layer inputs | Code cannot be reused across domain variations; triggers proliferation of near-identical implementations |
+Target, not implemented:
+- A governance board, a standing red-team function, content safety oversight and transparency reporting. The
+  operator is the only approver today.
+- A periodic (quarterly) rule review cadence.
+- Collection of enforcement signals (deny events, injection attempts, exception volume); review is ad hoc.
+- A control plane (tool broker, secret brokering, admission control).
+- Assignment or checking of a workflow's autonomy level, and capability stage progression.
 
-Pillars 2 and 6 are two faces of the same rule: code is reusable mechanism; domain context is configuration.
-Pillars 4 and 5 are two faces of the same rule: long sessions accumulate noise; short sessions with durable state are the operating model.
+## Rules
 
----
+- Core: [AGENTS.md](../AGENTS.md)
+- [governance.md](../ai_harness/rules/governance.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md),
+  [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
+- Per-spoke rules: [ASSISTANTS.md](../ASSISTANTS.md)
+
+## Platform Pillars
+
+They apply to all governed repos. Pillar 1 is partly checked by a validator (see Enforced); the others are
+enforced by human review only.
+
+| # | Pillar | Rule | Consequence of violation |
+|---|---|---|---|
+| 1 | UV only for Python | `governance.md` → Python Tooling | Environments diverge; no reproducible execution path |
+| 2 | Config drives code | `governance.md` → Config Purity | Domain changes need code changes; code cannot be reused |
+| 3 | Low-code / OSS preference | `governance.md` → Low-Code / OSS Preference | Custom code reimplements tested paths and accrues maintenance |
+| 4 | Context minimisation | `AGENTS.md` → Sessions and memory | Earlier constraints lose weight; work becomes non-resumable |
+| 5 | Token management | `AGENTS.md` → Sessions and memory | Cost grows non-linearly; regeneration replaces reuse |
+| 6 | No domain context in code | `governance.md` → Config Purity | Near-identical implementations proliferate per domain |
+
+Pillars 2 and 6 are one rule (code is mechanism; domain context is config); so are 4 and 5 (short sessions with
+durable state).
 
 ## Capability-Fit Governance
 
-The platform governs three peer solution drivers:
-- **Config-driven** — variability is carried in configuration rather than code
-- **Data-driven** — the answer is explicit in the data and recoverable by fixed rules
-- **AI-driven** — the mechanism must infer meaning not explicit in the input
-
-Governance does not privilege deterministic mechanism by default. It asks which driver fits the task.
-The standing test is explicit answer vs inference:
-- explicit derivation defaults to deterministic mechanism,
-- semantic interpretation defaults to AI-driven mechanism.
-
-AI-driven is not a foreign exception. It is a first-class governed mode with its own obligations:
-evaluation, provenance, and recorded non-determinism. Deterministic mechanism is still the default
-for acquisition, bookkeeping, parsing of known syntactic structures, validation, and bounded transforms.
-
-Recurring failure class: bespoke deterministic machinery built for semantic work. The platform response
-is structural rather than rhetorical:
-- capability-fit rule in agent behaviour,
-- AI-driven recognised explicitly in governance vocabulary,
-- a capability-decision record when the driver choice was a real decision,
-- task-boundary review sensor screening the substance of the choice.
-
----
+Governance does not privilege deterministic mechanism by default; it asks which of three peer drivers
+(config-, data- or AI-driven) fits the task. The rule and the explicit-vs-inference test:
+[governance.md](../ai_harness/rules/governance.md) → Driver Selection. The recurring failure class it answers
+and the human review step (no hook): [behaviour spoke](../behaviour/README.md) → Capability-Fit Review.
 
 ## Governance Scope (what the hub owns)
 
 ### Decision rights
 
-Agent Governance centralises decisions about:
-- Core vs optional policy ("pillars" vs guidance)
-- Tool availability and entitlements
-- Allowed workflows and routing rules
-- Risk tiers, approvals, and escalation paths
-- Evaluation gates and pass/fail thresholds
-- Exception policy (how exceptions are granted, time-bounded, and revoked)
+- Rule, hook, skill, settings and governance-contract changes: the operator, explicitly, in that session
+  ([AGENTS.md](../AGENTS.md) → Governance changes).
+- `ai_context/pco/` and `AGENTS.md`: changed only in the PCO. A consumer does not override or contradict a
+  platform rule locally (its `REPO_CONTRACT.md` included); it reports the gap upstream.
+- Exceptions: time-bounded registry entries ([CONTRACT.md](CONTRACT.md) → Exceptions).
 
 ### Autonomy placement (supervision model)
 
-Governance owns the supervision model for workflows: how much human oversight is used and what triggers moving a workflow toward more supervision.
+| Autonomy level | Meaning |
+|---|---|
+| **Fully supervised** | Human approves each high-impact step before it executes ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Approval Gates) |
+| **Human-in-the-loop** | Agent acts within bounds; escalates for approval on defined conditions |
+| **Human-on-the-loop** | Agent executes end-to-end; humans review sampled runs and intervene on alerts |
+| **Fully autonomous** | No routine human review; only for narrow, well-characterised workflows |
 
-| Autonomy level | Meaning | Default controls |
-|---|---|---|
-| **Fully supervised** | Human approves each high-impact step before it executes | Strict tool entitlements, blocking review gates, minimal autonomy |
-| **Human-in-the-loop** | Agent acts within bounds; escalates for approvals on defined conditions | Exception policy + escalation rules enforced as blocking gates |
-| **Human-on-the-loop** | Agent executes end-to-end; humans review sampled runs and intervene on alerts | Strong telemetry, canarying, rollback readiness, online evaluation sampling |
-| **Fully autonomous** | Agent executes without routine human review | Allowed only for narrow, well-characterised workflows with proven controls and monitoring |
-
-Placement criteria are independent of security risk tier. A low-risk workflow may still require high supervision when novelty or ambiguity is high.
+Placement is a human decision, independent of security risk tier: a low-risk workflow may still need high
+supervision when novelty or ambiguity is high. No mechanism assigns or checks it.
 
 ### Capability-tiered governance (model/agent capability)
 
-| Capability tier | Typical characteristics | Governance strength |
+The tier is the `tier` field in [capability_registry.yaml](capability_registry.yaml).
+
+| Capability tier | Typical characteristics | Control |
 |---|---|---|
-| **Tier 1 (low)** | Narrow scope, constrained tools, low autonomy | Standard gates + baseline eval suites |
-| **Tier 2 (moderate)** | Broader toolset, higher success rate across domains | Expanded eval coverage, stricter review for tool changes |
-| **Tier 3 (high)** | Strong general problem-solving, higher autonomy pressure | Blocking adversarial testing, tighter entitlements, independent review requirements |
-| **Tier 4 (frontier+)** | Rapid capability shifts, high leverage tools, novel behaviour risk | Governance-board approval for key changes, standing red-team capability, conservative rollout and monitoring |
+| **Tier 1** | Narrow scope, constrained tools, low autonomy | Human review |
+| **Tier 2** | Broader toolset, works across domains | Human review |
+| **Tier 3** | Strong general problem-solving, higher autonomy | Operator approval and adoption gate (see Enforced) |
+| **Tier 4** | High-leverage tools, novel behaviour risk | As Tier 3 |
 
 ### Independent review pattern
 
-When a workflow, risk tier, or change class requires independent review, the canonical enforcement
-pattern is fixed-role separation:
+When a workflow, risk tier, or change class requires independent review, the canonical pattern is fixed-role
+separation:
 
 - One agent executes/builds; a different agent judges/reviews.
 - The judge/reviewer operates under the same repo contracts and behavioural rules as the executor.
@@ -107,212 +122,100 @@ pattern is fixed-role separation:
 - Same-model self-review may be used as advisory signal only; it does not satisfy an independent
   review requirement.
 
-### Policy taxonomy (what is governed)
-
-| Policy type | What it controls | Enforcement semantics |
-|---|---|---|
-| Pillars | Architectural law and organisational non-negotiables | Blocking |
-| Security policy | Data classes, secret handling, tool entitlements | Blocking |
-| Workflow policy | Which workflows exist and when they may run | Blocking |
-| Quality policy | Evals and thresholds by risk tier | Blocking |
-| Operational policy | SLOs, incident response, rollbacks, kill-switch | Blocking where safety/reliability demands |
-| Guidance | Preferred patterns and defaults | Advisory |
-
-### Evidence and accountability
-
-Governance is only real if outcomes are attributable and auditable:
-- Every run has a traceable "why" (policy set, versions, approvals)
-- Every action has accountable ownership (role, entitlement, execution record)
-- Every exception is recorded (scope, owner, expiry, justification)
-
----
-
-## Governance Operating Model
-
-### Institutional oversight (named structures)
-
-- **PCO owner**: accountable for the canonical PCO (this repo) and its change control
-- **Governance board**: approves Tier 3/4 changes and any changes that materially alter risk appetite
-- **Standing red-team function**: continuously tests adversarial behaviour; not a one-time deployment gate
-- **Content safety oversight**: owns policies and response for harmful output risks (abuse, impersonation, unsafe content)
-- **Transparency reporting**: periodic aggregated reporting across all governed agents (exceptions, incidents, drift, cost-quality frontier)
-
-### The governance loop
-
-Agent Governance is a continuous loop:
-1. Define policies and standards
-2. Enforce them structurally in the harness
-3. Measure outcomes (quality, safety, cost, throughput)
-4. Investigate incidents and near misses
-5. Improve policies, tooling, and evals
-
-### Change control principles
-
-- Policies are versioned and rolled out deliberately.
-- Breaking changes are deliberate: compatibility windows and migration paths exist.
-- Exceptions are products: explicit owner, expiry, scope, and evidence.
-- Advisory guidance is distinct from blocking law (enforcement semantics anchor: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)).
-
----
-
-## Governance Design Principle: Enable, Don't Constrain
-
-Governance fails in two modes: too rigid (blocks legitimate work, gets bypassed) and too porous (rules exist on paper but aren't followed because compliance cost exceeds the cost of ignoring them).
-
-The design intent is **enabling governance**:
-
-- **Short, hard prohibition list** — a small set of non-negotiable controls (Lethal Trifecta mitigations, non-impersonation, pillar violations). These do not change with capability advancement; they become harder to satisfy as capability grows, not easier.
-- **Long, growing approved-pattern list** — new capabilities, tools, and workflow patterns are added as they mature through the capability lifecycle. The approved list grows continuously; the disallowed list stays short and stable.
-- **Certainty enables speed** — clear rules about what is permitted allow agents to act without escalating. Ambiguity forces constant approval requests, slowing work and incentivising workarounds.
-- **Additive by default** — new capabilities extend the PCO; they do not require dismantling existing rules.
-
----
+No hook or validator checks independence; whoever dispatches the review sets it.
 
 ## PCO Evolution Model
 
-The PCO is not frozen at authoring time. It is a living governance system that evolves as enforcement reveals miscalibrations, research identifies new gaps, and the capability of governed agents changes.
-
 ### What triggers a rule review
 
-1. **Enforcement anomaly** — a rule fires unexpectedly (false positive) or fails to fire when a violation occurs (false negative). Both indicate miscalibration and trigger review, not just logging.
-2. **New external research** — a credible source identifies a pattern or threat not covered by current rules. Record the source in the change proposal and queue the rule update.
-3. **Downstream feedback** — a governed repo surfaces a conflict: a platform rule prevents legitimate work, or a downstream pattern reveals a class of risk the PCO does not cover.
-4. **Sensor silence** — a rule that rarely fires is validated (can it detect what it claims to detect?) not assumed to be working.
-5. **Capability change** — a new model class, expanded tool access, or new deployment context changes the risk profile and may require new or tightened rules.
-6. **Periodic cadence** — rules are examined at a regular cadence regardless of triggers.
+1. **Enforcement anomaly**: a rule fires on legitimate work (false positive) or misses a violation (false negative).
+2. **New external research**: a credible source names a pattern or threat the rules do not cover.
+3. **Downstream feedback**: a governed repo hits a rule that blocks legitimate work, or a risk the PCO misses.
+4. **Sensor silence**: a rule that rarely fires is checked for whether it can detect what it claims.
+5. **Capability change**: a new model class, tool access or deployment context changes the risk profile.
 
 ### Cadence and ownership
 
-- **Cadence**: the PCO is reviewed on a named, recurring cadence (at minimum quarterly) regardless of incident triggers
-- **Accountable owner**: a named human owner is accountable for running the cadence review and ensuring outcomes are recorded
-- **Inputs**: enforcement anomalies, sensor silence checks, downstream feedback, red-team findings, and capability changes
-- **Outputs**: approved changes, rejected proposals with rationale, and a prioritised backlog of enforcement work
+- **Accountable owner**: the operator.
+- **Cadence**: a periodic review is target, not implemented; reviews run on the triggers above.
 
 ### Change process
 
-1. **Propose** — state the change, the trigger that caused it, and trace it to a source. A change without a traceable source is not accepted.
-
-   **Change Proposal Evidence Block (PR description minimum):**
-   - **Trigger**: enforcement anomaly | external research | downstream feedback | sensor silence | capability change | cadence review
-   - **Decision**: what will change and what will not
-   - **Sources (if any)**: URL + retrieval date
-   - **Claims relied on**: short bullet list in your own words
-   - **Controls impacted**: which rules/hooks/tests/sensors change; link to files
-   - **Verification plan**: what proves this is correct; what failure would look like
-   - **Rollout**: breaking/non-breaking; compatibility window if relevant
-
-2. **Review** — assess: does it contradict an existing rule? Is it proportionate to the risk? HIGH or CRITICAL rule changes require independent review.
-3. **Approve and record** — commit with a message that names the trigger and source. Breaking changes are marked `breaking:` in the commit.
-4. **Communicate downstream** — governed repos are notified of any change that affects their conformance.
+1. **Propose**: state the change, its trigger and its source (URL + retrieval date for research). A change
+   without a traceable source is not accepted. Provenance labels: [governance-provenance.md](../ai_harness/rules/governance-provenance.md).
+2. **Review**: does it contradict an existing rule? Is it proportionate? A change that removes or weakens a control
+   requires independent review (see Independent review pattern).
+3. **Approve and record**: operator approval; the commit names the trigger and source. Breaking changes are
+   marked `breaking:` in the commit.
+4. **Communicate downstream**: `distill_harness.py sync` to consumers.
 
 ### Rollback procedure (governance-of-governance)
 
-- Rollback criteria are defined (safety regression, widespread false positives, unacceptable throughput collapse)
-- Rollback restores the last known-good policy version and records the trigger and evidence
-- Forward-fix follows rollback; "roll forward without control" is not an acceptable response when safety is at stake
+Human review; nothing triggers it automatically.
+- Roll back a rule change that causes a safety regression, widespread false positives or blocked legitimate work.
+- Restore the last known-good version of the changed files, sync it, and record the trigger and evidence in the
+  commit.
+- Forward-fix through the change process; when safety is at stake, never roll forward without the control.
 
 ### Enforcement feedback loop
 
+No mechanism collects these signals; the operator reviews them when they surface.
+
 | Signal | Human action |
 |---|---|
-| Tool denial event | Periodic review: was the denied action legitimate? False positive → loosen rule. Correct block → confirm calibration. |
-| Injection detection | Catalogue every detected attempt. Patterns trigger test suite updates. |
-| Sensor silence | Validate the sensor can detect what it claims; do not assume silence means quality. |
-| High exception volume | High rates for a rule indicate the rule may be wrong, not that teams are non-compliant. Review the rule before escalating. |
-| Approval backlog | Elevated approval latency or volume signals a rule is too restrictive for the actual risk level. |
+| Tool denial event | Was the denied action legitimate? False positive: loosen the rule. Correct block: keep it. |
+| Sensor silence | Check the sensor can detect what it claims; silence is not evidence of quality. |
+| High exception volume | The rule may be wrong; review it before escalating. |
 
 ### The AI's role in evolution
 
 | Role | What the AI does | What the AI does not do |
 |---|---|---|
 | Sensor | Detects stale rules, enforcement anomalies, new research gaps | Decide whether a signal warrants a rule change |
-| Proposer | Drafts the rule change with full rationale and source tracing | Approve the change |
-| Implementer | Writes the change into docs, updates the backlog (docs/TODO.md), communicates downstream | Determine the organisation's risk appetite |
-
-Human approval gates exist for every rule change (canonical anchor: [AGENTS.md](../AGENTS.md) → Governance changes). A governance system where the governed entity approves its own rules is not governance.
-
-### What a governed repo cannot do unilaterally
-
-- Override or negate a platform rule in its local context
-- Introduce a local rule that contradicts the hub
-- Request a rule change by modifying its own `REPO_CONTRACT.md` without a formal change proposal to this repo
-
----
+| Proposer | Drafts the rule change with rationale and source tracing | Approve the change |
+| Implementer | Writes the approved change, updates the anchor doc, syncs downstream | Determine the organisation's risk appetite |
 
 ## Capability Lifecycle
 
-New agent capabilities enter the PCO through a defined path. Without this, new capabilities are either blocked (not yet approved) or ungoverned (bypassing the PCO).
+New capabilities are tracked in [capability_registry.yaml](capability_registry.yaml); the registry contract and
+what is checked: [CONTRACT.md](CONTRACT.md) → Capability Lifecycle.
 
-| Stage | Meaning | Monitoring | Downstream adoption |
-|---|---|---|---|
-| **Experimental** | Capability exists; not yet governed | Every use logged and reviewed | Requires platform awareness; not self-service |
-| **Emerging** | Understood and governed at a basic level; adversarial testing in progress | Enhanced monitoring; provisional rule exists | Permitted with explicit acknowledgment |
-| **Established** | Fully governed; guide/sensor coherence confirmed | Standard harness monitoring | Available to all governed repos as a standard pattern |
-| **Deprecated** | Being retired; migration path defined | Tracked until removed | No new adoption; existing uses given a time-bounded migration window |
+| Stage | Meaning |
+|---|---|
+| **Experimental** | Exists; not yet governed. Anything not in the registry is treated as experimental. |
+| **Emerging** | A provisional rule exists; not yet tested against adversarial cases |
+| **Established** | A rule tested against adversarial cases covers it; available to all governed repos |
+| **Deprecated** | Being retired; no new adoption; existing uses need a migration path and timeline ([CONTRACT.md](CONTRACT.md) → Capability Lifecycle) |
 
 ### Progression criteria
 
-- **Experimental → Emerging**: a rule exists, monitoring is in place, risk is understood
-- **Emerging → Established**: adversarial testing complete, guide/sensor coherence confirmed, no open HIGH gaps in the spoke doc covering this capability
-- **Established → Deprecated**: capability is superseded, carries unacceptable risk, or is no longer used across governed repos
-
-Anything not yet in the lifecycle is treated as **Experimental** — not blocked outright, but requiring explicit acknowledgment and enhanced monitoring.
-
-Registry: [capability_registry.yaml](capability_registry.yaml)
-
----
+Human review; stage progression is not enforced.
+- **Experimental → Emerging**: a rule exists and the risk is understood
+- **Emerging → Established**: tested against adversarial cases; no open named gap for it in the covering spoke
+- **Established → Deprecated**: superseded, unacceptable risk, or no longer used
 
 ## `ai_agent_core` Relationship (Governed Implementation Substrate)
 
-`ai_agent_core` is both a governed repo conforming to `ai_agent_pco` structure and the shared implementation substrate that downstream repos pin to as a dependency. This separation enforces "consume as dependency, not source" for shared controls: downstream repos do not vendor or modify `ai_agent_core`. `ai_agent_pco` is guide-heavy by design; `ai_agent_core` is the shared sensor substrate.
-
-Because changes to `ai_agent_core` affect all consumers, its change control is stricter than a typical downstream repo:
-- Breaking changes require explicit release signalling and downstream communication
-- Capability tier and autonomy implications are reviewed as part of `ai_agent_core` changes, not only local correctness
-
----
-
-## Enforcement Model
-
-| Layer (PCO) | Governance responsibility |
-|---|---|
-| Policy | Define policies, risk tiers, approvals; decide routing and gating |
-| Control plane | Enforce policies at control points; broker secrets; block unsafe actions |
-| Observability | Provide evidence: audit logs, trajectories, eval results, cost and drift signals |
+`ai_agent_core` is a governed repo and the shared implementation substrate that downstream repos pin as a
+dependency, not vendor or modify. Because its changes reach every consumer, breaking changes need explicit
+release signalling. The PCO does not check that consumers use it (see Not enforced); position and conformance
+declarations: [CONTRACT.md](CONTRACT.md) → Special Case: `ai_agent_core`.
 
 ## Harness Rule Enforcement Lifecycle (session-snapshot model)
 
 ### How rules are loaded
 
-Rule files under `.claude/rules/` load in two ways. A rule with no `paths:` frontmatter loads at session start; a rule with `paths:` loads when the agent first reads or edits a matching file. Every rule is path-scoped. The always-loaded core is the root `AGENTS.md` (synced from `ai_context/pco/AGENTS.md`), which `CLAUDE.md` imports. Governance docs that need explicit reads are listed in the on-demand spoke index `ai_context/pco/ASSISTANTS.md`. This creates a context snapshot. Mid-session writes to rule files do not retroactively apply to the running session — they take effect at the next session start.
+- The core (`AGENTS.md`, synced from `ai_context/pco/AGENTS.md`) loads at session start through `CLAUDE.md`.
+  Every rule under `.claude/rules/` is `paths:`-scoped and loads when the agent first reads or edits a matching
+  file. Docs that need an explicit read are listed in [ASSISTANTS.md](../ASSISTANTS.md).
+- A rule written mid-session does not apply to the running session; it takes effect at the next session start.
+- **Consequence:** an agent writing a weaker rule is not caught by the harness, only by human review. Automated
+  checks cannot detect semantic contradictions between rules, so human review is the governance sensor.
+- `distill_harness.py sync` propagates changes to consumers; they take effect at each consumer's next session start.
 
-### Within-session enforcement
+## Spokes
 
-- The core (`AGENTS.md`) is active from the first tool call; scoped rules join when the agent touches a matching file.
-- The spoke index routes to governance docs that need explicit reads; it does not load rule files (the harness loads them on a matching file).
-- Computational sensors (tests, linters, structural validators) run within a session and report violations synchronously.
-
-### Cross-session enforcement and the bootstrapping loop
-
-- Governance doc changes are written in one session and loaded by the next — intentional. Governance quality compounds across sessions, but only if changes are correct.
-- **Consequence:** governance doc changes require human review before acceptance. An agent writing a weaker rule within a session is not caught by the harness — only by the review layer.
-
-### Human review as the governance sensor
-
-Automated sensors cannot detect semantic contradictions between governance docs or rules that weaken controls. Human review is the primary sensor for governance doc changes (canonical anchor: [AGENTS.md](../AGENTS.md) → Governance changes).
-
-### Enforcement trigger summary
-
-| Event | Effect |
-|---|---|
-| Session start | Rules snapshot loaded; constraints become active for that session |
-| Mid-session rule write | No effect on current session; takes effect at next session start |
-| Human acceptance of governance change | Change enters the operative rule set for subsequent sessions |
-| `distill_harness.py sync` | Propagates rule changes to downstream repos; takes effect at their next session start |
-
-## Spokes (the governed execution arms)
-
-Each spoke is an execution domain controlled by this governance hub, mapped from the DAMA data management wheel:
+One spoke per DAMA knowledge area; each README states what the area governs, what is enforced and the named gaps:
 
 | DAMA Knowledge Area | Agent Harness Equivalent | Canonical document |
 |---|---|---|
@@ -326,13 +229,3 @@ Each spoke is an execution domain controlled by this governance hub, mapped from
 | Data Warehousing & Business Intelligence | Observability, Analytics & FinOps | [observability/](../observability/README.md) |
 | Metadata Management | Registries, Versioning & Lineage | [lineage/](../lineage/README.md) |
 | Data Quality Management | Assurance, Evals & Continuous Improvement | [assurance/](../assurance/README.md) |
-
-## Definition of "Done" for Governance
-
-Agent Governance is "done enough" for a real organisation when:
-- Policies are centralised, versioned, and enforced structurally
-- Tool access is least-privilege and auditable
-- Runs are reproducible with full lineage and evidence
-- Risk-tier gating exists (not everything is allowed by default)
-- Evals/regressions protect the system from unsafe drift
-- Incidents lead to measurable policy/tool/eval improvements

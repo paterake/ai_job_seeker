@@ -19,8 +19,10 @@ paths:
 
 ## Hybrid Search Contract
 
-- Treat hybrid search as a first-class contract: sparse + dense legs, merged and reranked.
-- Any leg bypass requires an explicit config flag and a rationale.
+- Use the simplest retrieval that meets the task (simplest-first; order: [knowledge spoke](../../knowledge/README.md)
+  → Retrieval decision hierarchy). Hybrid search is added only where the task needs it.
+- Where hybrid search is used, its legs are merged, and reranking is a later step of the same hierarchy; any leg
+  bypass requires an explicit config flag and a rationale.
 
 ## Quality Gate
 

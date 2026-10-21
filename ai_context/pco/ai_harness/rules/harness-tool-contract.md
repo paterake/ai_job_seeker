@@ -36,27 +36,24 @@ right, so it adds a step to every commit without catching a wrong driver.
 
 ## Hooks: Guidance vs Enforcement
 
-CLAUDE.md and governance docs are guidance — they inform agent behaviour but cannot guarantee it under context saturation or instruction drift. Hooks are enforcement — they execute at harness lifecycle points and cannot be overridden by model behaviour.
+CLAUDE.md and governance docs are guidance — they inform agent behaviour but cannot guarantee it under context saturation or instruction drift. Hooks are enforcement — they run deterministically at harness lifecycle points.
 
 | Constraint type | Correct mechanism |
 |---|---|
 | Soft defaults, style, preferences | CLAUDE.md / governance docs |
 | Hard constraints that must hold unconditionally | Hooks in `settings.json` |
 
-Use a hook, not docs, for:
-- Blocking destructive bash commands (force push, `rm -rf`, hard reset)
-- Running typecheck / lint / tests after file edits
-- Requiring approvals before commits or PRs are created
-- Any constraint where a single violation has irreversible consequences
+Use a hook, not docs, for any constraint where a single violation has irreversible consequences (e.g. force push, `rm -rf`, hard reset).
 
 **The test**: if the constraint must hold even at the end of a long, saturated session — wire it as a hook.
 A constraint whose violation is reversible and caught by a validator (e.g. exception expiry) stays a validator check.
 
-The hooks the PCO ships, what each needs and what it does when a tool is missing: [hooks/README.md](../hooks/README.md).
-- A gate hook fails closed when it cannot run: it blocks a call it governs with a one-line reason (exit 2),
-  and never passes that call silently.
-  **Consequence:** a gate that passes when a tool it needs is missing is enforcement that silently does not
-  happen.
+The hooks the PCO ships, what each blocks and misses, and what each does when a tool is missing:
+[hooks/README.md](../hooks/README.md).
+- A gate hook fails closed when it cannot run: it blocks a call it governs, never passes it silently.
+  A hook crash or a missing script does not meet this today (it does not block the call; per the hooks docs, not
+  tested here — [hooks/README.md](../hooks/README.md)); no PCO check.
+  **Consequence:** a gate that passes when it cannot run is enforcement that silently does not happen.
 - The context reaches every session as committed files; the PCO adds no session-environment setup.
 
 **Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.

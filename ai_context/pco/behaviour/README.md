@@ -1,207 +1,89 @@
 # Behaviour Design (Spoke)
 > DAMA mapping: Data Modelling & Design → Agent Behaviour Modelling & Design
 
-## Purpose
+## Governs
 
-Make agent behaviour specifiable, testable, and versioned, so "how the agent behaves" can be governed like an interface contract rather than folklore.
+- How a coding agent works: assumptions stated, minimum code, surgical changes, proof of verification
+- Driver choice (config-, data- or AI-driven) for code that interprets content
+- Session scope and multi-session work through anchor docs
+- Epistemic honesty: low confidence and ambiguity are surfaced, not filled
+- Failure harvest: each agent failure becomes a structural fix
 
-## PCO Emphasis
+## Enforced
 
-- Policy: defines behaviour contracts, policies, and safe defaults
-- Control plane: injects/locks system policy; enforces schema contracts at runtime
-- Observability: measures behaviour quality, drift, and policy compliance over time
+- Bash calls per session are capped: hook, `check_execution_limits.sh`, limit in [execution_limits.yaml](../governance/execution_limits.yaml) ([hooks/README.md](../ai_harness/hooks/README.md)).
+- The synced core is read-only in a consumer: hook, `check_guard.sh` denies a file edit under `ai_context/pco/` outside the PCO; a shell write is not checked ([hooks/README.md](../ai_harness/hooks/README.md)).
+- Root `AGENTS.md` is an exact copy of the core: `wire`/`sync` write it and `validate` reports drift ([CONTRACT.md](../governance/CONTRACT.md)).
+- UV only, for raw `python`/`python3` commands: validator, `governance-audit` (Python command scan; [HUB.md](../governance/HUB.md) → Enforced).
+- Everything else in the core, including the driver choice and governance-change approval: human review (operator, at code review).
 
-## Scope (what this spoke governs)
+## Not enforced
 
-### Behaviour as a contract
+- No `pip`, Poetry, Pipenv, Conda or ad-hoc virtualenv workflows: required by [governance.md](../ai_harness/rules/governance.md) → Python Tooling (UV Only); no PCO check.
+- Evals of whether the rules change agent behaviour: no rule requires them; target, not implemented.
 
-- Role definition (behaviour boundaries and prohibitions)
-- Input/output contracts for each workflow step
-- Uncertainty handling (escalation rules, safe refusal rules)
+## Rules
 
-### Epistemic honesty (non-negotiable behaviour)
+- The always-loaded core: [AGENTS.md](../AGENTS.md)
+- [governance.md](../ai_harness/rules/governance.md) (Config Purity, Driver Selection, Capability-Decision Record, Python Tooling)
+- [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) (Capability Decisions Are Reviewed, Not Gated; Hooks: Guidance vs Enforcement)
+- [security-threat-model.md](../ai_harness/rules/security-threat-model.md) §6 Epistemic honesty
+- Anchor docs: [AI_ASSISTANT_BACKLOG_CONTINUITY.md](../governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md); automated-decision safeguards: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
 
-Agents must not present outputs as objective or infallible when they are not. When confidence is low or a request is outside reliable capability, signal uncertainty explicitly, surface ambiguity before proceeding, and return a structured low-confidence result rather than a confident wrong answer. Canonical anchor: [AGENTS.md](../AGENTS.md)
-
-### Specification ambiguity protocol
-
-Agents must state assumptions explicitly before acting, present multiple interpretations when they exist, and stop to name what is unclear rather than filling gaps silently. Assumptions used to proceed must be recorded as evidence. Canonical anchors: [AGENTS.md](../AGENTS.md) and [lineage.md](../ai_harness/rules/lineage.md)
-
-### Capability-fit protocol
-
-Agents must choose the driver that fits the task — `config-driven`, `data-driven`, or `AI-driven` — before introducing a new content-interpretation mechanism. The governing test is explicit answer vs inference: explicit derivation stays deterministic; semantic inference defaults to AI-driven. Parser-/extractor-shaped changes require a capability-decision artefact, and the task-boundary review sensor checks the substance of the choice. Canonical anchors: [AGENTS.md](../AGENTS.md), [governance.md](../ai_harness/rules/governance.md), [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md), and [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
-
-### Tool contract design
-
-- Tool schemas (types, validated fields, validation)
-- Idempotency expectations (safe retries, deduplication)
-- Error semantics (what is retriable vs blocking)
-
-### Prompt and policy structure
-
-- Separation of policy from task context
-- System policy composition (core policy + optional policy + project-additive)
-- Context boundaries (what retrieval is allowed and how it is attributed)
-
-### Repo-wide engineering conventions
-
-- Configuration drives code and Python tooling uses `uv` only: [governance.md](../ai_harness/rules/governance.md)
-
-## Governance Controls (hub decisions)
-
-### Role contracts
-
-Governance defines, per role:
-- Mandatory behaviours (e.g., produce artefact X, follow gate Y)
-- Disallowed behaviours (e.g., bypass tool broker, expose secrets)
-- Allowed tool set and risk-based escalation rules
-
-### Autonomy spectrum behaviour rules
-
-Canonical anchor: [governance/HUB.md](../governance/HUB.md).
-
-### Policy injection semantics
-
-Core posture and security posture must be injected as non-conversational policy by the harness at session start — not as user-editable guidance. Canonical anchors: the always-loaded core [AGENTS.md](../AGENTS.md) and [CONTRACT.md](../governance/CONTRACT.md).
-
-### Output formats and evidence requirements
-
-Governance defines what "done" means per workflow step:
-- Artefacts (PRD, feedback, trajectories, eval summaries)
-- Metadata (policy versions, tool versions, model identifiers)
-
-## Artefacts and Surfaces (planned)
-
-- Behaviour specification per role (contract-style)
-- Workflow step I/O schemas (including failure outputs)
-- Tool schemas and validation rules
-- Escalation playbooks (what to do when uncertain)
-- Risk tiers and how they change behaviour (gating, approval, tool access)
-
-## Enforcement Rules
-
-Canonical enforcement:
-- Pre-implementation gate, simplicity, surgical changes, verification, session boundaries, memory discipline: the always-loaded core [AGENTS.md](../AGENTS.md)
-- Config drives code; no domain context in code; Python tooling uses `uv`: [governance.md](../ai_harness/rules/governance.md)
-- Anchor doc pattern and its required sections: [AI_ASSISTANT_BACKLOG_CONTINUITY.md](../governance/AI_ASSISTANT_BACKLOG_CONTINUITY.md)
-- Guidance vs enforcement; edit-tool compatibility; approval gates: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
-- Automated-decision safeguards (High/Critical decisions affecting individuals): how a decision is explained, contested, reviewed by a human, and how DSARs over prompt/output logs are served: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
-- Scope-of-validation declaration and rule evidence-basis (`basis:`) provenance; assistant-research-derived governance is advisory until validated by a non-shared-path source: [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
-
-## Enforcement Points (where the control plane enforces)
-
-### Pre-run
-
-- Role assignment and entitlements: [master-data/README.md](../master-data/README.md)
-- Output schema selection: [master-data/README.md](../master-data/README.md)
-- Config purity and "no domain context in code" posture: [governance.md](../ai_harness/rules/governance.md)
-
-### In-run
-
-- System policy injection and locking (core cannot be overridden)
-- Tool call schema validation (blocking on invalid structures)
-- Context retrieval bounded and attributed (provenance enforced)
-
-### Post-run
-
-- Output artefact validation (schema + completeness checks)
-- Behavioural evaluation runs (rubric scoring, safety checks, regressions)
-
-### Hooks (lifecycle enforcement layer)
-
-Guidance files (CLAUDE.md, governance docs) inform behaviour but cannot guarantee it — context saturation and instruction drift weaken prose rules over long sessions. Hooks execute at harness lifecycle points and are not subject to model behaviour.
-
-Hard constraints — blocking destructive commands, enforcing typecheck/lint/tests after edits, requiring approvals before commits — should be expressed as hooks in `settings.json` rather than prose guidance. The PCO gate hooks return a PreToolUse `"deny"` inside `hookSpecificOutput` when they trip, which blocks the tool call, and exit silently otherwise so the normal permission flow applies. Their fail-open conditions are listed in [DENY_INTERFACE.md](../governance/DENY_INTERFACE.md#current-enforcement-points); notably the exception-expiry hook enforces in the PCO repo only. See [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) for the enforcement anchor.
+## Canonical
 
 ### Session Design and Token Economy
 
-Session boundaries are in the core ([AGENTS.md](../AGENTS.md) → Sessions and memory). Token management:
-
-- Long-running sessions that resolve a single ask by accumulating large context are an anti-pattern.
-  Design work in chapters: one anchor doc item per session.
-- Config-driven code directly reduces token burn: an existing piece of code reused via config change
-  eliminates the probability of re-implementation. This is a consequence of the Config Purity rule
-  (see `governance.md`), not an independent rule.
-- Domain context in code forces regeneration. When the domain changes, code with baked-in domain
-  assumptions cannot be reused — a new implementation is triggered. Keep domain context in config
-  so the same mechanism is reused across runs and domains.
-- Proliferation of near-identical implementations is a token economy failure: multiple files
-  performing similar operations on slight domain variations is the symptom of domain context leaking
-  into code. Treat it as a governance violation, not just a code smell.
+Session boundaries are in the core ([AGENTS.md](../AGENTS.md) → Sessions and memory). A long session that
+resolves one ask by accumulating context is an anti-pattern: work in chapters, one anchor-doc item per session.
+Config purity is the main token-economy lever: code reused through a config change is never regenerated
+([governance.md](../ai_harness/rules/governance.md) → Config Purity).
 
 ### Failure Harvest
 
-Every agent failure is a permanent signal. Do not treat it as a one-off incident.
-
-For each harness failure or behaviour violation:
-1. Identify the root failure class (assumption filling, false success signal, scope creep, format mismatch, etc.)
-2. Engineer a structural fix — a rule, a hook, a test, or a verification step.
-3. Record the fix in the appropriate governance doc; wire it as a hook in `settings.json` if the constraint must hold unconditionally.
+Every agent failure is a permanent signal, not a one-off incident. For each one:
+1. Name the failure class (assumption filling, false success signal, scope creep, format mismatch, ...).
+2. Engineer a structural fix: a rule, a hook, a test or a verification step.
+3. Record the fix in the governing file; if the constraint must hold unconditionally, wire it as a hook in settings.json ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement).
 4. Remove a constraint only when the model demonstrably no longer triggers that failure class.
 
-**The ratchet**: governance accretes from failures. Rules are added from evidence and removed by capability evidence — not by preference or convenience.
+**The ratchet**: rules are added from evidence and removed by capability evidence, not by preference.
+**Consequence**: failures treated as isolated incidents leave the harness with no memory, so the class recurs.
 
-**Consequence**: treating failures as isolated incidents produces a harness with no institutional memory. The same failure class recurs because the harness never encoded it as a constraint.
+### Agent Behaviour Failure Taxonomy
 
-## Evidence and Metrics (what observability measures)
+The root-cause classes that the [incident template](../templates/incident_report.md) records. System error
+sensors do not detect them; run review or human review at the task boundary does:
 
-- Schema contract violations (tool calls, outputs)
-- Behaviour drift signals (changes in refusal/escalation rates)
-- Uncertainty hygiene: escalation vs overconfident action in high-risk contexts
-- Output quality scores from eval suites (trend, variance, regressions)
-- Policy override attempts (core policy)
+- **Overeagerness**: unrequested features, or business logic inferred from domain terms.
+- **Assumption filling**: spec gaps filled without signalling, causing production problems with no system error.
+- **Brute-force fix**: a hacky workaround (more memory, added annotations) instead of the root-cause fix.
+- **False success signal**: the task reported complete despite failing tests or violated constraints.
+- **Genie risk**: a spec loophole exploited (what was asked for, delivered in an unexpected way), or a confident wrong answer.
+- **Code quality drift**: duplicated literals, unused parameters, improper patterns, nested conditionals.
 
-## Common Failure Modes
+### Capability-Fit Review (human, at code review)
 
-- Behaviour lives in chat history rather than versioned artefacts
-- "Soft policy" that the agent can ignore under pressure
-- Tool contracts are vague; downstream failures become hard to attribute
-- Over-prescription: behaviour spec becomes so rigid it blocks legitimate work
-- Hard constraints written as prose guidance rather than enforced by hooks — they erode as context fills
-- Multi-task sessions rather than one session per task — context accumulates, earlier governance rules lose weight, and constraints erode without any visible signal
-- Agent failures treated as one-off incidents rather than harvested into permanent rules (see Failure Harvest above)
-
-## Agent Behaviour Failure Taxonomy
-
-These are failure modes not detectable by system error sensors. They require
-behavioural sensors (semantic guardrails, run review, human review at task boundary):
-
-| Failure mode | Description | Detection approach |
-|---|---|---|
-| **Overeagerness** | Generates unrequested features or business logic inferred from domain terms | Semantic guardrails; scope review at task boundary |
-| **Assumption filling** | Fills spec gaps autonomously without signalling; produces production problems without system error | Require explicit ambiguity surfacing; adversarial eval scenarios |
-| **Brute-force fix** | Applies hacky solutions (increase memory, add annotations) rather than root-cause fixes | Static analysis sensors; code review gates |
-| **False success signal** | Reports task complete despite failing tests or violated constraints | Require verification command output in completion signal |
-| **Genie risk** | Exploits spec loopholes; gives what was asked for in an unexpected way | Human review at task boundary; adversarial specification tests |
-| **Code quality drift** | Duplicated literals, unused parameters, improper patterns, nested conditionals | Static analysis as a required sensor type |
-
-### Capability-Fit Review Sensor
-
-Capability-fit failure is a behavioural class, not a syntax error. The required review question at
-task boundary / code review is:
+A human review step; no automated sensor or gate exists. The questions:
 
 - Is this task explicit derivation or semantic inference?
 - If inference is present, why is the mechanism not AI-driven?
 - If the solution is AI-driven, what makes deterministic derivation insufficient or misleading?
 - If the solution is deterministic, what exact explicit structure in the source makes fixed-rule recovery valid?
 
-This sensor is specifically aimed at two mirror-image failures:
-- bespoke deterministic machinery solving a semantic problem,
-- or model use where exact deterministic derivation was available.
+It targets two mirror-image failures: bespoke deterministic machinery solving a semantic problem, and model use
+where exact deterministic derivation was available.
 
-## Recurring failure class: deterministic over-build for semantic work
+### Recurring failure class: deterministic over-build for semantic work
 
-Record this as a recurring class, not a one-off incident:
+A recurring class, not a one-off:
 
-1. Coding agents default to writing code, so a model path looks like "less implementation" and is under-selected.
-2. The governance corpus historically rewarded deterministic mechanism and treated model use as foreign, so the bias was systemic rather than local.
-3. Deterministic builds were once the only viable path in some environments; the failure was not re-evaluating when the capability frame changed.
-4. No explicit capability-choice checkpoint existed, so model-vs-code was defaulted silently instead of reviewed.
-5. Structured inputs disguised semantic tasks as parsing problems, even when the real work was inference.
-6. Agents did not self-reframe reliably; the correction had to come from repeated human challenge, which means structure — not preference — must carry the fix.
+1. Coding agents default to writing code, so a model path looks like less implementation and is under-selected.
+2. The governance corpus once rewarded deterministic mechanism, so the bias was systemic, not local.
+3. Deterministic builds were once the only viable path and were not re-evaluated when capability changed.
+4. With no capability-choice checkpoint, model-vs-code was defaulted silently instead of reviewed.
+5. Structured inputs disguised semantic tasks as parsing problems.
+6. Agents did not self-reframe; the correction came from repeated human challenge, so structure must carry the fix.
 
-Required structural response:
-- add a capability-fit rule,
-- treat AI-driven as a first-class peer to config-driven and data-driven,
-- record the driver choice for parser-/extractor-shaped work where it was a real decision,
-- and run a task-boundary review sensor for capability-fit.
+The structural response is Driver Selection and the Capability-Decision Record in
+[governance.md](../ai_harness/rules/governance.md), screened by the review above.

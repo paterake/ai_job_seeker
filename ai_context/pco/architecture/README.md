@@ -1,159 +1,45 @@
 # Architecture (Spoke)
 > DAMA mapping: Data Architecture → Agent Architecture
 
-## Purpose
+## Governs
 
-Define the reference architectures, boundaries, and approved patterns that make agent behaviour composable, reviewable, and enforceable across projects.
+- Driver and pattern choice, simplest first ([governance.md](../ai_harness/rules/governance.md) → Driver Selection)
+- Workflow patterns: prompt chaining, routing, parallelisation, orchestrator–workers and evaluator–optimizer are
+  common patterns, not a closed list; autonomous agents are within Driver Selection
+- Code structure: config purity, reuse and shared-code home, one responsibility per file, modular entry points,
+  UV-only Python
+- The boundary between the synced PCO layer and a repo's project-additive content
+- Independent review ([governance/HUB.md](../governance/HUB.md) → Independent review pattern)
 
-## PCO Emphasis
+## Enforced
 
-- Policy: defines architecture standards and allowed patterns
-- Control plane: enforces workflow routing, boundaries, and tool access
-- Observability: provides evidence of adherence and drift
+- No raw Python commands (UV only): validator `governance-audit --fail`, scope as in
+  [governance/HUB.md](../governance/HUB.md) → Enforced ([governance.md](../ai_harness/rules/governance.md) →
+  Python Tooling (UV Only)); pip, Poetry, Pipenv, Conda and venv use is not detected (human review).
+- A consumer's `REPO_CONTRACT.md` exists, has the required sections and maps only real spokes: validator
+  `validate --scope governance|full` ([CONTRACT.md](../governance/CONTRACT.md)).
+- The synced PCO layer is not edited in a consumer: hook `check_guard.sh` (file-edit tools only) and validator
+  `validate` (reports drift after the fact; the default `--scope harness` covers `ASSISTANTS.md`, `AGENTS.md` and
+  `ai_harness/`, and only `--scope full` covers the whole synced tree)
+  ([hooks/README.md](../ai_harness/hooks/README.md)).
+- Driver choice: human review at code review ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
+  → Capability Decisions Are Reviewed, Not Gated).
+- Config purity, code reuse gate and shared-code home, one responsibility per file, modular entry points: human
+  review ([governance.md](../ai_harness/rules/governance.md) → Config Purity, Code Reuse Gate, One Responsibility
+  Per File, Modular Entry Points; [governance/HUB.md](../governance/HUB.md) → Platform Pillars).
+- Independent review: human review; no hook or validator checks independence
+  ([governance/HUB.md](../governance/HUB.md) → Independent review pattern).
 
-## Scope (what this spoke governs)
+## Not enforced
 
-### Architecture boundaries
+- There is no orchestrator, tool broker or admission control: workflow pattern, topology and tool entitlements
+  are not checked before or during a run (target, not implemented).
+- Hard-coded domain strings and oversized multi-concern files: required by
+  [governance.md](../ai_harness/rules/governance.md) → Config Purity, One Responsibility Per File; no PCO check.
 
-- Control plane vs execution plane separation
-- Where policy lives (central), and where execution occurs (project scope)
-- What a "workflow" is and how it may be composed
+## Rules
 
-### Workflow taxonomy (named patterns)
-
-The five patterns below are the approved workflow patterns. Work that does not map to one is an unapproved
-architecture variant and needs review before adoption. **Consequence:** without a fixed list, patterns proliferate
-and a workflow can have no known governance template.
-
-| Approved pattern | When to use |
-|---|---|
-| **Prompt chaining** | When steps can be pre-specified and controlled |
-| **Routing** | When inputs vary but the set of workflows is fixed |
-| **Parallelisation** | When sub-problems are separable and merge logic is clear |
-| **Orchestrator–workers** | When decomposition is clear but workload is variable |
-| **Evaluator–optimizer** | When quality is improved iteratively with bounded loops |
-
-### "When not to use agents" decision gate
-
-Canonical anchors: [AGENTS.md](../AGENTS.md) (pre-implementation gate) and [CONTRACT.md](../governance/CONTRACT.md) (conformance boundaries).
-
-### Reference patterns (approved building blocks)
-
-- Planner/executor separation
-- Multi-agent review loops (independence preserved; see [governance/HUB.md](../governance/HUB.md) "Independent review pattern")
-- Tool-broker pattern (central tool registry + entitlements)
-- Retrieval boundary (approved sources only; provenance maintained)
-- Evidence boundary (every run produces a verifiable artefact set)
-
-### Harness runtime context engineering patterns
-
-These are runtime engineering mechanisms, distinct from session-level context minimisation rules.
-
-- **Compaction**: summarise and offload context when approaching capacity limits, preserving decision-relevant facts and citations
-- **Tool output offloading**: move large tool outputs to durable artefacts (filesystem/object store) and keep only minimal references in context
-- **Progressive disclosure**: load tools/skills on demand rather than all at startup to reduce tool overload and accidental misuse
-
-### Anti-patterns (examples)
-
-Canonical anchors: [CONTRACT.md](../governance/CONTRACT.md) and [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
-
-- Agents directly calling each other outside orchestration
-- Projects bypassing the harness to invoke agents/tools
-- "Hidden policy" embedded in local prompts or ad-hoc scripts
-- Architecture defined by chat history instead of versioned artefacts
-
-## Governance Controls (hub decisions)
-
-### Approved workflow catalogue
-
-Governance defines a small set of approved workflow archetypes and their mandatory gates.
-
-Examples of archetypes (illustrative):
-- Debate (spec agreement) → Build (implementation) → Review (pillar + PRD compliance)
-- Low-risk fast lane with reduced tool permissions and stronger output constraints
-- High-risk lane requiring explicit approval and expanded eval coverage
-
-### Architectural pillars (structural law)
-
-Governance defines which architectural rules are non-negotiable (core pillars) vs opt-in (optional pillars) vs project-additive (local constraints that cannot weaken platform policy).
-
-### Role catalogue
-
-Governance defines:
-- Roles (architect/reviewer/builder/etc.)
-- Responsibilities and expected outputs per role
-- Independence requirements (e.g., adversarial review cannot share synthesis context; see the canonical rule in [governance/HUB.md](../governance/HUB.md) "Independent review pattern")
-
-### Topology commitment (harness completeness prerequisite)
-
-Harness completeness requires bounding the design space.
-
-- Workflows are deployed into named service topologies (e.g., batch job, event processor, CRUD service, interactive CLI, data dashboard)
-- Each topology has a harness template: pre-configured guide + sensor bundle designed for that topology
-- A project commits to a topology as part of admission control; topology drift requires architecture review
-
-### Poka-yoke tool design (mistakes impossible by construction)
-
-When a tool interface can make a class of mistakes impossible, governance prefers interface design over documentation.
-
-- Tool schemas encode validated fields and safe defaults
-- Idempotency keys and dry-run options exist for high-impact tools
-- Tool brokers enforce entitlements and block unsafe combinations, rather than relying on "remember not to do X"
-
-## Artefacts and Surfaces (examples)
-
-- Reference architecture (logical diagrams + text) for the harness
-- Role catalogue (role → responsibilities → outputs → entitlements)
-- Workflow catalogue (workflow → phases → gates → evidence requirements)
-- Boundary definitions (what projects may and may not do)
-- Exception policy for architecture deviations (time-bounded)
-
-### Harness component taxonomy (what a harness contains)
-
-- System policy prompts (core + optional + project-additive)
-- Tool/skill/MCP catalogue (descriptions, schemas, versions, risk ratings)
-- Bundled infrastructure (filesystem, sandbox, browser, secrets broker)
-- Orchestration logic (routing, delegation, handoffs, model selection)
-- Hooks/middleware for deterministic enforcement (pre/post checks, evidence capture)
-
-## Enforcement Rules
-
-Canonical enforcement:
-- Pre-implementation gate, anti-patterns, and "when not to use agents": [AGENTS.md](../AGENTS.md)
-- Conformance boundaries, approved workflow catalogue, anti-patterns: [CONTRACT.md](../governance/CONTRACT.md)
-- Edit-tool contract, approval gates, hooks vs guidance: [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
-
-## Enforcement Points (where the control plane enforces)
-
-### Pre-run (admission control)
-
-- Workflow type recognition and approval
-- Project registration, version compatibility, and policy binding
-- Tool entitlements checked for role and risk tier
-
-### In-run (control-plane enforcement)
-
-- Workflow steps executed only through the orchestrator
-- Tool invocations mediated by the tool registry/broker
-- Retrieval bounded to approved sources and policies
-
-### Post-run (evidence and closure)
-
-- Evidence package completeness checks
-- Policy and version attribution recorded (what rules were applied)
-- Drift signals emitted (non-standard paths attempted)
-
-## Evidence and Metrics (what observability measures)
-
-- Workflow conformity rate (% runs using approved workflow types)
-- Policy bypass attempts
-- Architecture drift rate (new patterns appearing without review)
-- Exception volume and expiry compliance (% exceptions expired vs renewed vs removed)
-- Reproducibility rate (can a run be replayed from evidence)
-
-## Common Failure Modes
-
-- Spaghetti orchestration: agents invoke each other ad-hoc, making auditing impossible
-- Local optimisation: projects introduce "helpful" shortcuts that bypass governance
-- Pattern proliferation: too many workflow variants to govern effectively
-- Over-coupling: architecture assumes a specific vendor/agent/tool format
+- [governance.md](../ai_harness/rules/governance.md)
+- [AGENTS.md](../AGENTS.md) → Before you start
+- [CONTRACT.md](../governance/CONTRACT.md)
+- [harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
