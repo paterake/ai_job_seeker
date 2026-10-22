@@ -17,10 +17,12 @@ fail_closed() {
     exit 2
 }
 
-# Installed at <repo>/<agent config folder>/hooks/<gate>; the config folder also holds the gate's state.
-state_dir="$(cd "$(dirname "$0")/.." && pwd)"
-root="$(dirname "$state_dir")"
+# Installed at <repo>/<agent config folder>/hooks/<gate>. Gate state lives per user, outside the checkout, so
+# nothing is written inside the repository: <home>/.local/state/governed_harness/<repo path with / as ->.
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 gate_path="$root/ai_context/pco/ai_harness/hooks/$gate"
+[[ -n "${HOME:-}" ]] || fail_closed "HOME is not set (the gate state lives under it)"
+state_dir="$HOME/.local/state/governed_harness/$(printf '%s' "$root" | tr -c 'A-Za-z0-9_-' '-')"
 command -v jq >/dev/null 2>&1 || fail_closed "jq not found on PATH (install it)"
 [[ -f "$gate_path" ]] || fail_closed "gate not found: $gate_path (re-sync the PCO)"
 

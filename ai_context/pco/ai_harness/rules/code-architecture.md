@@ -21,7 +21,7 @@ paths:
 - Domain strings, entity names, dataset identifiers, thresholds, file paths, and prompt text must not be hard-coded in source code.
 - If a string would change when adopting a new dataset or domain, it belongs in configuration, not code.
 - Treat code as reusable mechanism. Treat domain context as configuration and context-layer inputs; do not bake domain assumptions into implementations.
-- Runtime inputs come from config files (YAML, JSON) and command-line arguments. Environment variables carry secrets only, read at point of use and never written to config, logs or evidence. Any other value read from the environment is a defect: move it to config.
+- Runtime inputs come from config files (YAML, JSON) and command-line arguments. Environment variables carry secrets only, read at point of use and never written to config, logs or evidence. Any other value read from the environment is a defect: move it to config. Variables the operating system provides (`HOME`, `PATH`) are not configuration and may be read.
 
 **Consequence:** an environment value is invisible in the repo and in the run evidence, differs silently between shells, agents and machines, and cannot be reviewed or reproduced; config is committed, diffable and recorded with the run.
 
