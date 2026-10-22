@@ -25,6 +25,9 @@ A rule without a stated consequence is routinely overridden under pressure.
 - Do not add absolute file paths or internal tooling paths to publishable content.
 - Do not name the client/company or internal programme names in publishable content.
 - Keep use-case-specific material in use-case-specific areas; keep framework-level context generic.
+- **Consequence:** a published path or client name discloses internal structure and confidential relationships
+  to every reader, and cannot be recalled once indexed; use-case detail in framework context stops it being
+  reused.
 
 ## Claim Scoping (No Overclaiming Coverage)
 
@@ -44,4 +47,6 @@ as the owner of claim discipline.
 
 - Skills under `ai_context/pco/ai_harness/skills/` remain orchestration-only: reference canonical standards instead of restating them.
 - Status and backlog metadata: one source, per [ANTI_DRIFT.md](../../governance/ANTI_DRIFT.md).
+- **Consequence:** a skill that restates a standard becomes a second copy that drifts, and agents follow the
+  stale copy; duplicated status gives two answers to "where is this item".
 

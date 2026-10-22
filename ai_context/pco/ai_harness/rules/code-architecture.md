@@ -70,6 +70,7 @@ The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its 
 - This applies to every Python execution path: scripts, validators, one-liners, tests, and ad-hoc local commands.
 - Do not introduce `pip`/`requirements.txt`, Poetry, Pipenv, Conda, or ad-hoc virtualenv workflows.
 - If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock`.
+- **Consequence:** one execution path outside UV resolves different versions, so a result cannot be reproduced.
 
 ## Code Reuse Gate
 
@@ -129,6 +130,8 @@ accumulates until a single shared config change requires edits across multiple m
 - Code is structured so classes can be imported independently of the entry point.
 - Avoid procedural scripts that can only be run top-to-bottom.
 - Entry points (`main()`) are thin wrappers over importable classes.
+- **Consequence:** logic that lives only in a script cannot be tested in isolation or reused by another module,
+  so it is copied instead.
 
 ## Docs Currency
 
@@ -137,7 +140,8 @@ a fact the change alters: a command, a design decision, a config key or default,
 Which doc owns which fact: `ai_context/pco/governance/DOCS_CONTRACT.md` → Segregation Rules (validate with the
 `docs-alignment` skill).
 
-**Stale documentation is a bug in the change, not a backlog item.**
+**Stale documentation is a bug in the change, not a backlog item.** **Consequence:** the next agent acts on the
+stale fact, and a deferred doc fix is never made.
 
 ## Low-Code / OSS Preference
 
@@ -148,6 +152,8 @@ Which doc owns which fact: `ai_context/pco/governance/DOCS_CONTRACT.md` → Segr
   The test is: "does this custom code become a maintenance liability or block reuse?" If yes, find the library.
 - Custom code that reimplements something an OSS library already provides well is a governance violation,
   not just a style preference.
+- **Consequence:** custom code reimplements tested paths with fewer users finding its bugs, and its maintenance
+  is paid forever.
 
 ## Native First
 

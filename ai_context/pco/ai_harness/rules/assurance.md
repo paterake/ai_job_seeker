@@ -27,6 +27,8 @@ paths:
 - "Should work" is not a threshold. The measurable property and the minimum acceptable score must be explicit and versioned.
 - Any threshold change is a governance change — it requires regression evidence before taking effect.
 - Self-evaluation is advisory only ([HUB.md](../../governance/HUB.md) → Independent review pattern); its known failure modes must be documented before use.
+- **Consequence:** an advisory eval or an unstated threshold lets a regression ship with a passing report, and a
+  threshold lowered without evidence hides the regression it was set to catch.
 
 ## Evaluation Units
 
@@ -36,6 +38,8 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 - **Trajectory-level** (agents and tool loops): check the tool calls for safety violations and waste; do not require a particular path, because the outcome is what is graded
 - **Thread-level** (multi-turn products only): score multi-turn coherence, not only individual turns.
 - Where a task is run k times, reliability is pass^k: all k trials succeed; a pass@k (any-success) score hides flaky behaviour that fails in production.
+- **Consequence:** an output-only eval passes an agent that reached the right answer through an unsafe or wasteful
+  path, and that path is what runs in production.
 
 ## Dataset Governance
 
@@ -48,20 +52,26 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 
 - Required eval suites are declared and scheduled as part of the workflow plan.
 - The run evidence records which suites were required, which were executed, and the dataset versions/splits used.
+- **Consequence:** without the required set on record, a skipped suite is indistinguishable from a passed one.
 
 ## Evaluator Calibration
 
 - Evaluators are sensors. Sensor silence is not evidence of correctness — validate periodically that a sensor can detect what it claims to cover.
 - Adversarial review loops follow the independence pattern ([HUB.md](../../governance/HUB.md) → Independent review pattern).
 - If the evaluator model or rubric changes, re-baseline against pinned historical results before treating new scores as comparable.
+- **Consequence:** an uncalibrated evaluator reports silence as correctness, and a score from a changed evaluator
+  is read as a change in the system under test.
 
 ## Online-to-Offline Loop (Required)
 
 - Offline eval gates changes. Online eval monitors production. Production failures must become permanent offline regression cases — validated offline, then confirmed by online monitoring.
-- A system that detects production failures but does not convert them into regression cases has a broken improvement mechanism.
+- **Consequence:** a system that detects production failures but does not convert them into regression cases has a
+  broken improvement mechanism: the same failure ships again.
 
 ## Incident Capture (Required)
 
 - When an incident or near miss occurs, file an incident report in `audit/incidents/` (created with the first record) using `ai_context/pco/templates/incident_report.md`.
 - If the incident produces a governance change, the incident report must cross-reference the affected governance surface(s): rule file(s) and/or registry entry IDs (where each registry lives: [CONTRACT.md](../../governance/CONTRACT.md) → Exceptions, Capability Lifecycle, Policy Packs).
 - If a governance change is justified by an incident, the change record (approval, PR, or run evidence) must link back to the incident report.
+- **Consequence:** an unrecorded incident recurs as a one-off, and a rule with no link to its incident cannot be
+  re-validated or retired on evidence.

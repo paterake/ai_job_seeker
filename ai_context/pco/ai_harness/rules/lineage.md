@@ -22,6 +22,9 @@ paths:
   ship with a migration note and a compatibility window. A surface used in one repo needs only a stable version
   identifier.
 - Downstream repos must pin platform dependencies and model snapshots explicitly; "floating latest" is prohibited for governed execution surfaces.
+- **Consequence:** an unregistered tool or unpinned model cannot be traced from a run back to what executed, so a
+  regression or incident cannot be attributed or reproduced; an unannounced breaking change fails every consumer
+  at once.
 
 ## Lineage and Evidence
 

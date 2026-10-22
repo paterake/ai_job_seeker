@@ -17,6 +17,8 @@ paths:
 - **Structured observability**: per `observability.md` → Telemetry Event Contract.
 - **Defined evaluation path**: an evaluation harness exists or is explicitly planned; quality is proven, not assumed (`assurance.md` → Error Analysis Before Gates).
 - **Degrade mode**: failures/timeouts return a structured error, not silent empties.
+- **Consequence:** an LLM-calling module missing any of these has unbounded cost, unattributable failures,
+  unproven quality, or empty results read as valid answers.
 
 ## Execution Bounds (Required)
 
