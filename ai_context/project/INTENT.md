@@ -232,4 +232,4 @@ criteria are to be written when the stage is designed.
 - **The tracked backend config identifies the candidate.** It carries an absolute CV folder path and CV file
   stems.
 
-These limitations are triaged under item 4 of [docs/TODO.md](../../docs/TODO.md).
+These limitations are triaged under item 4 of [docs/todo/backlog.md](../../docs/todo/backlog.md).
