@@ -133,7 +133,7 @@ As a result, its conformance declarations are not “additive only”. It must d
 ## Change Control (Policy Anchor)
 
 - Traceable sources, review triggers, cadence and the change process: [HUB.md](HUB.md) → PCO Evolution Model.
-- Tier 3/4 capability changes require a traceable approval. A PCO-owned capability is approved by its entry in the PCO capability registry. A repo-owned one needs an approval record in that repo's `audit/approvals/` (template `ai_context/pco/templates/approval_record.md`), referenced from the change evidence.
+- Tier 3/4 capability changes require a traceable approval. A PCO-owned capability is approved by its entry in the PCO capability registry. A repo-owned one needs an approval record in that repo's `audit/approvals/` (created with the first record; template `ai_context/pco/templates/approval_record.md`), referenced from the change evidence.
 
 ## Exceptions (Registry Contract)
 
