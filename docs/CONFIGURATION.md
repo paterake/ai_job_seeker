@@ -6,7 +6,7 @@ config file lives in `implementation/job_seeker/config/`.
 
 | File | Tracked in git | Owns |
 |---|---|---|
-| [backend.yaml](../implementation/job_seeker/config/backend.yaml) | yes | LLM backend mode and the default CV location |
+| [backend.yaml](../implementation/job_seeker/config/backend.yaml) | yes | LLM backend mode, the default CV location and the secret lookup root |
 | [search.yaml](../implementation/job_seeker/config/search.yaml) | yes | Job sources and generic ingest filters |
 | [exclusions.yaml](../implementation/job_seeker/config/exclusions.yaml) | yes | Hard-block policy for match |
 | `profile/<candidate>.yaml` | **no** (gitignored PII) | The candidate profile |
@@ -26,6 +26,7 @@ CV folder path and CV file stems, which identify the candidate. That is a known 
 | `cloud.provider`, `cloud.model` | empty | Opt-in only. Set **both** or **neither**: setting just one is rejected. Setting both enables cloud whatever `default_mode` says. API keys never go here. |
 | `profile.cv_dir` | `implementation/job_seeker/config/profile` | Folder holding the source CV. Absolute paths are used verbatim; relative paths are resolved from the workspace root. Keep the CV outside the repo. |
 | `profile.cv_docx_stem`, `profile.cv_pdf_stem` | `CV` | Expected file names, without extension. If the named file is missing, the first `*.docx` / `*.pdf` in `cv_dir` is used. |
+| `secrets.apikey_root` | none (required) | Folder holding one file per API key ([Secrets](#secrets)). `~` is expanded. Keep it outside the repo. |
 
 ## search.yaml
 
@@ -87,8 +88,8 @@ required and must be non-empty. `education` and `achievements_and_awards` are op
 **No secret values in any file in this repo.** Secrets are looked up in this order, and the
 first non-empty value wins:
 
-1. A file at `<root>/<service>/<file>`. `<root>` defaults to `~/Documents/__cfg/apikey`; set
-   the environment variable `AI_JOB_SEEKER_APIKEY_ROOT` to use another folder.
+1. A file at `<root>/<service>/<file>`. `<root>` is `secrets.apikey_root` in
+   [backend.yaml](#backendyaml) (committed value `~/Documents/__cfg/apikey`).
 2. An environment variable. Variables can come from a gitignored `.env` file in the directory
    the command runs from. Variables that are already set are not overwritten.
 

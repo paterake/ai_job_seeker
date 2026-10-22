@@ -38,3 +38,8 @@ profile:
   # will look for these and fall back to whatever *.docx exists if the names don't match.
   cv_docx_stem: "Kiera_Patel_CV"
   cv_pdf_stem: "Kiera_Patel_CV"
+
+# Secret lookup root (a path, not a secret). Keys are read from <apikey_root>/<service>/<file>,
+# falling back to environment variables. Lives outside the repo; `~` is expanded.
+secrets:
+  apikey_root: "~/Documents/__cfg/apikey"

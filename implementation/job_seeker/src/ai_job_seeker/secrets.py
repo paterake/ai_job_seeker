@@ -1,17 +1,18 @@
 """Canonical secret sources for the ai_job_seeker pipeline.
 
 Two ordered sources, first hit wins:
-  1. $HOME/Documents/__cfg/apikey/<service>/<filename>  (preferred — lives
-     outside the repo, PII/secret-safe, reusable across repos)
+  1. <secrets.apikey_root>/<service>/<filename>  (preferred — the root is set
+     in backend.yaml, lives outside the repo, PII/secret-safe, reusable across
+     repos)
   2. environment variable (fallback — via .env, gitignored at repo root)
 
 Secrets are NEVER hard-coded or returned in error messages that might leak
 into logs. Failures raise typed exceptions with a remediation hint (file path
 or env var name the user can populate).
 
-The canonical on-disk layout inside ~/Documents/__cfg/apikey/ is:
+The canonical on-disk layout inside the root is:
 
-  __cfg/apikey/
+  <apikey_root>/
     adzuna/
       app_id
       app_key
@@ -26,18 +27,19 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-CANONICAL_ROOT_ENV = "AI_JOB_SEEKER_APIKEY_ROOT"
-CANONICAL_ROOT_DEFAULT = "~/Documents/__cfg/apikey"
+from ai_job_seeker.backend import DEFAULT_BACKEND_CFG, _load_yaml
 
 
 class SecretNotFound(RuntimeError):
     """Raised when a required secret is missing from BOTH canonical sources."""
 
 
-def _canonical_root() -> Path:
-    override = os.environ.get(CANONICAL_ROOT_ENV, "").strip()
-    base = Path(override) if override else Path(CANONICAL_ROOT_DEFAULT)
-    return base.expanduser().resolve()
+def _canonical_root(cfg_path: str | Path = DEFAULT_BACKEND_CFG) -> Path:
+    raw = _load_yaml(cfg_path)
+    root = str((raw.get("secrets") or {}).get("apikey_root") or "").strip()
+    if not root:
+        raise ValueError(f"{cfg_path}: secrets.apikey_root is not set")
+    return Path(root).expanduser().resolve()
 
 
 def _read_file_secret(service: str, filename: str) -> str | None:

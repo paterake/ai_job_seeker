@@ -73,8 +73,8 @@ skill passes these:
 
 ## Installing API keys
 
-- Put one file per key under `~/Documents/__cfg/apikey/<service>/`, or under whatever folder
-  `AI_JOB_SEEKER_APIKEY_ROOT` names. The file names are in [CONFIGURATION.md](CONFIGURATION.md#secrets).
+- Put one file per key under `<secrets.apikey_root>/<service>/` (`backend.yaml`; committed
+  value `~/Documents/__cfg/apikey`). The file names are in [CONFIGURATION.md](CONFIGURATION.md#secrets).
   Each file holds the bare key value. Leading and trailing whitespace is ignored.
 - Fallback: environment variables, or a gitignored `.env` in the directory you run from.
 - Staged keys may sit under `.ignore/apikey_install/` (gitignored) with an install script. That
