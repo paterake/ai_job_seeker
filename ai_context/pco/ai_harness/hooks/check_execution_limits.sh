@@ -8,7 +8,6 @@
 # At the limit: writes <dir>/execution_limit_hit, exit 2, structured reason on stderr.
 # Fails closed (exit 2, one-line GOVERNANCE STOP): no --state-dir, no ruby, or no readable positive
 # max_tool_calls, because a session it cannot count is unbounded.
-# Env overrides for testing: TOOL_CALL_COUNT_FILE, EXECUTION_LIMITS_FILE, EXECUTION_LIMIT_HIT_FILE
 set -euo pipefail
 
 fail_closed() {
@@ -35,13 +34,12 @@ session_id="$(printf '%s' "$session_id" | tr -cd 'A-Za-z0-9_-')"
 # The repo root is four levels above this script: <repo>/ai_context/pco/ai_harness/hooks/.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 if [[ -n "$session_id" ]]; then
-    DEFAULT_COUNT_FILE="$state_dir/tool_calls/$session_id"
+    COUNT_FILE="$state_dir/tool_calls/$session_id"
 else
-    DEFAULT_COUNT_FILE="$state_dir/tool_call_count"
+    COUNT_FILE="$state_dir/tool_call_count"
 fi
-COUNT_FILE="${TOOL_CALL_COUNT_FILE:-$DEFAULT_COUNT_FILE}"
-LIMITS_FILE="${EXECUTION_LIMITS_FILE:-$REPO_ROOT/ai_context/pco/governance/execution_limits.yaml}"
-HIT_FILE="${EXECUTION_LIMIT_HIT_FILE:-$state_dir/execution_limit_hit}"
+LIMITS_FILE="$REPO_ROOT/ai_context/pco/governance/execution_limits.yaml"
+HIT_FILE="$state_dir/execution_limit_hit"
 
 # Read max_tool_calls from config via ruby (matches distill_harness.py's YAML loader).
 MAX_TOOL_CALLS="$(ruby -ryaml -e "
