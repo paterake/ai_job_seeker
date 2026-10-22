@@ -19,7 +19,7 @@ Missing any of these is a blocker, not a backlog item.
 | File | Owns | Consequence if absent |
 |-----|------|-----------------------|
 | `ai_context/project/INTENT.md` | Purpose, scope and non-goals; guarantees the code must meet; decisions with rejected alternatives; constraints from outside the code; known limitations. Shape: `ai_context/pco/templates/INTENT_TEMPLATE.md` | The code cannot be checked against intent; rejected alternatives are re-proposed; invariants are broken unseen |
-| `docs/RUNBOOK.md` | Prerequisites and environment; which entry point serves which task and when; what a failure means and the recovery the code cannot show. Commands and flags come from each tool's `--help` | An agent cannot set up, sequence or recover the module; failures are fixed by guesswork |
+| `docs/RUNBOOK.md` ‡ | Prerequisites and environment; which entry point serves which task and when; what a failure means and the recovery the code cannot show. Commands and flags come from each tool's `--help` | An agent cannot set up, sequence or recover the module; failures are fixed by guesswork |
 | `docs/CONFIGURATION.md` | Config keys, defaults, rationale — [code-blind](#configurationmd-code-blind-definition) | Domain values leak into code; reuse across datasets requires code changes |
 | `docs/TODO.md` † | Project backlog index — open initiatives with pointers to anchor docs, completed section | Backlog continuity breaks; completed items re-enter scope; sessions re-derive state |
 
@@ -28,6 +28,13 @@ the backlog is closed and `docs/TODO.md` removed, its absence is permitted and m
 as a blocker. A missing `docs/TODO.md` is a violation only when the module still has open backlog
 items (e.g. an Alpha module with open maturity gaps); otherwise an intentional retirement and a
 drift defect are indistinguishable to `docs-alignment`.
+
+‡ **`docs/RUNBOOK.md` is required only when the module (or repo) is set up and run from its own checkout.** A
+library that runs only inside its consumers has no operations of its own: each consumer's runbook owns the
+workflows that use it, and the library's `INTENT.md` → Delegates names those consumers. Its absence is then
+permitted and must not be treated as a blocker. A missing runbook is a violation when the module is run from its
+own checkout or `INTENT.md` names no consumer runbook; otherwise `docs-alignment` reports a blocker no fix can
+clear, or a runbook is written with nothing to run.
 
 A root `README.md` is not required; a repo may keep one as a pointer to its entrypoint.
 
@@ -67,7 +74,7 @@ live backlog from session artefacts and historical records at a glance.
 ## Multi-Implementation Repos
 
 When a repo contains multiple named implementations (e.g., `impl_a/`, `impl_b/`), each implementation owns
-`<implementation>/docs/RUNBOOK.md`, `<implementation>/docs/CONFIGURATION.md` and
+`<implementation>/docs/RUNBOOK.md` (‡), `<implementation>/docs/CONFIGURATION.md` and
 `ai_context/project/<implementation>/INTENT.md`. The root `docs/RUNBOOK.md` and `docs/CONFIGURATION.md` are
 routing surfaces: they route to the implementation docs and hold no implementation-specific install steps,
 commands, recovery, keys, defaults or rationale.

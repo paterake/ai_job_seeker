@@ -20,8 +20,9 @@ checks and the fixes.
 
 Check the repo against each DOCS_CONTRACT.md section in this order. A failure is a blocker.
 
-1. **Required Set**, including the † rule (`docs/TODO.md` may be absent once the backlog is closed) and any
-   doc outside the set: a finding, not a blocker.
+1. **Required Set**, including the † rule (`docs/TODO.md` may be absent once the backlog is closed), the ‡ rule
+   (`docs/RUNBOOK.md` may be absent for a library whose `INTENT.md` names the consumer runbooks) and any doc
+   outside the set: a finding, not a blocker.
 2. **TODO File Structure**.
 3. **Multi-Implementation Repos** (if applicable): each implementation's files; root RUNBOOK and CONFIGURATION
    are routing surfaces.
