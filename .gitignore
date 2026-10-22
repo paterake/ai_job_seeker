@@ -23,11 +23,6 @@ venv/
 .idea/
 .vscode/
 
-# Harness runtime (per-run identifiers, not source)
-.claude/current_run_id
-.claude/tool_call_count
-.claude/tool_calls/
-.claude/execution_limit_hit
 
 # PII & generated outputs — never enter git
 #   - candidate profiles (PII: contact, CV data)
