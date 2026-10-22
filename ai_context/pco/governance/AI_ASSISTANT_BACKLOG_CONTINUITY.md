@@ -40,7 +40,7 @@ This resume line must be updated whenever the “Still todo” next step changes
 | **Resume (start here)** | One-line pointer to the next item + next step for handover |
 | **Session start prompt** | Exact prompt to paste at session start (including skill invocations) — stored so the operator never reconstructs the formula |
 | **Done** | What changed, where, and verification result — file-level references |
-| **Still Todo** | Remaining ordered actions |
+| **Still Todo** | Remaining ordered actions, each with its state: open, in progress, deferred, parked or dropped |
 | **Accumulated Active Constraints** | Invariants established by completed items — grows as work progresses; never shrinks |
 | **Verification** | Exact command(s) — "should work" is not a check |
 | **Gotchas** | Discovered friction that a fresh session would otherwise re-learn |
@@ -55,7 +55,7 @@ reading them as stated facts.
 | Work type | Anchor doc location |
 |---|---|
 | Cross-repo or cross-module work | `docs/todo/<tracker>.md` in the affected root repo |
-| Single-module backlog | `<module>/docs/TODO.md` (delete when exhausted) |
+| Single-module backlog | `<module>/docs/todo/<backlog>.md`, indexed in `<module>/docs/TODO.md` |
 | Contract/maturity gaps | the module's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Required Set); `INTENT.md` → Known Limitations references it |
 
 ## Constraint Inheritance Rule

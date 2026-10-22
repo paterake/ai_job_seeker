@@ -46,7 +46,8 @@ For each failing check:
 4. **A line restates what code shows** (fails the Derivability Test): confirm the code, config or `--help`
    actually shows it, then drop it. A line the code does not show is a constraint: keep it, or move it to its
    owner.
-5. **TODO file misplaced or completed**: apply TODO File Structure, and update the `docs/TODO.md` index.
+5. **TODO file misplaced or completed, or items in the index**: apply TODO File Structure (a completed backlog
+   is purged or archived as the operator decides), and update the `docs/TODO.md` index.
 6. **INTENT.md names code**: rewrite those references as guarantees.
 7. **Multi-implementation root docs too detailed**: move the implementation detail into each
    implementation's own files, and leave pointers at the root.

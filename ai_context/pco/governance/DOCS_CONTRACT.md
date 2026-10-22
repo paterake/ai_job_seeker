@@ -21,7 +21,7 @@ Missing any of these is a blocker, not a backlog item.
 | `ai_context/project/INTENT.md` | Purpose, scope and non-goals; guarantees the code must meet; decisions with rejected alternatives; constraints from outside the code; known limitations. Shape: `ai_context/pco/templates/INTENT_TEMPLATE.md` | The code cannot be checked against intent; rejected alternatives are re-proposed; invariants are broken unseen |
 | `docs/RUNBOOK.md` ‡ | Prerequisites and environment; which entry point serves which task and when; what a failure means and the recovery the code cannot show. Commands and flags come from each tool's `--help` | An agent cannot set up, sequence or recover the module; failures are fixed by guesswork |
 | `docs/CONFIGURATION.md` | Config keys, defaults, rationale — [code-blind](#configurationmd-code-blind-definition) | Domain values leak into code; reuse across datasets requires code changes |
-| `docs/TODO.md` † | Project backlog index — open initiatives with pointers to anchor docs, completed section | Backlog continuity breaks; completed items re-enter scope; sessions re-derive state |
+| `docs/TODO.md` † | Backlog index: one row per backlog file (open, in progress or archived), holding no items ([TODO File Structure](#todo-file-structure)) | Backlog continuity breaks; sessions re-derive state |
 
 † **`docs/TODO.md` is required only while the module (or repo) has open backlog.** Once
 the backlog is closed and `docs/TODO.md` removed, its absence is permitted and must not be treated
@@ -55,19 +55,26 @@ blocker.
 
 ### TODO File Structure
 
-`docs/TODO.md` is the single project backlog index — the only TODO file in the `docs/` root.
-All other TODO files are filed under `docs/todo/`.
+`docs/TODO.md` is the single backlog index — the only TODO file in the `docs/` root. The work lives in the
+backlog files under `docs/todo/`.
 
 | Location | Purpose |
 |----------|---------|
-| `docs/TODO.md` | Open initiatives (pointer + status) and completed section. One file, root only. |
-| `docs/todo/<initiative>.md` | Active anchor docs for named multi-session initiatives. Session continuity artefacts. |
-| (no archive) | A completed anchor doc is deleted once its durable facts are moved into code or docs; its Completed row in `docs/TODO.md` cites the deleting commit (recover with `git show <hash>^:<path>`). |
+| `docs/TODO.md` | Index only: one row per backlog file in `docs/todo/` or `docs/todo/archive/` (path, status open, in progress or archived, one-line description). It holds no items. |
+| `docs/todo/<backlog>.md` | A backlog (anchor doc): its items, each open, in progress, done, deferred, parked or dropped. |
+| `docs/todo/archive/<backlog>.md` | A completed backlog kept until it is no longer needed. |
 
-**Consequence**: named `TODO_<X>.md` files in the docs root make it impossible to distinguish the
-live backlog from session artefacts and historical records at a glance.
+When a backlog is exhausted, its durable facts move into code or docs first. The agent and the operator then
+decide together whether to archive it (move it to `docs/todo/archive/`, index status archived) or purge it
+(delete it and its index row; git keeps it). An archived backlog is purged the same way once the operator deems
+it no longer needed. Its deferred or parked items move, by the same discussion, into another backlog.
 
-**Implementation-level TODOs** belong within the implementation's own directory (`<implementation>/docs/TODO.md`), never in the project root.
+**Consequence**: items or history in the index give each fact two homes that drift, and every session starting
+there loads what it does not use; named `TODO_<X>.md` files in the docs root make the live backlog
+indistinguishable from session artefacts.
+
+**Implementation-level TODOs** use the same structure inside the implementation (`<implementation>/docs/TODO.md`,
+`<implementation>/docs/todo/`), never the project root.
 
 ---
 
