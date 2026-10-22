@@ -11,7 +11,7 @@ harness's normal permission flow; a gate never grants permission. Consumer repos
 | `check_execution_limits.sh` | `--state-dir <dir>` (required), `--session <id>` | ruby | no `--state-dir`, no ruby, or no positive `max_tool_calls` in the limits file: a session it cannot count is unbounded. |
 | `check_guard.sh` | `--command <shell command>`, `--path <file path>` (either may be empty) | — | given neither flag: a gate given nothing checks nothing. |
 
-The adapter also fails closed when it cannot read the call, when the gate is missing, or when the gate exits with
+The adapter also fails closed, for every gate, when `HOME` is not set (gate state lives under it), when it cannot read the call, when the gate is missing, or when the gate exits with
 anything other than 0 or 2. When the adapter itself is missing or crashes: integration spoke → Not enforced.
 
 - `check_guard.sh`: denies `git push --force` / `-f` / `--force-with-lease` / a `+refspec` (`force_push_refused`), because it rewrites shared history; it matches command text (a subshell or `git --<option> push` included), so a quoted form (`bash -c "git push -f"`) or a git alias is not caught. It also denies a file edit under `ai_context/pco/` in any repo other than the PCO (`synced_pco_edit_refused`), matched on the real path, so an edit through a symlinked rules or skills folder is caught too: that tree is PCO-owned and sync overwrites a local edit, so the change belongs in the PCO. The PCO is recognised by its consumer manifest, `ai_context/project/governance/consumers.yaml`, which exists only in the PCO repo. A shell command that writes into `ai_context/pco/` is not checked.

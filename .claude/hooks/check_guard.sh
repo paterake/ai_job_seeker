@@ -7,7 +7,7 @@
 # Reads the hook payload on stdin and passes the call's command, file path and session id to the gate.
 # Gate exit 0: exit 0, no output, so the agent's normal permission flow applies (never "allow").
 # Gate exit 2: a pre-tool-use "deny" decision whose reason is the gate's stderr.
-# Fails closed (exit 2, one-line reason): no jq, a payload that is not a JSON object, a guard payload with neither
+# Fails closed (exit 2, one-line reason): HOME not set, no jq, a payload that is not a JSON object, a guard payload with neither
 # a command nor a file path, the gate is missing, or the gate exits with any other code.
 set -uo pipefail
 
