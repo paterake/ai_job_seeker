@@ -52,5 +52,3 @@ The hooks the PCO ships, what each blocks and misses, and what each does when a 
   PCO hooks fall short: [integration spoke](../../integration/README.md) → Not enforced.
   **Consequence:** a gate that passes when it cannot run is enforcement that silently does not happen.
 - The context reaches every session as committed files; the PCO adds no session-environment setup.
-
-**Consequence**: hard constraints that live only in guidance text are subject to context saturation. As sessions grow, earlier rules lose weight. A constraint that must hold unconditionally must be enforced by the harness, not stated in prose.

@@ -43,7 +43,6 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 - Each dataset version that gates or scores behaviour declares its provenance: source, how cases were produced, and owner.
   **Consequence:** a gold set of unknown origin cannot be checked for leakage or for sharing the evaluated output's synthesis path, so the gate it drives proves nothing.
 - Named splits must be explicit (e.g. `ci_smoke`, `ci_regression`, `nightly`, `red_team`).
-- Production failures become permanent regression cases — never discarded.
 
 ## Workflow Plan and Required Suites
 
@@ -58,7 +57,7 @@ A passing output-level eval while taking an unsafe or wasteful tool trajectory i
 
 ## Online-to-Offline Loop (Required)
 
-- Offline eval gates changes. Online eval monitors production. Production failures must become offline regression cases — validated offline, then confirmed by online monitoring.
+- Offline eval gates changes. Online eval monitors production. Production failures must become permanent offline regression cases — validated offline, then confirmed by online monitoring.
 - A system that detects production failures but does not convert them into regression cases has a broken improvement mechanism.
 
 ## Incident Capture (Required)

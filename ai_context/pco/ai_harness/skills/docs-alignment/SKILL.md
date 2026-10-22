@@ -20,9 +20,7 @@ checks and the fixes.
 
 Check the repo against each DOCS_CONTRACT.md section in this order. A failure is a blocker.
 
-1. **Required Set**, including the † rule (`docs/TODO.md` may be absent once the backlog is closed), the ‡ rule
-   (`docs/RUNBOOK.md` may be absent for a library whose `INTENT.md` names the consumer runbooks) and any doc
-   outside the set: a finding, not a blocker.
+1. **Required Set**, including its † and ‡ rules, and any doc outside the set: a finding, not a blocker.
 2. **TODO File Structure**.
 3. **Multi-Implementation Repos** (if applicable): each implementation's files; root RUNBOOK and CONFIGURATION
    are routing surfaces.
@@ -40,11 +38,9 @@ Retrospective Refactor Safety). Skipping the inventory step produces silent info
 For each failing check:
 
 1. **Required file missing (greenfield)**: create it; `INTENT.md` from the template shape. No inventory is needed.
-2. **Doc outside the required set** (`PRD.md`, `docs/ARCHITECTURE.md`, `docs/AI.md`, `docs/EXECUTIVE-SUMMARY.md`,
-   `docs/use-cases/`, extension or legacy command docs, a module or package `README.md`): inventory it; for each item, confirm the code, config
-   or `--help` shows it and drop it, or move it to its owner (intent, guarantees, decisions, outside
-   constraints, limitations → `INTENT.md`; when to run what and recovery → `docs/RUNBOOK.md`; config rationale
-   → `docs/CONFIGURATION.md`); fix links to it; then delete it. The commit history keeps it.
+2. **Doc outside the required set**: inventory it; for each item, confirm the code, config or `--help` shows it
+   and drop it, or move it to its owner per DOCS_CONTRACT.md → Segregation Rules; fix links to it; then delete
+   it. The commit history keeps it.
 3. **Content in the wrong file**: inventory, map each section to its destination, move one section at a time,
    and confirm the source no longer holds misplaced content.
 4. **A line restates what code shows** (fails the Derivability Test): confirm the code, config or `--help`

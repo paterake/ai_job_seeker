@@ -15,6 +15,7 @@
 - A governed repo declares its sensors in `REPO_CONTRACT.md` (Sensor Layer Declaration, Guide/Sensor Coherence Map): section presence is checked as in the [architecture spoke](../architecture/README.md) → Enforced; content is human review.
 - Error analysis, eval levels, dataset provenance and splits, evaluator calibration and required-suite records: human review against [assurance.md](../ai_harness/rules/assurance.md) (no check).
 - Rule provenance tag on each rule file, the declared validated scope, and independent validation of `research-derived` content: human review at change approval. Rule: [governance-provenance.md](../ai_harness/rules/governance-provenance.md) → Scope of Validation, Rule Provenance, Independent Validation.
+- The enterprise-grade bar stated before work and reported per criterion: human review (no check).
 
 ## Not enforced
 
@@ -34,7 +35,7 @@
 Enterprise grade is not a fixed checklist or a label: the agent doing the work sets it for each task, because
 what the work needs moves with the work. Before starting, it states the bar: each criterion below that the work
 touches, plus any the task itself needs, each as a check it will run. It finishes by reporting each criterion with
-its evidence. Repos coin no grade names, tiers or status labels. **Consequence:** a self-coined grade measures
+its evidence. Repos coin no grade names, grade tiers or grade labels. **Consequence:** a self-coined grade measures
 against a label instead of criteria, cannot be compared across repos, and drifts from what the work actually needs.
 
 The floor, by what the work touches (each rule owns its criteria; this list only points):

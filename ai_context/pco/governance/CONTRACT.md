@@ -5,14 +5,9 @@
 `ai_context/` is the canonical, versioned context layer for the agent working in a governed repo. Its `pco/` layer is
 authored once in `ai_agent_pco` (the **superset**) and synced into every governed repo.
 
-This is an operational surface, not “documentation”. It is the continuity layer that governs assistant behaviour and makes runs reproducible.
-
 ## Anti-Drift (Single Source of Truth)
 
-A governed repo avoids duplicating “the same truth” across multiple files.
-
-- The anti-drift rules live in [ANTI_DRIFT.md](ANTI_DRIFT.md).
-- When behaviour changes, update the canonical source and keep other references as links/pointers.
+[ANTI_DRIFT.md](ANTI_DRIFT.md).
 
 ## What is Managed Here
 
@@ -101,7 +96,7 @@ Product artefacts (code, config, tests, `docs/`, `docs/TODO.md`) state their own
 do not cite PCO paths. Exempt: dated audit and decision records; an upstream gap report until it is lodged; and
 anchor docs under `docs/todo/`, which are session records of agent work and are deleted when their initiative
 closes.
-**Consequence:** a PCO rename or restructure breaks every consumer doc that cites it (dozens of consumer files on 2026-10-21).
+**Consequence:** a PCO rename or restructure breaks every consumer doc that cites it.
 
 ## Sync Behaviour
 
@@ -110,10 +105,7 @@ The sync tool is `scripts/distill_harness.py` in the PCO repo.
 Key principles:
 - Prune is **on by default**: within the selected scope, target-only files under `ai_context/pco/` are removed so the platform namespace is deterministic. Use `--no-prune` to disable pruning when explicitly instructed.
 - Sync target is `<repo>/ai_context/pco/` — the platform namespace only. `ai_context/project/` and `ai_context/ASSISTANTS.md` are repo-owned and are never touched by sync.
-- Sync is **scoped**:
-  - `--scope harness` syncs `ai_context/pco/ASSISTANTS.md`, `AGENTS.md` and `ai_harness/`
-  - `--scope governance` syncs `ai_context/pco/ASSISTANTS.md`, `AGENTS.md` and `governance/` (the `master-data/` registries are not in this scope; use `--scope full`)
-  - `--scope full` syncs the full `ai_context/pco/` tree
+- Sync is **scoped**. Scopes and what each syncs: `distill_harness.py sync --help`.
 
 ## How This Applies Across Repos
 

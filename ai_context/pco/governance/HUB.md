@@ -42,14 +42,9 @@ They apply to all governed repos. What is enforced for each: the [architecture](
 | # | Pillar | Rule | Consequence of violation |
 |---|---|---|---|
 | 1 | UV only for Python | `code-architecture.md` → Python Tooling | Environments diverge; no reproducible execution path |
-| 2 | Config drives code | `code-architecture.md` → Config Purity | Domain changes need code changes; code cannot be reused |
+| 2 | Config drives code: code is mechanism, domain context is config | `code-architecture.md` → Config Purity | Domain changes need code changes; near-identical implementations proliferate per domain |
 | 3 | Low-code / OSS preference | `code-architecture.md` → Low-Code / OSS Preference | Custom code reimplements tested paths and accrues maintenance |
-| 4 | Context minimisation | `AGENTS.md` → Sessions and memory | Earlier constraints lose weight; work becomes non-resumable |
-| 5 | Token management | `AGENTS.md` → Sessions and memory | Cost grows non-linearly; regeneration replaces reuse |
-| 6 | No domain context in code | `code-architecture.md` → Config Purity | Near-identical implementations proliferate per domain |
-
-Pillars 2 and 6 are one rule (code is mechanism; domain context is config); so are 4 and 5 (short sessions with
-durable state).
+| 4 | Short sessions with durable state | `AGENTS.md` → Sessions and memory | Earlier constraints lose weight and cost grows non-linearly; work becomes non-resumable |
 
 ## Capability-Fit Governance
 

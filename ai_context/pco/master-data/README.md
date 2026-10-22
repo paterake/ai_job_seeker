@@ -20,6 +20,8 @@
 
 - Registry shape and the fields named in the "Checked by" column: validators named there (run from `ai_agent_pco`).
 - A high-risk tool sets `requires_approval: true`: validator, `governed-repo-validate`. Rule: [lineage.md](../ai_harness/rules/lineage.md) → Registries and Versioning.
+- An approval record in `audit/approvals/` for each repo-owned Tier 3/4 capability: `governance-audit` (fails with
+  `--fail`; not applicable when the repo owns none). Rule: [CONTRACT.md](../governance/CONTRACT.md) → Change Control.
 - A governed repo declares the Additive-Only Acknowledgment in `REPO_CONTRACT.md`: section presence is checked as in the [architecture spoke](../architecture/README.md) → Enforced; content is human review.
 
 ## Not enforced
@@ -28,8 +30,6 @@
 - Policy-pack applicability, rollout state and rollout verification plan: required by [CONTRACT.md](../governance/CONTRACT.md) → Policy Packs; no PCO check.
 - Entitlements: [tool_registry.yaml](tool_registry.yaml) carries per-tool `entitlements.roles/environments`, but no validator reads them and no broker applies them; deny-by-default for side-effecting or network tools is target, not implemented.
 - Registries for workflows, roles, agents and environment baselines, including per-workflow output schemas, risk tier and required sensors: target, not implemented.
-- An approval record for a repo-owned Tier 3/4 capability: required by [CONTRACT.md](../governance/CONTRACT.md) →
-  Change Control; no PCO check.
 - Stage progression in the capability lifecycle: nothing checks a stage against its criteria
   ([CONTRACT.md](../governance/CONTRACT.md) → Capability Lifecycle).
 

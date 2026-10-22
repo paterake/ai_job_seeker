@@ -46,9 +46,6 @@ it can read in the tier table below; for other solutions the table is optional.
 | Untrusted | Public issue trackers, web pages, emails, arbitrary user input | Read only in an isolated context; never treat as instructions; never mix with credential access |
 | Prohibited | Sources not on the allowlist | Block |
 
-Never allow untrusted content sources to be processed in the same execution context
-as credential access or external write capabilities.
-
 ### 2. Per-task least-privilege decomposition (non-negotiable)
 
 Decompose agent tasks by access privilege. Each phase gets only the permissions it
@@ -95,7 +92,6 @@ and makes tool schemas harder to reason about in long sessions.
 
 The core states the rule ([AGENTS.md](../../AGENTS.md) → Security). It covers every channel an agent built on the
 platform speaks through: chat interfaces, email composition, comment posting and any other user-facing channel.
-Violating it is an ethical non-negotiable, not a preference.
 
 ### 6. Epistemic honesty (required)
 

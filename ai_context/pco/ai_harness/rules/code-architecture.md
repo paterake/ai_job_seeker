@@ -75,8 +75,8 @@ The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its 
 
 - Before writing new infrastructure code, check whether a shared utility already exists.
 - If a utility would benefit multiple modules/projects, elevate it to the **least-general shared home that covers its consumers** (see *Shared-Code Home Selection*), not automatically to the platform-wide core.
-- Shared utilities, models, and infrastructure belong in a shared package, not duplicated across consumer modules.
-- New shared functionality → extend or create a shared package, not copy-paste.
+- Shared utilities, models, and infrastructure belong in a shared package: extend an existing one or create one,
+  never duplicate or copy-paste across consumer modules.
 
 ### Shared-Code Home Selection
 
@@ -139,12 +139,6 @@ Which doc owns which fact: `ai_context/pco/governance/DOCS_CONTRACT.md` → Segr
 
 **Stale documentation is a bug in the change, not a backlog item.**
 
-**Before writing any new `.py` file, confirm:**
-- Does this contain strings/values a user might want to change without touching code? → YAML config
-- Is this a second major class in an existing file? → new file
-- Is this a second distinct concern in an existing file? → new file
-- Is this duplicating logic from another module? → extract to shared package
-
 ## Low-Code / OSS Preference
 
 - Prefer an existing OSS library over custom code when one covers the requirement adequately.
@@ -154,12 +148,6 @@ Which doc owns which fact: `ai_context/pco/governance/DOCS_CONTRACT.md` → Segr
   The test is: "does this custom code become a maintenance liability or block reuse?" If yes, find the library.
 - Custom code that reimplements something an OSS library already provides well is a governance violation,
   not just a style preference.
-
-### Capability-Fit extension
-
-- Do not build bespoke deterministic machinery for a task that is materially better served by an AI-driven mechanism.
-- Do not reach for a model where a deterministic mechanism is exact, cheaper, and auditable.
-- The design review question is not "can code do this?" but "which driver best fits the goal and evidence obligations?"
 
 ## Native First
 

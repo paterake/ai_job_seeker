@@ -32,8 +32,7 @@
 
 ### Session Design and Token Economy
 
-Session boundaries are in the core ([AGENTS.md](../AGENTS.md) → Sessions and memory). A long session that
-resolves one ask by accumulating context is an anti-pattern: work in chapters, one anchor-doc item per session.
+Session boundaries are in the core ([AGENTS.md](../AGENTS.md) → Sessions and memory).
 Config purity is the main token-economy lever: code reused through a config change is never regenerated
 ([code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity).
 
@@ -77,11 +76,12 @@ where exact deterministic derivation was available.
 A recurring class, not a one-off:
 
 1. Coding agents default to writing code, so a model path looks like less implementation and is under-selected.
-2. The governance corpus once rewarded deterministic mechanism, so the bias was systemic, not local.
-3. Deterministic builds were once the only viable path and were not re-evaluated when capability changed.
-4. With no capability-choice checkpoint, model-vs-code was defaulted silently instead of reviewed.
-5. Structured inputs disguised semantic tasks as parsing problems.
-6. Agents did not self-reframe; the correction came from repeated human challenge, so structure must carry the fix.
+2. A governance corpus that rewards deterministic mechanism makes the bias systemic, not local.
+3. A deterministic build chosen when it was the only viable path is not re-evaluated when capability changes.
+4. With no capability-choice checkpoint, model-vs-code is defaulted silently instead of reviewed.
+5. Structured inputs disguise semantic tasks as parsing problems.
+6. Agents do not self-reframe; without structure the correction depends on repeated human challenge, so structure
+   must carry the fix.
 
 The structural response is Driver Selection and the Capability-Decision Record in
 [code-architecture.md](../ai_harness/rules/code-architecture.md), screened by the review above.

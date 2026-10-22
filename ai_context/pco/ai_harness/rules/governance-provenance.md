@@ -20,7 +20,7 @@ paths:
   never implies coverage by omission (`publication.md` → Claim Scoping). The current declaration:
   [assurance spoke](../../assurance/README.md) → Declared Scope of Validation.
 - **Consequence:** without a stated validated scope, governance proven for one use case is
-  silently assumed general — the mechanism that let one axis's governance be treated as
+  silently assumed general — the mechanism by which one axis's governance is treated as
   enterprise-complete. A named scope converts a hidden overclaim into a credible boundary.
 
 ## Rule Provenance (Required)
@@ -44,5 +44,4 @@ Rule Provenance above) and record the validation when it lands.
 
 **Consequence:** an assistant stress-testing its own prior output shares that output's blind spots;
 treating the result as an independent audit re-imports the same bias through every future
-assistant-assisted governance change. This generalises the Legal/DPO sign-off gate on
-[ENTERPRISE_OBLIGATIONS.md](../../governance/ENTERPRISE_OBLIGATIONS.md) (Compliance Lifecycle) into a standing principle.
+assistant-assisted governance change.

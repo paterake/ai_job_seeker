@@ -1,6 +1,6 @@
 # Per-Tier Deny Interface
 
-> Canonical deny response schema for governed agent runs. All hook denials, and denials by a future control plane ([HUB.md](HUB.md) → Not enforced), must produce a response conforming to this shape. This is the observable interface — enforcement wiring (hook scripts, detection logic, allowlists) is not disclosed here.
+> Canonical deny response schema for governed agent runs. All hook denials, and denials by a future control plane ([HUB.md](HUB.md) → Not enforced), must produce a response conforming to this shape. This is the observable interface — detection logic is not described here.
 
 ## Deny Response Shape
 

@@ -43,5 +43,5 @@ as the owner of claim discipline.
 ## Workflow Gates
 
 - Skills under `ai_context/pco/ai_harness/skills/` remain orchestration-only: reference canonical standards instead of restating them.
-- Avoid duplicating status/todo metadata across multiple files; prefer a single source of truth and pointers.
+- Status and backlog metadata: one source, per [ANTI_DRIFT.md](../../governance/ANTI_DRIFT.md).
 

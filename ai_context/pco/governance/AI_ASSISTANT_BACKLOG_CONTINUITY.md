@@ -50,10 +50,6 @@ placeholder until the first item completes. **Consequence:** an anchor doc witho
 will fail. The next session re-derives constraints from context, which is expensive and unreliable, instead of
 reading them as stated facts.
 
-An anchor doc may also be a **hybrid**: the checkpoint sections above plus per-item
-descriptive/spec sections (e.g. one `### Item N` per module) for a full backlog spec. See
-"Single Source of Truth for Status" below for the constraint this hybrid shape must follow.
-
 ## Anchor Doc Selection
 
 | Work type | Anchor doc location |
@@ -77,10 +73,6 @@ hybrid shape: "checkpoint anchor doc" + "full backlog spec" in one file.
 When this hybrid shape is used, the per-item spec sections must not restate completion status
 in prose. They reference the Resume/Accumulated-Constraints section instead (e.g. "see Resume"
 or a bare ✅/⏳ marker on the heading only).
-
-Before closing any session that changes an item's status, grep the full anchor doc for every
-other mention of that item's name/number and confirm no other location contradicts the new
-status.
 
 **Consequence**: status duplicated across a Resume line and a per-item prose section drifts the
 moment one is updated and the other isn't — a fresh session reading the per-item section sees a

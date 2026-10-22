@@ -19,9 +19,3 @@ Prevent documentation drift and stale duplication in a governed repo, across:
 
 **Consequence:** a second copy of a contract drifts the next time either copy changes, and an agent reading the
 stale one acts on it.
-
-## Drift Tests
-
-Before considering a change “done”:
-- There is exactly one canonical place that defines each behavioural contract.
-- Any other place that mentions it is either a link or a one-line pointer.

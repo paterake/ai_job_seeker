@@ -14,7 +14,7 @@ paths:
 ## Non-Negotiable Baseline
 
 - **Bounded execution**: timeouts and a token/cost budget for every LLM call. No unbounded loops.
-- **Structured observability**: every call emits a correlation ID (`run_id`), latency, and token counts into structured telemetry.
+- **Structured observability**: per `observability.md` → Telemetry Event Contract.
 - **Defined evaluation path**: an evaluation harness exists or is explicitly planned; quality is proven, not assumed (`assurance.md` → Error Analysis Before Gates).
 - **Degrade mode**: failures/timeouts return a structured error, not silent empties.
 
