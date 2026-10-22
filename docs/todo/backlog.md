@@ -28,6 +28,7 @@ Repo backlog (anchor doc). Intent and guarantees live in
 | 2 | Stage 5 — Packet: ready-to-send folder per job; submission is a human-approval gate, no auto-send | ⬜ open | [INTENT → Acceptance](../../ai_context/project/INTENT.md#acceptance) |
 | 3 | User action: review the candidate profile with Kiera — confirm `target.roles` / `remote` and the audit-role end date | ⬜ open (user) | [CONFIGURATION → Candidate profile](../CONFIGURATION.md#candidate-profile-profilecandidateyaml) |
 | 4 | Defects and gaps found in the 2026-10-11 docs audit (salary key mismatch, empty shortlist exits 0, silent exclusions disable, hard-coded cohort keywords, `cli.py` size, no capability-decision record for the CV extractor, no phase-2 eval, whole profile incl. contact details in the phase-2 prompt) | ⬜ open — triage | [INTENT → Known Limitations](../../ai_context/project/INTENT.md#known-limitations) |
+| 5 | Exception `EXC-2026-10-12-001` scope still names the Adzuna values "in docs/TODO.md"; since 394a86a they are only in git history (flagged 2026-10-22) | ⏸ parked — operator: not an issue (2026-10-22) | [exception_registry.yaml](../../ai_context/project/governance/exception_registry.yaml) |
 
 ---
 
