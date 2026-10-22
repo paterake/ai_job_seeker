@@ -8,6 +8,7 @@
 - Evaluator calibration (independence: [HUB.md](../governance/HUB.md) → Independent review pattern)
 - Incident capture and the link from an incident to the governance change it causes
 - Rule provenance (`basis:`) and the declared scope of validation
+- The enterprise-grade bar for work
 
 ## Enforced
 
@@ -27,6 +28,24 @@
 - [governance-provenance.md](../ai_harness/rules/governance-provenance.md)
 
 ## Canonical
+
+### Enterprise Grade
+
+Enterprise grade is not a fixed checklist or a label: the agent doing the work sets it for each task, because
+what the work needs moves with the work. Before starting, it states the bar: each criterion below that the work
+touches, plus any the task itself needs, each as a check it will run. It finishes by reporting each criterion with
+its evidence. Repos coin no grade names, tiers or status labels. **Consequence:** a self-coined grade measures
+against a label instead of criteria, cannot be compared across repos, and drifts from what the work actually needs.
+
+The floor, by what the work touches (each rule owns its criteria; this list only points):
+- Any code: guarantees and error envelope ([INTENT_TEMPLATE.md](../templates/INTENT_TEMPLATE.md)), config purity
+  and driver selection ([code-architecture.md](../ai_harness/rules/code-architecture.md))
+- Docs: [DOCS_CONTRACT.md](../governance/DOCS_CONTRACT.md)
+- LLM-calling modules: [operations.md](../ai_harness/rules/operations.md),
+  [observability.md](../ai_harness/rules/observability.md), [lineage.md](../ai_harness/rules/lineage.md),
+  [assurance.md](../ai_harness/rules/assurance.md)
+- Untrusted content, tools or MCP servers: [security-threat-model.md](../ai_harness/rules/security-threat-model.md)
+- High/Critical solutions at go-live: [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)
 
 ### Declared Scope of Validation
 

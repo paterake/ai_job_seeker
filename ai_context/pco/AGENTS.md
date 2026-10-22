@@ -11,8 +11,10 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 - Before adding code that interprets content, choose the driver (config-, data- or AI-driven) with the
   explicit-vs-inference test in `code-architecture.md` → Driver Selection. *Defaulting builds parsers for semantic
   problems, or models for exact derivations.*
-- Define how you will verify before you start. Finish with the proof (commands and results), not "done".
-  *Weak success criteria produce false success signals.*
+- Define how you will verify before you start: state the enterprise-grade bar for this work, which you set from
+  the work at hand (assurance spoke → Enterprise Grade), and report against stated criteria, never a grade label.
+  Finish with the proof (commands and results), not "done". *Weak success criteria produce false success signals;
+  self-coined grades cannot be compared or checked.*
 
 ## While you work
 - Write the minimum code for the stated problem: no speculative features, abstractions, configurability or

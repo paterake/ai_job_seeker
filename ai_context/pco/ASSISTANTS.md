@@ -20,7 +20,7 @@ The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.m
 | [master-data/](master-data/README.md) | Model/tool registries, policy packs, exceptions | — (registry data) |
 | [observability/](observability/README.md) | Tracing, telemetry, run review, FinOps | `observability.md` |
 | [lineage/](lineage/README.md) | Tool/model registration, risk rating, versioning, run lineage | `lineage.md` |
-| [assurance/](assurance/README.md) | Evals, datasets, incidents, rule provenance | `assurance.md`, `governance-provenance.md` |
+| [assurance/](assurance/README.md) | Evals, datasets, incidents, rule provenance, the enterprise-grade bar | `assurance.md`, `governance-provenance.md` |
 
 ## Governance docs (explicit read)
 
