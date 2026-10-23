@@ -8,7 +8,7 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 - State your assumptions. When a request has more than one reading, name them and ask; when a simpler approach
   exists, say so. Skip this only for a change whose meaning is uniquely determined (a typo, a rename, a one-liner).
   *Silent gap-filling is the leading cause of rework.*
-- Before changing code, read `ai_context/project/ASSISTANTS.md` and the mandatory files its router names for the task.
+- Before starting work, read `ai_context/project/ASSISTANTS.md` and the mandatory files its router names for the task.
   *Skipped project context is how an agent re-derives, or contradicts, a decision the repo already recorded.*
 - Before adding code that interprets content, choose the driver (config-, data- or AI-driven) with the
   explicit-vs-inference test in `code-architecture.md` → Driver Selection. *Defaulting builds parsers for semantic

@@ -11,7 +11,7 @@ authored once in `ai_agent_pco` (the **superset**) and synced into every governe
 
 ## What is Managed Here
 
-- Shared assistant entrypoint: `ai_context/ASSISTANTS.md` (dispatcher) → `ai_context/pco/ASSISTANTS.md` + `ai_context/project/ASSISTANTS.md`
+- Read order: the core (`ai_context/pco/AGENTS.md`) → `ai_context/project/ASSISTANTS.md` (repo router) → the platform docs it or the spoke index (`ai_context/pco/ASSISTANTS.md`) names; `ai_context/ASSISTANTS.md` is a map of the two layers, not a step
 - Concern framing: `ai_context/pco/governance/CONCERNS.md`
 - Shared harness tooling: `ai_context/pco/ai_harness/`
   - `hooks/` deterministic guardrails
@@ -24,7 +24,7 @@ For a target repo to be “harness-wired”, it must have a **two-layer `ai_cont
 
 ```
 <repo>/ai_context/
-  ASSISTANTS.md          ← router to the pco/ and project/ indexes (repo-owned, never synced)
+  ASSISTANTS.md          ← map of the pco/ and project/ layers (repo-owned, never synced)
   pco/                   ← synced wholesale from ai_agent_pco/ai_context/pco/ (platform-owned, read-only)
     ai_harness/          ← platform hooks, rules, skills
     governance/          ← platform governance contracts
@@ -44,7 +44,7 @@ Additionally:
   `ai_context/pco/ai_harness/hooks/` through an agent adapter kept in the agent's configuration, outside
   `ai_context/`. The PCO repo's sync tooling manages the links and installs the adapter.
 - The repo's agent entrypoint loads the always-loaded core from the synced layer (`ai_context/pco/AGENTS.md`) and
-  routes to `ai_context/ASSISTANTS.md`; there is no root copy of the core. The entrypoint is repo-owned and sync
+  routes to `ai_context/project/ASSISTANTS.md`; there is no root copy of the core. The entrypoint is repo-owned and sync
   never writes it.
 - One agent is wired; which entrypoint and configuration folder it uses is set in `ai_agent_pco`'s wiring
   configuration, never in `ai_context/`. Other agents read the committed context their own way; the PCO does not
@@ -88,7 +88,7 @@ The Additive Content Map must include a markdown table whose first column is `Sp
 
 A consumer references the PCO only from its agent layer, in three ways:
 - Load: the agent entrypoint loads the core (`ai_context/pco/AGENTS.md`).
-- Navigation: entrypoint → `ai_context/ASSISTANTS.md` → `pco/ASSISTANTS.md` or `project/ASSISTANTS.md`; a file under
+- Navigation: entrypoint → core → `project/ASSISTANTS.md` → the PCO docs it names (spoke index `pco/ASSISTANTS.md`); a file under
   `ai_context/project/` may name the PCO doc its task needs.
 - Wiring: the agent configuration's links into `ai_context/pco/ai_harness/`.
 
