@@ -2,4 +2,4 @@
 
 @ai_context/pco/AGENTS.md
 
-Repo context: [ai_context/ASSISTANTS.md](ai_context/ASSISTANTS.md) (read on demand).
+Repo context: [ai_context/project/ASSISTANTS.md](ai_context/project/ASSISTANTS.md) (the core says when to read it).

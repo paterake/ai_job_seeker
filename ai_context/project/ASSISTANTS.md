@@ -1,7 +1,8 @@
 # AI Assistant Guide — ai_job_seeker (Project Layer)
 
-This file is the repo-owned layer. Read `ai_context/pco/ASSISTANTS.md` first for platform
-rules, then use this file for ai_job_seeker-specific posture and routing.
+This file is the repo-owned layer and the first read after the core: its router names what each
+task must read. Platform docs load on demand (spoke index: `ai_context/pco/ASSISTANTS.md`). It
+holds the ai_job_seeker-specific posture and routing.
 
 ## Posture
 
