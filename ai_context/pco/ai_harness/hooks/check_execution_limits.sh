@@ -60,7 +60,7 @@ fi
 if [[ "$COUNT" -ge "$MAX_TOOL_CALLS" ]]; then
     mkdir -p "$(dirname "$HIT_FILE")"
     printf 'limit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\n' "$COUNT" "$MAX_TOOL_CALLS" > "$HIT_FILE"
-    printf 'GOVERNANCE STOP\nrisk_tier: high\ndenial_reason: execution_limit_hit\nlimit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\nnext_action: shell commands are denied for the rest of this session; start a new session (its count starts at 0) and continue from the anchor doc\n' \
+    printf 'GOVERNANCE STOP\nrisk_tier: high\ndenial_reason: execution_limit_hit\nlimit: max_tool_calls\nvalue_at_stop: %d\nmax_allowed: %d\nnext_action: shell commands are denied for the rest of this session; subagents and forks share this count, so start a new session or a background session (each count starts at 0) and continue from the anchor doc\n' \
         "$COUNT" "$MAX_TOOL_CALLS" >&2
     exit 2
 fi
