@@ -44,8 +44,11 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 - In a consumer repo, `ai_context/pco/` (this core included) is read-only. Stop, and report the gap upstream:
   the file, what is wrong, the consequence and the suggested fix. The PCO applies it and re-syncs. *A local edit
   is overwritten on the next sync and never reaches the other repos.*
-- Turn every agent failure into a structural fix (a rule, hook, test or check) and remove a constraint only on
+- Turn every agent failure into a structural fix (a rule, hook or check) and remove a constraint only on
   evidence that the failure no longer occurs. *Failures treated as one-offs recur* (behaviour spoke → Failure Harvest).
+- Tests are the repo's fixed catalogue, one set per delivered feature; a change keeps them passing and adds none.
+  A new test needs a newly delivered capability and the operator's approval (assurance spoke → Test Catalogue).
+  *A test per fix tracks change history, not intent, and buries what the repo delivers.*
 - Record major actions in a commit, an anchor doc or a capability-decision record. *Unrecorded actions cannot be audited.*
 
 ## Security
