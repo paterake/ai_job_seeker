@@ -40,7 +40,8 @@ Config purity is the main token-economy lever: code reused through a config chan
 
 Every agent failure is a permanent signal, not a one-off incident. For each one:
 1. Name the failure class (assumption filling, false success signal, scope creep, format mismatch, ...).
-2. Engineer a structural fix: a rule, a hook, a test or a verification step.
+2. Engineer a structural fix: a rule, a hook or a verification step. A test only when the failure shows a delivered
+   capability the test catalogue does not prove ([assurance.md](../ai_harness/rules/assurance.md) → Test Catalogue).
 3. Record the fix in the governing file; if the constraint must hold unconditionally, wire it as a hook ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md) → Hooks: Guidance vs Enforcement). When the governing file or hook is under `ai_context/pco/` and you are in a consumer, report the gap upstream instead ([AGENTS.md](../AGENTS.md) → Governance changes).
 4. Remove a constraint only when the model demonstrably no longer triggers that failure class.
 

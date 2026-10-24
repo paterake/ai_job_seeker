@@ -7,11 +7,25 @@ paths:
   - "**/*eval*.py"
   - "**/*eval*.yaml"
   - "audit/**"
+  - "**/test_*.py"
+  - "**/test_catalogue.yaml"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)
 
 # Assurance and Evaluation Rules
+
+## Test Catalogue (Required)
+
+- A repo's tests are a fixed catalogue: every test file is listed under the delivered feature it proves (each served
+  surface end to end, its safety invariants, the goldens consumers depend on, the eval gates CI runs), with its test
+  count, and a gate fails on an unlisted file, a gone file or a changed count.
+- A change keeps the catalogued tests passing and adds none: no test for a fix, a review finding, a historical item,
+  a library swap or an agent task. A new test is added only for a newly delivered capability, through a catalogue
+  edit the operator approves.
+- **Consequence:** without a fixed catalogue every change adds tests (one consumer repo grew to about 4,500 tests,
+  a third of its commits adding some, and kept about 760 after a purge); the suite then measures change history, not
+  intent, costs more effort than the work, and hides which tests prove what the repo delivers.
 
 ## Error Analysis Before Gates
 

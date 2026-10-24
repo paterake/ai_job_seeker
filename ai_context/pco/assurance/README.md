@@ -9,6 +9,7 @@
 - Incident capture and the link from an incident to the governance change it causes
 - Rule provenance (`basis:`) and the declared scope of validation
 - The enterprise-grade bar for work
+- The test catalogue: tests as a fixed set per delivered feature
 
 ## Enforced
 
@@ -16,6 +17,7 @@
 - Error analysis, eval levels, dataset provenance and splits, evaluator calibration and required-suite records: human review against [assurance.md](../ai_harness/rules/assurance.md) (no check).
 - Rule provenance tag on each rule file, the declared validated scope, and independent validation of `research-derived` content: human review at change approval. Rule: [governance-provenance.md](../ai_harness/rules/governance-provenance.md) → Scope of Validation, Rule Provenance, Independent Validation.
 - The enterprise-grade bar stated before work and reported per criterion: human review (no check).
+- The test catalogue: a consumer's own gate over its catalogue file (its `REPO_CONTRACT.md` names it); the PCO ships no check.
 
 ## Not enforced
 
