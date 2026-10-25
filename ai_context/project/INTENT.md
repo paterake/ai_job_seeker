@@ -174,15 +174,15 @@ criteria are to be written when the stage is designed.
 
 ## Decisions
 
-| Decision | Rejected alternatives | Why |
-|---|---|---|
-| Deterministic phase-1 scoring first; the model judge is an optional, additive phase 2 behind a backend switch | Model-only ranking | Phase 1 is cheap, explainable, runs on an 8 GB machine and needs no keys |
-| Exclusions live in YAML | Exclusion rules in the scorer | The candidate's "never show me X" feedback changes data, not code |
-| Two independent cohorts in one HTML file | One merged ranking | Cohort A is preserved exactly at the operator's request; Cohort B widens discovery without disturbing it |
-| Cohort B widens role matching with its own keywords, for Cohort B only | Relying on the +22 cohort bonus alone | The marketing-heavy target-role list scores genuine research, policy and archive roles at zero role overlap, and the bonus alone cannot lift them into the top 25; scoping it to Cohort B leaves Cohort A's order unchanged |
-| A stable "latest" alias plus a 7-day timestamped archive | Overwriting in place; timestamped files only | A re-run never destroys the previous deliverable, and the folder the candidate opens stays clean |
-| Postings are data only: ingest never interprets them, and the phase-2 prompt puts them in a labelled untrusted block after the instructions | Feeding posting text into an instruction context | The repo combines PII, untrusted content and (planned) outbound channels; ingest reads board credentials in the same process that fetches postings, which is a mechanical HTTP call with no LLM context |
-| The CV extractor is a deterministic parser for one graduate-CV layout, recognised by section headers | An LLM extractor | No capability-decision record exists for it, so it is a candidate for capability-fit review |
+| Decision | Why |
+|---|---|
+| Deterministic phase-1 scoring first; the model judge is an optional, additive phase 2 behind a backend switch | Phase 1 is cheap, explainable, runs on an 8 GB machine and needs no keys |
+| Exclusions live in YAML | The candidate's "never show me X" feedback changes data, not code |
+| Two independent cohorts in one HTML file | Cohort A is preserved exactly at the operator's request; Cohort B widens discovery without disturbing it |
+| Cohort B widens role matching with its own keywords, for Cohort B only | The marketing-heavy target-role list scores genuine research, policy and archive roles at zero role overlap, and the bonus alone cannot lift them into the top 25; scoping it to Cohort B leaves Cohort A's order unchanged |
+| A stable "latest" alias plus a 7-day timestamped archive | A re-run never destroys the previous deliverable, and the folder the candidate opens stays clean |
+| Postings are data only: ingest never interprets them, and the phase-2 prompt puts them in a labelled untrusted block after the instructions | The repo combines PII, untrusted content and (planned) outbound channels; ingest reads board credentials in the same process that fetches postings, which is a mechanical HTTP call with no LLM context |
+| The CV extractor is a deterministic parser for one graduate-CV layout, recognised by section headers | No capability-decision record exists for it, so it is a candidate for capability-fit review |
 
 ## Outside Constraints
 

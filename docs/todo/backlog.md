@@ -10,9 +10,7 @@ Repo backlog (anchor doc). Intent and guarantees live in
 
 - **Status:** Profile, live ingest (Adzuna, Reed, The Muse), and dual-cohort match + rank are
   built and in use. Draft and Packet are not built.
-- **Next:** Stage 4 — Draft. No Stage-4 anchor exists yet; create `docs/todo/stage4_draft.md`
-  with the four required anchor sections (continuity header, Accumulated Active Constraints,
-  per-item verification commands, Gotchas) and add its row to [docs/TODO.md](../TODO.md) before writing code.
+- **Next:** none. Stage 4 (Draft) is parked until the operator asks for it (operator 2026-10-25).
 - **Before touching code, read:** [ai_context/project/ASSISTANTS.md](../../ai_context/project/ASSISTANTS.md),
   [REPO_CONTRACT.md](../../ai_context/project/governance/REPO_CONTRACT.md),
   [INTENT.md](../../ai_context/project/INTENT.md), and `## Accumulated Active Constraints` below. Stage 4 builds
@@ -24,7 +22,7 @@ Repo backlog (anchor doc). Intent and guarantees live in
 
 | # | Item | Status | Pointer |
 |---|---|---|---|
-| 1 | Stage 4 — Draft: tailored cover letter + CV per shortlisted job; every claim traces to the profile | ⬜ open | [INTENT → Acceptance](../../ai_context/project/INTENT.md#acceptance) |
+| 1 | Stage 4 — Draft: tailored cover letter + CV per shortlisted job; every claim traces to the profile | parked (operator 2026-10-25: until asked) | [INTENT → Acceptance](../../ai_context/project/INTENT.md#acceptance) |
 | 2 | Stage 5 — Packet: ready-to-send folder per job; submission is a human-approval gate, no auto-send | ⬜ open | [INTENT → Acceptance](../../ai_context/project/INTENT.md#acceptance) |
 | 3 | User action: review the candidate profile with Kiera — confirm `target.roles` / `remote` and the audit-role end date | ⬜ open (user) | [CONFIGURATION → Candidate profile](../CONFIGURATION.md#candidate-profile-profilecandidateyaml) |
 | 4 | Defects and gaps found in the 2026-10-11 docs audit (salary key mismatch, empty shortlist exits 0, silent exclusions disable, hard-coded cohort keywords, `cli.py` size, no capability-decision record for the CV extractor, no phase-2 eval, whole profile incl. contact details in the phase-2 prompt; since core 0.13 `backend.yaml` `cloud` has no `base_url` key, so cloud mode set there fails without `--llm-base-url`, found 2026-10-25) | ⬜ open — triage | [INTENT → Known Limitations](../../ai_context/project/INTENT.md#known-limitations) |
