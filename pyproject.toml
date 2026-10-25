@@ -11,7 +11,7 @@ dependencies = [
 members = ["implementation/job_seeker"]
 
 [tool.uv.sources]
-ai-agent-core = { git = "https://github.com/paterake/ai_agent_core.git", rev = "f85333fab1e8e2f48253babb24169857699e78d9", subdirectory = "implementation/ai_agent_core" }
+ai-agent-core = { git = "https://github.com/paterake/ai_agent_core.git", rev = "231e46f4c7ffc1d1c6dbfa698a0326d8786488a8", subdirectory = "implementation/ai_agent_core" }
 ai-job-seeker = { workspace = true }
 
 [tool.pytest.ini_options]
