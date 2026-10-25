@@ -60,11 +60,11 @@ def test_mode_flags_ollama():
 
 
 def test_mode_flags_cloud():
-    mode = _resolve_mode(llm_provider="openrouter", llm_model="x")
+    # Core 0.13.0+: no default endpoint; the cloud base_url is always passed in.
+    cloud = dict(llm_provider="openrouter", llm_model="x", llm_base_url="https://openrouter.ai/api")
+    mode = _resolve_mode(**cloud)
     assert mode.value == "cloud"
 
-    cfg = execution_config_from_namespace(
-        _make_ns(llm_provider="openrouter", llm_model="x")
-    )
+    cfg = execution_config_from_namespace(_make_ns(**cloud))
     base_url, _ = resolve_cloud_endpoint_and_key(cfg.cloud)
     assert base_url == "https://openrouter.ai/api"

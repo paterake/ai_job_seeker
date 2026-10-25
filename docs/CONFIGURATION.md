@@ -99,7 +99,22 @@ first non-empty value wins:
 | Reed | `reed/api_key` | `REED_API_KEY` | yes, otherwise the source is skipped |
 | The Muse | `themuse/api_key` | `THEMUSE_API_KEY` | no; it works keyless at a lower rate limit |
 
-Cloud-LLM API keys are resolved by `ai_agent_core`, not by this repo. See that repo's docs.
+Cloud-LLM API keys are resolved by `ai_agent_core`, not by this repo, and never from the environment or `.env`
+(core 0.14.0): see [Core configuration](#core-configuration).
+
+## Core configuration
+
+`ai_agent_core` reads no environment variable (core 0.14.0). `match` and `draft` take `--config-dir`, a
+use-case folder outside the repo; without it the core runs unconfigured, which is enough for the default
+agent mode.
+
+| File in `--config-dir` | Effect |
+|---|---|
+| `layout.yaml` | `roots.output` is the core's output root (`paths.output_dir`); no default, absolute and outside any repository. Needed only when the core writes (for example `telemetry_jsonl` in `run.yaml`). |
+| `process.yaml` (optional) | The core's process keys, for example `paths.api_key_dir` or `providers.anthropic.api_key_file` / `providers.openai.api_key_file` (cloud keys, by file, never the value). |
+| `run.yaml` (optional) | The core's run keys (budgets, guardrails, telemetry sink). |
+
+Cloud mode also needs `--llm-base-url`: the core has no default endpoint (0.13.0).
 
 ## Output locations
 

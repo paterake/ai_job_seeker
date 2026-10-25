@@ -7,7 +7,7 @@ This covers running and recovering the pipeline. Intent and guarantees:
 
 ## Prerequisites
 
-1. This repo, synced with `uv sync`, which fetches the pinned `ai_agent_core` git tag (network
+1. This repo, synced with `uv sync`, which fetches the pinned `ai_agent_core` git rev (network
    access to the `ai_agent_core` repo is needed on first sync). **Every subcommand needs
    `ai_agent_core` installed**, profile and ingest included (see
    [Missing ai_agent_core](#missing-ai_agent_core)).
@@ -16,8 +16,8 @@ This covers running and recovering the pipeline. Intent and guarantees:
 3. Board API keys installed (see [Installing API keys](#installing-api-keys)).
 4. The candidate's CV `.docx` at the location set in the backend config, outside the repo.
 
-**Upgrading `ai_agent_core`:** bump both the git tag and the `==` version pin, re-lock with `uv sync`, and run
-the tests.
+**Upgrading `ai_agent_core`:** move the root `rev`, the module's `==` version pin and `uv.lock` together
+(`uv lock`, `uv sync`), and run the tests.
 
 ## Default run (the job-search skill)
 
@@ -25,7 +25,7 @@ The canonical flow is the
 [kiera-job-search skill](../ai_context/project/ai_harness/skills/kiera-job-search/SKILL.md),
 which any harness triggers from a chat request. It runs these steps:
 
-1. **Sync dependencies** with `uv sync` (fetches the pinned `ai_agent_core` git tag).
+1. **Sync dependencies** with `uv sync` (fetches the pinned `ai_agent_core` git rev).
 2. **Re-extract the profile** from the CV, with forced overwrite.
 3. **Restore the target fields** that extraction left for review. Extraction clears
    `target.roles` and `target.locations` every time, so the skill writes back the
@@ -82,7 +82,8 @@ skill passes these:
 - Check: run a live ingest. Every source should report a count, not `SKIP`.
 - Never paste key values into docs, commits, issue text or chat logs.
 - For a cloud LLM key, prefer the key-file or key-folder flags to the inline key flag, which puts the key in
-  shell history.
+  shell history. `ai_agent_core` reads no environment variable (0.14.0): a cloud key comes from those flags or
+  from `process.yaml` in `--config-dir` ([CONFIGURATION → Core configuration](CONFIGURATION.md#core-configuration)).
 
 ## Recovery
 
@@ -128,10 +129,10 @@ A local model was used on the 8 GB machine. Kill it, stop the local model server
 `default_mode: agent`, an empty `local.model`, and an empty cloud section.
 
 ### Missing ai_agent_core
-Symptoms: `uv sync` cannot fetch the pinned `ai_agent_core` git tag, or any command fails with an
+Symptoms: `uv sync` cannot fetch the pinned `ai_agent_core` git rev, or any command fails with an
 `ai_agent_core` import error. That includes `profile` and `ingest`, because the CLI imports the LLM judge at
 load time. The CLI's error message gives the same `uv sync` fix. Fix: check network/GitHub access to the
-`ai_agent_core` repo and that the pinned tag exists, then run `uv sync`.
+`ai_agent_core` repo and that the pinned rev exists, then run `uv sync`.
 
 ### Profile errors
 - `Profile not found` / `missing required fields`: re-run the extraction, or fix the YAML. The

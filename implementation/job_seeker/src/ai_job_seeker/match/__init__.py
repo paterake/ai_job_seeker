@@ -4,7 +4,7 @@ Public surface re-exports everything the CLI or downstream draft stage needs.
 
 ExecutionConfig/ExecutionMode (from ai_agent_core) are used only by the LLM
 judge gate (phase-2) for type checks. ai_agent_core is a required, pinned git
-dependency (tag v0.11.0, installed by `uv sync`); this package imports it at
+dependency (0.25.0, installed by `uv sync`); this package imports it at
 load via llm_judge.
 """
 
@@ -48,14 +48,14 @@ def _require_ai_agent_core_for_phase2() -> tuple[Any, Any]:
 
     Used only when the caller actually passes cfg AND mode (i.e. phase-2 LLM
     judge will run). ai_agent_core is a required, pinned git dependency
-    (tag v0.11.0) — this package already imports it at load via llm_judge.
+    (0.25.0) — this package already imports it at load via llm_judge.
     """
     try:
         from ai_agent_core.execution import ExecutionConfig as _EC, ExecutionMode as _EM
     except ImportError as e:
         raise ImportError(
             "ai_agent_core could not be imported — it is a pinned git "
-            "dependency (tag v0.11.0) required by every subcommand. Run "
+            "dependency (0.25.0) required by every subcommand. Run "
             "`uv sync` from the repo root to install it."
         ) from e
     return _EC, _EM
