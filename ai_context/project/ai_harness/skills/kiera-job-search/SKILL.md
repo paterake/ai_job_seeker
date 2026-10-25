@@ -48,8 +48,8 @@ If the user explicitly specifies **search terms** or a **location** in the same 
 Work from the repo root: `/Users/kierapatel/Documents/__code/git/emailrak/ai_job_seeker`. Every command must use `uv run …` (never install Python globally).
 
 **Step 1 — Sync dependencies.**
-- Run `uv sync` from the repo root. `ai-agent-core` is a pinned git dependency (tag `v0.11.0`, `==0.11.0`), fetched from GitHub; no sibling checkout is needed.
-- Every CLI command needs it installed (profile and ingest included). If the sync cannot fetch the tag, check network/GitHub access to `paterake/ai_agent_core` and stop with that hint.
+- Run `uv sync` from the repo root. `ai-agent-core` is a pinned git dependency (rev `f85333f`, `==0.25.0`), fetched from GitHub; no sibling checkout is needed.
+- Every CLI command needs it installed (profile and ingest included). If the sync cannot fetch the rev, check network/GitHub access to `paterake/ai_agent_core` and stop with that hint.
 
 **Step 2 — Re-extract profile YAML from Kiera's CV (always --force).**
 ```bash

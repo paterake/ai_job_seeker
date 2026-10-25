@@ -8,7 +8,8 @@
 #   --ollama-model              -> local
 #   (neither)                   -> agent   (default: the coding agent authors in-session, no API key)
 #
-# Secrets never live here. Cloud keys are read from the environment (.env, gitignored).
+# Secrets never live here. Cloud keys come from --llm-api-key-file/--llm-api-key-dir or process.yaml in
+# --config-dir (ai_agent_core reads no environment variable); see docs/CONFIGURATION.md.
 # Candidate PII (the profile YAML, draft output) lives under gitignored paths — this file
 # carries pointers only, never CV content or profile facts.
 
@@ -26,7 +27,7 @@ local:
 cloud:
   provider: ""               # e.g. "anthropic" — opt-in only, never defaulted
   model: ""                  # e.g. "claude-opus-5"
-  # api key resolved from env, not stored here
+  # api key resolved by ai_agent_core from a key file, not stored here; cloud also needs --llm-base-url
 
 # Profile-level defaults (mechanism, not facts). Draft stage + CV→YAML helpers use cv_dir
 # as the default location for the raw .docx/.pdf source CVs. Paths are resolved verbatim —
