@@ -47,7 +47,7 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 - Turn every agent failure into a structural fix (a rule, hook or check) and remove a constraint only on
   evidence that the failure no longer occurs. *Failures treated as one-offs recur* (behaviour spoke → Failure Harvest).
 - Tests are the repo's fixed catalogue, one set per delivered feature; a change keeps them passing and adds none.
-  A new test needs a newly delivered capability and the operator's approval (assurance spoke → Test Catalogue).
+  A new test needs a newly delivered capability and the operator's approval (`ai_harness/rules/assurance.md` → Test Catalogue).
   *A test per fix tracks change history, not intent, and buries what the repo delivers.*
 - Record major actions in a commit, an anchor doc or a capability-decision record. *Unrecorded actions cannot be audited.*
 
