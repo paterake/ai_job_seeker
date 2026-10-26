@@ -1,0 +1,24 @@
+# Job-source configuration for the contract search (mechanism, not candidate data).
+# Candidate scope (queries, roles, locations) lives in the gitignored profile YAML.
+# API keys come from the environment (ADZUNA_APP_ID, ADZUNA_APP_KEY, REED_API_KEY).
+
+sources:
+  adzuna:
+    enabled: true
+    country: gb
+    base_url: "https://api.adzuna.com/v1/api/jobs"
+    results_per_page: 50
+    max_pages: 3
+
+  reed:
+    enabled: true
+    base_url: "https://www.reed.co.uk/api/1.0/search"
+    results_to_take: 100
+
+  themuse:
+    enabled: false                    # 403 without a key, and the shared ingest aborts on any non-200
+    base_url: "https://www.themuse.com/api/public/jobs"
+
+filters:
+  max_age_days: 14                    # contract roles fill fast
+  dedupe_on: ["title", "company"]

@@ -58,6 +58,23 @@ and position), use the
 writes to the local store, which the next match run filters on, and it mirrors the rows to the
 tracker sheet through the browser.
 
+## Contract search (contract-role shortlist)
+
+Run from the repo root, with the board keys in the environment (a new interactive zsh loads them via `secret-set`):
+
+```bash
+uv sync
+uv run contract-search run            # live ingest, score, write the shortlist
+uv run contract-search run --dry-run  # synthetic listings, no API calls
+```
+
+Flags: `--top N` (default 25), `--profile`, `--search-config`, `--scoring-config`, `--output-dir`. The command
+prints counts fetched, kept and dropped by reason, any `SKIP <source>` line, and the paths of
+`latest_shortlist.md` and `.json` under `implementation/contract_search/config/output/`. The agent skill is
+[paterake-job-search](../ai_context/project/ai_harness/skills/paterake-job-search/SKILL.md). Config:
+[CONFIGURATION → Contract search](CONFIGURATION.md#contract-search). A `SKIP` means that board's key is not set;
+an `error: ingest failed: … HTTP <code>` aborts the run, as in [Recovery](#recovery).
+
 ## Output folders
 
 The output root is `implementation/job_seeker/config/output/` (gitignored). Only the applied-jobs store defaults

@@ -1,7 +1,8 @@
 # ai_job_seeker
 
-An AI-assisted job-search pipeline for one candidate: CV to profile, live job-board ingest, and a two-section
-ranked shortlist for human review. It never sends anything.
+An AI-assisted job-search pipeline: CV to profile, live job-board ingest, and a ranked shortlist for human review.
+It has two separate components, a graduate pipeline (`implementation/job_seeker`) and a contract-role search
+(`implementation/contract_search`), each with its own profile and results. It never sends anything.
 
 - Intent, guarantees and limitations: [ai_context/project/INTENT.md](ai_context/project/INTENT.md)
 - Running and recovery: [docs/RUNBOOK.md](docs/RUNBOOK.md)

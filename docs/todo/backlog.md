@@ -10,7 +10,7 @@ Repo backlog (anchor doc). Intent and guarantees live in
 
 - **Status:** Profile, live ingest (Adzuna, Reed, The Muse), and dual-cohort match + rank are
   built and in use. Draft and Packet are not built.
-- **Next:** none. Stage 4 (Draft) is parked until the operator asks for it (operator 2026-10-25).
+- **Next:** item 6 (contract-search follow-ups) when the operator wants more sources. Stage 4 (Draft) is parked until the operator asks for it (operator 2026-10-25).
 - **Before touching code, read:** [ai_context/project/ASSISTANTS.md](../../ai_context/project/ASSISTANTS.md),
   [REPO_CONTRACT.md](../../ai_context/project/governance/REPO_CONTRACT.md),
   [INTENT.md](../../ai_context/project/INTENT.md), and `## Accumulated Active Constraints` below. Stage 4 builds
@@ -27,6 +27,7 @@ Repo backlog (anchor doc). Intent and guarantees live in
 | 3 | User action: review the candidate profile with Kiera — confirm `target.roles` / `remote` and the audit-role end date | ⬜ open (user) | [CONFIGURATION → Candidate profile](../CONFIGURATION.md#candidate-profile-profilecandidateyaml) |
 | 4 | Defects and gaps found in the 2026-10-11 docs audit (salary key mismatch, empty shortlist exits 0, silent exclusions disable, hard-coded cohort keywords, `cli.py` size, no capability-decision record for the CV extractor, no phase-2 eval, whole profile incl. contact details in the phase-2 prompt; since core 0.13 `backend.yaml` `cloud` has no `base_url` key, so cloud mode set there fails without `--llm-base-url`, found 2026-10-25) | ⬜ open — triage | [INTENT → Known Limitations](../../ai_context/project/INTENT.md#known-limitations) |
 | 5 | Exception `EXC-2026-10-12-001` scope still names the Adzuna values "in docs/TODO.md"; since 394a86a they are only in git history (flagged 2026-10-22) | ⏸ parked — operator: not an issue (2026-10-22) | [exception_registry.yaml](../../ai_context/project/governance/exception_registry.yaml) |
+| 6 | Contract search: extend sources beyond Adzuna and Reed (CWJobs, JobServe: no public job-seeker API or feed found 2026-10-26, email alerts only; their terms were not read); fix the shared ingest aborting on any single source's HTTP error; Reed returned no contract type in the first live run | ⬜ open | [INTENT → Known Limitations](../../ai_context/project/INTENT.md#known-limitations) |
 
 ---
 

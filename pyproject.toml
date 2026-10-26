@@ -5,16 +5,18 @@ description = "Multi-implementation workspace — job-selection management facet
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "ai-job-seeker",
+    "contract-search",
 ]
 
 [tool.uv.workspace]
-members = ["implementation/job_seeker"]
+members = ["implementation/job_seeker", "implementation/contract_search"]
 
 [tool.uv.sources]
 ai-agent-core = { git = "https://github.com/paterake/ai_agent_core.git", rev = "231e46f4c7ffc1d1c6dbfa698a0326d8786488a8", subdirectory = "implementation/ai_agent_core" }
 ai-job-seeker = { workspace = true }
+contract-search = { workspace = true }
 
 [tool.pytest.ini_options]
 cache_dir = ".ignore/.pytest_cache"
 addopts = ["--import-mode=importlib"]
-pythonpath = ["implementation/job_seeker/src"]
+pythonpath = ["implementation/job_seeker/src", "implementation/contract_search/src"]

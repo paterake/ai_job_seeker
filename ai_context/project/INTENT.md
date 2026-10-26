@@ -17,6 +17,10 @@ independent cohorts in a single human-readable shortlist. Every score carries ev
 deterministic and needs no model. An optional LLM judge adds a second score, and planned later stages (Draft,
 Packet) draft tailored applications. Nothing is ever sent without explicit human approval.
 
+A second, separate component serves a different candidate: a senior contractor looking for contract roles in data and AI,
+ideally outside IR35, remote or London. It reuses the same ingest and shares none of the graduate pipeline's
+scoring, exclusions or profile, so changing one candidate's search cannot change the other's results.
+
 ## Scope and Boundaries
 
 **Owns:**
@@ -27,6 +31,9 @@ Packet) draft tailored applications. Nothing is ever sent without explicit human
 - The local applied-jobs store and the filter that removes applied roles from later runs.
 - The prompt, output schema and result validation of the phase-2 LLM judge.
 - The output folder convention (stable aliases, timestamped archive, 7-day retention).
+- The contract-search component (`implementation/contract_search`): its own config-driven scorer (contract, IR35,
+  remote and location signals read from advert text), profile, search config and shortlist. It imports the
+  ingest layer unchanged and nothing from the graduate pipeline's match package.
 
 **Delegates:**
 - To the shared LLM substrate (`ai_agent_core`): choosing the backend mode (agent, local or cloud), provider
@@ -39,7 +46,9 @@ Packet) draft tailored applications. Nothing is ever sent without explicit human
 **Non-goals:**
 - Submitting applications, emailing recruiters, or any automated outbound communication.
 - Logging in to job sites, or storing credentials for them.
-- Serving more than one candidate at a time. The pipeline runs against one profile per run.
+- Serving more than one candidate in one run. Each component runs against one profile per run; the graduate
+  pipeline and the contract search are separate components with separate profiles and outputs.
+- Inferring IR35 status. The contract search reports it only when the advert states it.
 
 ## Guarantees
 
@@ -182,6 +191,8 @@ criteria are to be written when the stage is designed.
 | Cohort B widens role matching with its own keywords, for Cohort B only | The marketing-heavy target-role list scores genuine research, policy and archive roles at zero role overlap, and the bonus alone cannot lift them into the top 25; scoping it to Cohort B leaves Cohort A's order unchanged |
 | A stable "latest" alias plus a 7-day timestamped archive | A re-run never destroys the previous deliverable, and the folder the candidate opens stays clean |
 | Postings are data only: ingest never interprets them, and the phase-2 prompt puts them in a labelled untrusted block after the instructions | The repo combines PII, untrusted content and (planned) outbound channels; ingest reads board credentials in the same process that fetches postings, which is a mechanical HTTP call with no LLM context |
+| A second candidate gets a separate component, not a mode of the graduate pipeline (operator 2026-10-26) | The graduate scorer hard-blocks engineer and architect titles and carries graduate keyword sets in code; sharing it would either break the contract search or change the graduate candidate's results |
+| The contract search reads contract, IR35 and remote status from explicit advert phrases kept in config, and ranks rather than drops on IR35 | The phrases are fixed text that exact patterns recover (config-driven, no model); most adverts do not state IR35, so dropping unstated ones would hide valid roles |
 | The CV extractor is a deterministic parser for one graduate-CV layout, recognised by section headers | No capability-decision record exists for it, so it is a candidate for capability-fit review |
 
 ## Outside Constraints
@@ -211,6 +222,8 @@ criteria are to be written when the stage is designed.
   cohort keyword sets and the CV-strength synonyms are not in config, so changing them needs a code change.
 - **Salary component never fires on extracted profiles.** The scorer reads an expected-minimum salary key that
   extraction does not write (extraction writes a differently named key).
+- **Contract search signals are advert text only.** Listings that never say contract, IR35 or day rate are
+  dropped or shown as `unstated`; the boards' truncated descriptions can hide a signal the full advert has.
 - **Search terms.** Comma-separated terms are joined into a single all-words query, so multi-concept searches
   narrow rather than widen.
 - **Inconsistent key normalisation.** The applied-jobs filter and the pool merge lowercase and trim, but do not

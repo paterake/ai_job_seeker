@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11, <3.14"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -11,6 +11,7 @@ resolution-markers = [
 members = [
     "ai-job-seeker",
     "ai-job-seeker-workspace",
+    "contract-search",
 ]
 
 [[package]]
@@ -77,10 +78,14 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "ai-job-seeker" },
+    { name = "contract-search" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "ai-job-seeker", editable = "implementation/job_seeker" }]
+requires-dist = [
+    { name = "ai-job-seeker", editable = "implementation/job_seeker" },
+    { name = "contract-search", editable = "implementation/contract_search" },
+]
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -583,6 +588,29 @@ sdist = { url = "https://files.pythonhosted.org/packages/ca/65/efd0fe8a936fc8ca2
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8d/e4/d66708bdf0d92fb4d49b22cdff4b10cec38aca5dcd7e81d909bb55c65cd7/confection-1.3.3-py3-none-any.whl", hash = "sha256:b9fef9ee84b237ef4611ec3eb5797b70e13063e6310ad9f15536373f5e313c82", size = 35902, upload-time = "2026-03-24T18:45:22.664Z" },
 ]
+
+[[package]]
+name = "contract-search"
+version = "0.1.0"
+source = { editable = "implementation/contract_search" }
+dependencies = [
+    { name = "ai-job-seeker" },
+    { name = "pyyaml" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ai-job-seeker", editable = "implementation/job_seeker" },
+    { name = "pyyaml", specifier = ">=6.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.0.2" }]
 
 [[package]]
 name = "coverage"

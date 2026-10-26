@@ -2,7 +2,8 @@
 
 This doc covers config files, keys, defaults and rationale only. When to run what is in
 [RUNBOOK.md](RUNBOOK.md); intent and limitations are in [INTENT.md](../ai_context/project/INTENT.md). Every
-config file lives in `implementation/job_seeker/config/`.
+config file lives in `implementation/job_seeker/config/`, except the contract search's, which are listed under
+[Contract search](#contract-search).
 
 | File | Tracked in git | Owns |
 |---|---|---|
@@ -122,3 +123,20 @@ Cloud mode also needs `--llm-base-url`: the core has no default endpoint (0.13.0
 - Applied-jobs store default: `output/_pipeline/applied_jobs.json`.
 - Archive retention is 7 days. That is a code constant, not config.
 - The full layout convention is in [RUNBOOK.md → Output folders](RUNBOOK.md#output-folders).
+
+## Contract search
+
+Config for `implementation/contract_search/config/`. Each file declares its keys, and the loader fails on an
+undeclared or missing key.
+
+| File | Tracked in git | Owns |
+|---|---|---|
+| `search.yaml` | yes | Job sources (Adzuna, Reed; The Muse is disabled because it returns 403 without a key) and the age filter (14 days) |
+| `scoring.yaml` | yes | Contract, day-rate, IR35 and remote patterns (case-insensitive regexes over title and description), the valid `target.remote` modes (`remote_modes`) and which of them skip the location-free query pass (`remote_modes_without_location_pass`), blocked title phrases, and the score weights |
+| `profile/<candidate>.yaml` | **no** (gitignored PII) | Identity, `skills`, and `target`: `queries` (one ingest pass each), `title_weights` (best phrase found in the title sets the title score, 1-100), `locations`, `remote` |
+| `output/` | **no** (gitignored) | `latest_shortlist.{md,json}` plus a timestamped copy in `_archive/` |
+
+Keys come from the same environment variables as above (`ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`).
+A listing is dropped when its title is outside `title_weights`, matches a blocked phrase, is permanent or has no
+contract signal (`require_contract`), or is neither in a target location nor remote. IR35 changes the score
+(outside +20, inside -30) and is `unstated` when the advert does not say.

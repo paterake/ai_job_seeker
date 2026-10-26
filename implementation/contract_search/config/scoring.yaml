@@ -1,0 +1,64 @@
+# Scoring policy for the contract search (mechanism, not candidate data).
+# Candidate-specific inputs (title weights, skills, locations, queries) live in the
+# gitignored profile YAML. Patterns are case-insensitive regexes over title + description.
+
+require_contract: true                # drop listings with no contract signal
+blocked_contract_types: ["permanent", "part_time"]   # dropped unless a strong contract pattern matches
+
+# Strong signals that the engagement is a contract (day rate, IR35, fixed-term contract).
+contract_patterns:
+  - '\bir35\b'
+  - '\bday rate\b'
+  - '\b\d{1,2}[- ]month(?:s)? (?:initial )?contract\b'
+
+# Day rate, with named groups lo and hi (hi optional). A match is also a strong contract signal.
+day_rate_pattern: '£\s*(?P<lo>\d{3,4})(?:\s*(?:-|–|to)\s*£?\s*(?P<hi>\d{3,4}))?\s*(?:per day|p/?d\b|a day|/\s*day|daily)'
+
+# Patterns that count only when they match the title.
+contract_title_patterns:
+  - '\bcontract\b'
+  - '\binterim\b'
+  - '\bfreelance\b'
+
+ir35_outside_patterns:
+  - 'outside\s+(?:of\s+)?ir35'
+  - 'ir35\s*[:\-]?\s*outside'
+  - 'not\s+(?:caught\s+by\s+|subject\s+to\s+)?ir35'
+  - 'not\s+inside\s+(?:of\s+)?ir35'
+ir35_inside_patterns:
+  - '(?<!not )inside\s+(?:of\s+)?ir35'
+  - 'ir35\s*[:\-]?\s*inside'
+  - 'umbrella\s+(?:company\s+)?only'
+
+remote_patterns:
+  - '\bremote\b'
+  - 'work(?:ing)? from home'
+  - '\bwfh\b'
+
+# Valid values of the profile's target.remote, and the ones that mean "no location-free query pass".
+remote_modes: [remote_only, hybrid_or_remote_ok, onsite_only]
+remote_modes_without_location_pass: [onsite_only]
+
+blocked_title_phrases:
+  - junior
+  - graduate
+  - intern
+  - internship
+  - apprentice
+  - apprenticeship
+  - trainee
+  - placement
+
+seniority_phrases: ["lead", "principal", "senior", "head of", "chief", "interim"]
+
+weights:
+  title_max: 40            # best matching profile title weight is scaled to this
+  ir35_outside: 20
+  ir35_inside: -30
+  remote: 10
+  in_target_location: 10
+  seniority: 5
+  skills_per_match: 2
+  skills_max: 20
+  fresh: 5                 # posted within half of filters.max_age_days
+  day_rate_stated: 3

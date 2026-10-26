@@ -5,4 +5,4 @@ Index only: one row per backlog file. Items live in the backlog files
 
 | Backlog | Status | Description |
 |---|---|---|
-| [todo/backlog.md](todo/backlog.md) | open | Repo backlog: Stage 4 Draft, Stage 5 Packet, profile review with Kiera, 2026-10-11 audit triage |
+| [todo/backlog.md](todo/backlog.md) | open | Repo backlog: Stage 4 Draft, Stage 5 Packet, profile review with Kiera, 2026-10-11 audit triage, contract-search follow-ups |
