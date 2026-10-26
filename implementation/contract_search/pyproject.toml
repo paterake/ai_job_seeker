@@ -6,6 +6,7 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     "ai-job-seeker",
     "pyyaml>=6.0",
+    "requests>=2.32.0",
 ]
 
 [project.scripts]

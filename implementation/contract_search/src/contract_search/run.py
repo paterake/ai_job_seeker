@@ -10,6 +10,7 @@ from pathlib import Path
 from ai_job_seeker.ingest import IngestConfig, dedupe_listings, run_ingest, run_ingest_dry
 from ai_job_seeker.ingest.schema import JobListing
 
+from contract_search.apify_source import ApifyConfig, gather_apify
 from contract_search.config import ConfigError, Profile, Scoring
 from contract_search.score import Scored, score_listing
 
@@ -22,7 +23,7 @@ class RunResult:
     skips: list[tuple[str, str]] = field(default_factory=list)
 
 
-def gather(cfg: IngestConfig, profile: Profile, policy: Scoring, *, dry_run: bool) -> tuple[list[JobListing], list[tuple[str, str]]]:
+def gather(cfg: IngestConfig, profile: Profile, policy: Scoring, *, dry_run: bool, apify: ApifyConfig | None = None) -> tuple[list[JobListing], list[tuple[str, str]]]:
     """One ingest pass per query. Remote roles are not tied to a place, so each query
     also runs without a location unless the profile is on-site only."""
     if dry_run:
@@ -38,6 +39,10 @@ def gather(cfg: IngestConfig, profile: Profile, policy: Scoring, *, dry_run: boo
             res = run_ingest(cfg, [query], place)
             listings.extend(res.listings)
             skips.extend(s for s in res.source_skips if s not in skips)
+    if apify is not None:
+        extra, extra_skips = gather_apify(apify, profile)
+        listings.extend(extra)
+        skips.extend(extra_skips)
     return dedupe_listings(listings, cfg), skips
 
 
@@ -47,12 +52,13 @@ def run_search(
     policy: Scoring,
     *,
     dry_run: bool = False,
+    apify: ApifyConfig | None = None,
     top: int = 25,
     now: datetime | None = None,
 ) -> RunResult:
     if profile.remote not in policy.remote_modes:
         raise ConfigError(f"profile target.remote {profile.remote!r} is not one of {sorted(policy.remote_modes)}")
-    listings, skips = gather(cfg, profile, policy, dry_run=dry_run)
+    listings, skips = gather(cfg, profile, policy, dry_run=dry_run, apify=apify)
     result = RunResult(fetched=len(listings), skips=skips)
     for listing in listings:
         out = score_listing(listing, profile, policy, max_age_days=cfg.max_age_days, now=now)

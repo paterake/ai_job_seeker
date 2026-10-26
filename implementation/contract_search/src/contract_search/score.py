@@ -75,8 +75,9 @@ def score_listing(
     score = round(title_weight * w["title_max"] / 100)
     evidence.append(f"title match +{score}")
 
-    outside = _any(policy.ir35_outside, text)
-    inside = _any(policy.ir35_inside, text)
+    stated = (listing.raw or {}).get("ir35")
+    outside = _any(policy.ir35_outside, text) or stated == "outside"
+    inside = _any(policy.ir35_inside, text) or stated == "inside"
     if outside and not inside:
         ir35 = "outside"
         score += w["ir35_outside"]

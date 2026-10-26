@@ -91,3 +91,9 @@ def test_loader_rejects_undeclared_key(tmp_path):
 def test_not_inside_ir35_is_scored_outside(profile, policy):
     r = score(make(desc="Contract role, not inside IR35 per the client."), profile, policy)
     assert r.ir35 == "outside"
+
+
+def test_actor_stated_ir35_is_honoured(profile, policy):
+    lst = make(desc="Great team.", contract_type="contract")
+    lst.raw = {"ir35": "inside"}
+    assert score(lst, profile, policy).ir35 == "inside"

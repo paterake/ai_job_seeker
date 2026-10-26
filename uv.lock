@@ -596,6 +596,7 @@ source = { editable = "implementation/contract_search" }
 dependencies = [
     { name = "ai-job-seeker" },
     { name = "pyyaml" },
+    { name = "requests" },
 ]
 
 [package.dev-dependencies]
@@ -607,6 +608,7 @@ dev = [
 requires-dist = [
     { name = "ai-job-seeker", editable = "implementation/job_seeker" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "requests", specifier = ">=2.32.0" },
 ]
 
 [package.metadata.requires-dev]

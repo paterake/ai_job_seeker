@@ -1,0 +1,54 @@
+# Apify actors used as extra job sources (mechanism, not candidate data). Opt-in: `contract-search run --apify`.
+# The API token comes from the environment (APIFY_API_TOKEN, set with `secret-set`); it is never stored here.
+# Only LIMITED_PERMISSIONS actors belong here: a FULL_PERMISSIONS actor gets access to the whole Apify account.
+# Cost is per result (Apify pay-per-event), so keep max_results small; the free plan has $5 a month.
+
+base_url: "https://api.apify.com/v2"
+request_timeout_s: 30        # each HTTP call
+poll_interval_s: 5           # between run-status checks
+max_wait_s: 240              # a run still going this long after it started is aborted (stops billing) and the actor is skipped
+max_queries: 3               # profile queries sent per actor run (cost control)
+
+actors:
+  cwjobs:
+    actor: "santamaria-automations~cwjobs-uk-scraper"
+    query_field: searchQueries          # list of keyword queries
+    query_suffix: " contract"           # appended to each profile query
+    location_field: location
+    input:
+      sortBy: newest
+      includeJobDetails: true
+      maxResults: 30
+      maxResultsPerQuery: 6
+    fields:                             # JobListing field <- actor output field
+      id: id
+      title: title
+      company: company_name
+      location: location
+      description: description_full
+      url: apply_url                    # the Totaljobs apply link; CWJobs and Totaljobs share one inventory
+      posted_at: posted_at_datetime
+      contract_type: employment_type
+      rate: salary_text                 # prepended to the description so the day-rate pattern sees it
+      ir35: ir35_status                 # outside | inside | undetermined | null
+
+  jobserve:
+    actor: "solidcode~jobserve-scraper"   # honours keywords; the santamaria JobServe actor ignored them (2026-10-26)
+    query_field: keywords
+    query_suffix: ""
+    location_field: location
+    input:
+      jobType: "2"                        # Contract
+      includeDescription: true
+      maxResults: 30
+    fields:
+      id: reference
+      title: title
+      company: company
+      location: location
+      description: description
+      url: applyUrl
+      posted_at: postedDateTime
+      contract_type: jobType
+      rate: rate                          # carries the IR35 wording; the IR35 patterns read it from the description
+      ir35: ir35_status                   # this actor has no such field, so IR35 comes from the rate text

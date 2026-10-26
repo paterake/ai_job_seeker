@@ -134,9 +134,17 @@ undeclared or missing key.
 | `search.yaml` | yes | Job sources (Adzuna, Reed; The Muse is disabled because it returns 403 without a key) and the age filter (14 days) |
 | `scoring.yaml` | yes | Contract, day-rate, IR35 and remote patterns (case-insensitive regexes over title and description), the valid `target.remote` modes (`remote_modes`) and which of them skip the location-free query pass (`remote_modes_without_location_pass`), blocked title phrases, and the score weights |
 | `profile/<candidate>.yaml` | **no** (gitignored PII) | Identity, `skills`, and `target`: `queries` (one ingest pass each), `title_weights` (best phrase found in the title sets the title score, 1-100), `locations`, `remote` |
+| `apify.yaml` | yes | Opt-in Apify actors for CWJobs and JobServe: actor ids, input templates, the output-field mapping, `max_queries`, polling and wait limits |
 | `output/` | **no** (gitignored) | `latest_shortlist.{md,json}` plus a timestamped copy in `_archive/` |
 
 Keys come from the same environment variables as above (`ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`).
 A listing is dropped when its title is outside `title_weights`, matches a blocked phrase, is permanent or has no
 contract signal (`require_contract`), or is neither in a target location nor remote. IR35 changes the score
 (outside +20, inside -30) and is `unstated` when the advert does not say.
+
+`--apify` adds CWJobs and JobServe through Apify. It needs `APIFY_API_TOKEN` in the environment (set with
+`secret-set`) and spends Apify credit: the free plan has $5 a month, and a run with three queries costs about
+$0.25-0.30. Without the token, or if Apify refuses a call, each actor is recorded as a skip and the run goes on. A run
+that outlives `max_wait_s` is aborted. Use only actors with limited permissions: an actor that asks for full access
+to the Apify account does not belong in `apify.yaml`. CWJobs adverts apply through Totaljobs (one shared inventory),
+so the CWJobs actor's apply link is the listing URL and no separate Totaljobs actor is configured.

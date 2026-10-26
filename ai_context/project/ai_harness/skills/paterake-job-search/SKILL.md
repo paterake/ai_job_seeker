@@ -10,12 +10,12 @@ Runs `contract-search`, the package in `implementation/contract_search/`. It is 
 ## Preconditions
 
 - The profile `implementation/contract_search/config/profile/paterake.yaml` exists (gitignored, hand-written from the CV). If it is missing, stop and ask; do not invent one from a CV you have not read.
-- Board keys are in the environment: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY` (set with `secret-set`; a new interactive zsh loads them). Check presence only, never print a value. If the run reports `SKIP <source>`, the key is missing: tell the user which one.
+- Board keys are in the environment: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `REED_API_KEY`, and `APIFY_API_TOKEN` for `--apify` (set with `secret-set`; a new interactive zsh loads them). Check presence only, never print a value. If the run reports `SKIP <source>`, the key is missing: tell the user which one.
 
 ## Steps
 
 1. From the repo root: `uv sync`.
-2. Run `uv run contract-search run` (add `--top N` for a longer list; `--dry-run` tests the plumbing with no API calls). If the keys are not in your shell, run it through `zsh -ic "cd <repo root> && uv run contract-search run"`.
+2. Run `uv run contract-search run` (add `--top N` for a longer list; `--apify` adds CWJobs and JobServe via Apify and spends credit from the free $5 a month, so use it when the user wants those boards; `--dry-run` tests the plumbing with no API calls). If the keys are not in your shell, run it through `zsh -ic "cd <repo root> && uv run contract-search run"`.
 3. Report the printed counts (fetched, kept, dropped by reason), any `SKIP` lines, and the paths of `latest_shortlist.md` and `latest_shortlist.json` under `implementation/contract_search/config/output/`.
 4. Summarise the top roles from the markdown: title, company, location or remote, IR35 as stated, day rate if stated, link. Keep IR35 as the advert states it: `unstated` means the advert did not say, never infer it.
 

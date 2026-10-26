@@ -32,7 +32,8 @@ scoring, exclusions or profile, so changing one candidate's search cannot change
 - The prompt, output schema and result validation of the phase-2 LLM judge.
 - The output folder convention (stable aliases, timestamped archive, 7-day retention).
 - The contract-search component (`implementation/contract_search`): its own config-driven scorer (contract, IR35,
-  remote and location signals read from advert text), profile, search config and shortlist. It imports the
+  remote and location signals read from advert text), profile, search config, opt-in Apify sources (CWJobs,
+  JobServe) and shortlist. It imports the
   ingest layer unchanged and nothing from the graduate pipeline's match package.
 
 **Delegates:**

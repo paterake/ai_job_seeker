@@ -66,9 +66,10 @@ Run from the repo root, with the board keys in the environment (a new interactiv
 uv sync
 uv run contract-search run            # live ingest, score, write the shortlist
 uv run contract-search run --dry-run  # synthetic listings, no API calls
+uv run contract-search run --apify    # also CWJobs and JobServe via Apify (uses Apify credit)
 ```
 
-Flags: `--top N` (default 25), `--profile`, `--search-config`, `--scoring-config`, `--output-dir`. The command
+Flags: `--top N` (default 25), `--apify`, `--apify-config`, `--profile`, `--search-config`, `--scoring-config`, `--output-dir`. The command
 prints counts fetched, kept and dropped by reason, any `SKIP <source>` line, and the paths of
 `latest_shortlist.md` and `.json` under `implementation/contract_search/config/output/`. The agent skill is
 [paterake-job-search](../ai_context/project/ai_harness/skills/paterake-job-search/SKILL.md). Config:
