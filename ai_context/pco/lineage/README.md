@@ -1,5 +1,5 @@
 # Registries, Versioning & Lineage (Spoke)
-> DAMA mapping: Metadata Management → Registries, Versioning & Lineage
+> Area: Registries, Versioning & Lineage
 
 ## Governs
 

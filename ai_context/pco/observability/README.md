@@ -1,5 +1,5 @@
 # Observability, Analytics & FinOps (Spoke)
-> DAMA mapping: Data Warehousing & Business Intelligence → Observability, Analytics & FinOps
+> Area: Observability, Analytics & FinOps
 
 ## Governs
 

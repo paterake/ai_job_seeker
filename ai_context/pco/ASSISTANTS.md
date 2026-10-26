@@ -5,7 +5,7 @@ What to do: the core, the path-scoped rules (last column; the harness loads each
 read them pre-emptively) and the governance docs below. Spokes are narrative (scope, what is enforced, named
 gaps); read one only when a task needs it.
 
-## Spokes (DAMA-DMBOK wheel → agent harness)
+## Spokes (agent harness)
 
 The model and the reason each spoke exists: [governance/HUB.md](governance/HUB.md).
 

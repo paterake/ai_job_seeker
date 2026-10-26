@@ -1,5 +1,5 @@
 # Identity, Policy & Configuration Master Data (Spoke)
-> DAMA mapping: Reference & Master Data → Identity, Policy & Configuration Master Data
+> Area: Identity, Policy & Configuration Master Data
 
 ## Governs
 

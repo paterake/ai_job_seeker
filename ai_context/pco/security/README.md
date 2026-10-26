@@ -1,5 +1,5 @@
 # Security & Safety (Spoke)
-> DAMA mapping: Data Security → Agent Security & Safety
+> Area: Agent Security & Safety
 
 ## Governs
 

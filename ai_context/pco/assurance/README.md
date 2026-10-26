@@ -1,5 +1,5 @@
 # Assurance & Evals (Spoke)
-> DAMA mapping: Data Quality Management → Assurance, Evals & Continuous Improvement
+> Area: Assurance, Evals & Continuous Improvement
 
 ## Governs
 

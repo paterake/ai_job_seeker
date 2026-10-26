@@ -1,5 +1,5 @@
 # Tooling & Integration (Spoke)
-> DAMA mapping: Data Integration & Interoperability → Tooling & Integration
+> Area: Tooling & Integration
 
 ## Governs
 

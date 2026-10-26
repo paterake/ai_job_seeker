@@ -1,5 +1,5 @@
 # Knowledge & Content (Spoke)
-> DAMA mapping: Document & Content Management → Knowledge & Content Management
+> Area: Knowledge & Content Management
 
 ## Governs
 

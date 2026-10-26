@@ -1,7 +1,7 @@
 # Agent Core — governed repo
 
 Always loaded at session start, from the synced layer.
-Everything else loads on demand: path-scoped rules arrive with matching files, and the DMBOK spoke index is `ai_context/pco/ASSISTANTS.md`.
+Everything else loads on demand: path-scoped rules arrive with matching files, and the spoke index is `ai_context/pco/ASSISTANTS.md`.
 The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 
 ## Before you start

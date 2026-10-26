@@ -1,5 +1,5 @@
 # Behaviour Design (Spoke)
-> DAMA mapping: Data Modelling & Design → Agent Behaviour Modelling & Design
+> Area: Agent Behaviour Modelling & Design
 
 ## Governs
 

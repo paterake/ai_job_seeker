@@ -1,5 +1,5 @@
 # Operations (Spoke)
-> DAMA mapping: Data Storage & Operations → Agent Runtime & Operations
+> Area: Agent Runtime & Operations
 
 ## Governs
 

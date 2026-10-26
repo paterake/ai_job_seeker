@@ -6,7 +6,7 @@
 - Who may change a rule, and how a change is proposed, approved and synced
 - Capability tiers and the supervision (autonomy) model
 - The independent review pattern
-- The spokes, one per DAMA knowledge area
+- The spokes, one per area
 
 ## Enforced
 
@@ -178,6 +178,5 @@ Position and conformance declarations: [CONTRACT.md](CONTRACT.md) → Special Ca
 
 ## Spokes
 
-One spoke per DAMA-DMBOK knowledge area, mapped to its agent-harness equivalent. Each spoke README opens with its
-DAMA mapping and states what the area governs, what is enforced and the named gaps. The list of spokes, with the
+One spoke per area of the agent harness. Each spoke README opens with the area it governs and states what the area governs, what is enforced and the named gaps. The list of spokes, with the
 rules each one owns, is the spoke index: [ASSISTANTS.md](../ASSISTANTS.md).

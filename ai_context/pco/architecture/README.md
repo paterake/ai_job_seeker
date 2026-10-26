@@ -1,5 +1,5 @@
 # Architecture (Spoke)
-> DAMA mapping: Data Architecture → Agent Architecture
+> Area: Agent Architecture
 
 ## Governs
 
