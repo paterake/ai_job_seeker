@@ -23,11 +23,12 @@ Missing any of these is a blocker, not a backlog item.
 | `docs/CONFIGURATION.md` | Config keys, defaults, rationale — [code-blind](#configurationmd-code-blind-definition) | Domain values leak into code; reuse across datasets requires code changes |
 | `docs/TODO.md` † | Backlog index: one row per backlog file (open, in progress or archived), holding no items ([TODO File Structure](#todo-file-structure)) | Backlog continuity breaks; sessions re-derive state |
 
-† **`docs/TODO.md` is required only while the module (or repo) has open backlog.** Once
-the backlog is closed and `docs/TODO.md` removed, its absence is permitted and must not be treated
-as a blocker. A missing `docs/TODO.md` is a violation only when the module still has open backlog
-items (e.g. an Alpha module with open maturity gaps); otherwise an intentional retirement and a
-drift defect are indistinguishable to `docs-alignment`.
+† **`docs/TODO.md` exists only at the repo root, and is required only while the repo has open backlog.** A
+module directory has no `TODO.md` or `todo/` folder; its items live in the repo's backlogs and name the module.
+Once the backlog is closed and `docs/TODO.md` removed, its absence is permitted and must not be treated
+as a blocker. A missing `docs/TODO.md` is a violation only when open backlog items remain (e.g. an Alpha
+module's maturity gaps); otherwise an intentional retirement and a drift defect are indistinguishable to
+`docs-alignment`.
 
 ‡ **`docs/RUNBOOK.md` is required only when the module (or repo) is set up and run from its own checkout.** A
 library that runs only inside its consumers has no operations of its own: each consumer's runbook owns the
@@ -56,7 +57,8 @@ blocker.
 ### TODO File Structure
 
 `docs/TODO.md` is the single backlog index — the only TODO file in the `docs/` root. The work lives in the
-backlog files under `docs/todo/`.
+backlog files under `docs/todo/`. These sit at the repo root only; no module directory holds a `TODO.md` or a
+`todo/` folder, and an item names the module it concerns.
 
 | Location | Purpose |
 |----------|---------|
@@ -70,11 +72,8 @@ decide together whether to archive it (move it to `docs/todo/archive/`, index st
 it no longer needed. Its deferred or parked items move, by the same discussion, into another backlog.
 
 **Consequence**: items or history in the index give each fact two homes that drift, and every session starting
-there loads what it does not use; named `TODO_<X>.md` files in the docs root make the live backlog
-indistinguishable from session artefacts.
-
-**Implementation-level TODOs** use the same structure inside the implementation (`<implementation>/docs/TODO.md`,
-`<implementation>/docs/todo/`), never the project root.
+there loads what it does not use; a TODO file per module hides backlog from an agent working across modules;
+named `TODO_<X>.md` files in the docs root make the live backlog indistinguishable from session artefacts.
 
 ---
 

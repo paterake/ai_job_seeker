@@ -54,9 +54,9 @@ reading them as stated facts.
 
 | Work type | Anchor doc location |
 |---|---|
-| Cross-repo or cross-module work | `docs/todo/<tracker>.md` in the affected root repo |
-| Single-module backlog | `<module>/docs/todo/<backlog>.md`, indexed in `<module>/docs/TODO.md` |
-| Contract/maturity gaps | the module's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Required Set); `INTENT.md` → Known Limitations references it |
+| Work in one repo, including one module's backlog | `docs/todo/<backlog>.md` at the repo root, indexed in the root `docs/TODO.md`; the item names the module ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → TODO File Structure) |
+| Cross-repo work | `docs/todo/<tracker>.md` in the affected root repo |
+| Contract/maturity gaps | the repo's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Required Set); `INTENT.md` → Known Limitations references it |
 
 ## Constraint Inheritance Rule
 
