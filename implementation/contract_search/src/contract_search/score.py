@@ -50,7 +50,9 @@ def score_listing(
     w = policy.weights
     evidence: list[str] = []
 
-    for phrase in policy.blocked_title_phrases:
+    blocked = profile.blocked_title_phrases if profile.blocked_title_phrases is not None else policy.blocked_title_phrases
+    seniority = profile.seniority_phrases if profile.seniority_phrases is not None else policy.seniority_phrases
+    for phrase in blocked:
         if _has_phrase(title, phrase):
             return f"blocked title phrase {phrase!r}"
 
@@ -84,7 +86,8 @@ def score_listing(
         rate_hi = int(rate_match.groupdict().get("hi") or rate_lo)
     elif listing.salary_max and policy.day_rate_plausible_min <= listing.salary_max < policy.yearly_salary_min:
         rate_lo, rate_hi = int(listing.salary_min or listing.salary_max), int(listing.salary_max)
-    if rate_hi is not None and rate_hi < policy.day_rate_floor:
+    target_rate = profile.day_rate
+    if target_rate and rate_hi is not None and rate_hi < target_rate.floor:
         return "day rate below floor"
 
     score = round(title_weight * w["title_max"] / 100)
@@ -104,11 +107,11 @@ def score_listing(
     else:
         ir35 = "unstated"
 
-    if rate_hi is not None:
-        if rate_hi >= policy.day_rate_ideal:
+    if target_rate and rate_hi is not None:
+        if rate_hi >= target_rate.ideal:
             score += w["rate_ideal"]
             evidence.append(f"rate up to £{rate_hi} +{w['rate_ideal']}")
-        elif ir35 == "inside" and rate_hi < policy.day_rate_inside_target:
+        elif ir35 == "inside" and rate_hi < target_rate.inside_target:
             score += w["rate_below_inside_target"]
             evidence.append(f"inside IR35 rate up to £{rate_hi} {w['rate_below_inside_target']}")
 
@@ -119,11 +122,11 @@ def score_listing(
         score += w["in_target_location"]
         evidence.append(f"target location +{w['in_target_location']}")
 
-    if any(_has_phrase(title, p) for p in policy.seniority_phrases):
+    if any(_has_phrase(title, p) for p in seniority):
         score += w["seniority"]
         evidence.append(f"seniority +{w['seniority']}")
 
-    if _any(policy.clearance, text):
+    if not profile.clearance_held and _any(policy.clearance, text):
         score += w["clearance_required"]
         evidence.append(f"clearance required {w['clearance_required']}")
 

@@ -1,5 +1,5 @@
 # Scoring policy for the contract search (mechanism, not candidate data).
-# Candidate-specific inputs (title weights, skills, locations, queries) live in the
+# Candidate-specific inputs (title weights, skills, locations, queries, day rate, held clearance, and optional title-phrase lists) live in the
 # gitignored profile YAML. Patterns are case-insensitive regexes over title + description.
 
 require_contract: true                # drop listings with no contract signal
@@ -39,6 +39,7 @@ remote_patterns:
 remote_modes: [remote_only, hybrid_or_remote_ok, onsite_only]
 remote_modes_without_location_pass: [onsite_only]
 
+# Defaults; a profile's target.blocked_title_phrases / seniority_phrases replace them.
 blocked_title_phrases:
   - junior
   - graduate
@@ -63,12 +64,8 @@ yearly_salary_permanent_patterns:
 
 # Day rate in GBP, read from the advert text or, failing that, from a salary field between
 # day_rate_plausible_min (below it the figure is likely an hourly rate) and yearly_salary_min.
-# A stated top rate under the floor drops the listing; an unstated rate never does. An inside-IR35
-# rate under the target is penalised; a rate at or above the ideal is rewarded.
+# The floor, inside-IR35 target and ideal are the candidate's, in the profile (target.day_rate).
 day_rate_plausible_min: 200
-day_rate_floor: 650
-day_rate_inside_target: 750
-day_rate_ideal: 800
 
 # Hybrid wording means the role is not remote, so it must be in a target location. Applies to
 # remote read from text; a source's explicit remote flag is kept.
@@ -78,7 +75,7 @@ hybrid_patterns:
   - '\bhybrid\s*:'
   - '\b[1-5]\s*days?\s*(?:per week\s*|a week\s*)?(?:on[- ]?site|in(?: the)? office)'
 
-# Required clearance the candidate is not known to hold.
+# Required clearance; the penalty applies unless the profile says target.clearance_held: true.
 clearance_patterns:
   - '\bactive sc\b'
   - '\bsc[- ]cleared\b'

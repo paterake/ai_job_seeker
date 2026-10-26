@@ -47,9 +47,6 @@ _SCORING_KEYS = {
     "seniority_phrases": list,
     "yearly_salary_min": int,
     "day_rate_plausible_min": int,
-    "day_rate_floor": int,
-    "day_rate_inside_target": int,
-    "day_rate_ideal": int,
     "yearly_salary_contract_patterns": list,
     "yearly_salary_permanent_patterns": list,
     "hybrid_patterns": list,
@@ -62,6 +59,9 @@ _WEIGHT_KEYS = {
 }
 _PROFILE_KEYS = {"identity", "target", "skills", "summary"}
 _TARGET_KEYS = {"queries", "title_weights", "locations", "remote"}
+# Optional per-candidate preferences; an absent key means no rule (or the scoring.yaml default list).
+_TARGET_OPTIONAL = {"day_rate", "clearance_held", "blocked_title_phrases", "seniority_phrases"}
+_DAY_RATE_KEYS = {"floor", "inside_target", "ideal"}
 
 
 @dataclass(frozen=True)
@@ -80,14 +80,18 @@ class Scoring:
     seniority_phrases: tuple[str, ...]
     yearly_salary_min: int
     day_rate_plausible_min: int
-    day_rate_floor: int
-    day_rate_inside_target: int
-    day_rate_ideal: int
     yearly_salary_contract: tuple[re.Pattern, ...]
     yearly_salary_permanent: tuple[re.Pattern, ...]
     hybrid: tuple[re.Pattern, ...]
     clearance: tuple[re.Pattern, ...]
     weights: dict[str, int]
+
+
+@dataclass(frozen=True)
+class DayRate:
+    floor: int            # a stated top rate below this drops the listing
+    inside_target: int    # an inside-IR35 top rate below this is penalised
+    ideal: int            # a top rate at or above this is rewarded
 
 
 @dataclass(frozen=True)
@@ -98,6 +102,10 @@ class Profile:
     locations: tuple[str, ...]
     remote: str
     skills: tuple[str, ...]
+    day_rate: DayRate | None = None
+    clearance_held: bool = False
+    blocked_title_phrases: tuple[str, ...] | None = None   # None: use scoring.yaml's list
+    seniority_phrases: tuple[str, ...] | None = None       # None: use scoring.yaml's list
 
 
 def _read_mapping(path: Path) -> dict[str, Any]:
@@ -156,9 +164,6 @@ def load_scoring(path: str | Path = DEFAULT_SCORING_CFG) -> Scoring:
         seniority_phrases=tuple(str(x).lower() for x in raw["seniority_phrases"]),
         yearly_salary_min=raw["yearly_salary_min"],
         day_rate_plausible_min=raw["day_rate_plausible_min"],
-        day_rate_floor=raw["day_rate_floor"],
-        day_rate_inside_target=raw["day_rate_inside_target"],
-        day_rate_ideal=raw["day_rate_ideal"],
         yearly_salary_contract=_patterns("yearly_salary_contract_patterns", raw["yearly_salary_contract_patterns"]),
         yearly_salary_permanent=_patterns("yearly_salary_permanent_patterns", raw["yearly_salary_permanent_patterns"]),
         hybrid=_patterns("hybrid_patterns", raw["hybrid_patterns"]),
@@ -174,7 +179,7 @@ def load_profile(path: str | Path | None = None) -> Profile:
     target = raw["target"]
     if not isinstance(target, dict):
         raise ConfigError(f"{path}: target must be a mapping")
-    _check_keys(f"{path} target", target, _TARGET_KEYS, _TARGET_KEYS)
+    _check_keys(f"{path} target", target, _TARGET_KEYS | _TARGET_OPTIONAL, _TARGET_KEYS)
     weights = target["title_weights"]
     if not isinstance(weights, dict) or not weights:
         raise ConfigError(f"{path}: target.title_weights must be a non-empty mapping")
@@ -189,6 +194,26 @@ def load_profile(path: str | Path | None = None) -> Profile:
     identity = raw["identity"]
     if not isinstance(identity, dict) or not str(identity.get("name") or "").strip():
         raise ConfigError(f"{path}: identity.name is required")
+    day_rate = None
+    if "day_rate" in target:
+        dr = target["day_rate"]
+        if not isinstance(dr, dict):
+            raise ConfigError(f"{path}: target.day_rate must be a mapping")
+        _check_keys(f"{path} target.day_rate", dr, _DAY_RATE_KEYS, _DAY_RATE_KEYS)
+        if not all(isinstance(v, int) and not isinstance(v, bool) and v > 0 for v in dr.values()):
+            raise ConfigError(f"{path}: target.day_rate values must be positive ints")
+        if not dr["floor"] <= dr["inside_target"] <= dr["ideal"]:
+            raise ConfigError(f"{path}: target.day_rate must satisfy floor <= inside_target <= ideal")
+        day_rate = DayRate(dr["floor"], dr["inside_target"], dr["ideal"])
+    clearance_held = target.get("clearance_held", False)
+    if not isinstance(clearance_held, bool):
+        raise ConfigError(f"{path}: target.clearance_held must be true or false")
+    phrase_lists: dict[str, tuple[str, ...] | None] = {}
+    for key in ("blocked_title_phrases", "seniority_phrases"):
+        vals = target.get(key)
+        if vals is not None and not isinstance(vals, list):
+            raise ConfigError(f"{path}: target.{key} must be a list")
+        phrase_lists[key] = None if vals is None else tuple(str(x).lower() for x in vals)
     return Profile(
         name=str(identity["name"]).strip(),
         queries=tuple(str(q).strip() for q in queries if str(q).strip()),
@@ -196,4 +221,8 @@ def load_profile(path: str | Path | None = None) -> Profile:
         locations=tuple(str(x).lower() for x in (target["locations"] or [])),
         remote=str(target["remote"]),
         skills=tuple(str(s).lower() for s in skills),
+        day_rate=day_rate,
+        clearance_held=clearance_held,
+        blocked_title_phrases=phrase_lists["blocked_title_phrases"],
+        seniority_phrases=phrase_lists["seniority_phrases"],
     )
