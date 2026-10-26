@@ -51,6 +51,33 @@ blocked_title_phrases:
 
 seniority_phrases: ["lead", "principal", "senior", "head of", "chief", "interim"]
 
+# Adzuna attaches an estimated yearly salary to many permanent adverts and labels them contract.
+# A listing with a salary at or above this figure (a day rate is a few hundred) must carry its own
+# contract wording to pass: a strong or title contract signal, or one of these patterns with no
+# permanent pattern.
+yearly_salary_min: 1500
+yearly_salary_contract_patterns:
+  - '\bcontract\b'
+yearly_salary_permanent_patterns:
+  - '\bpermanent\b'
+
+# Hybrid wording means the role is not remote, so it must be in a target location. Applies to
+# remote read from text; a source's explicit remote flag is kept.
+hybrid_patterns:
+  - '\bhybrid\s+(?:working|role|basis|position|pattern|work|model of working)\b'
+  - '\(hybrid\)'
+  - '\bhybrid\s*:'
+  - '\b[1-5]\s*days?\s*(?:per week\s*|a week\s*)?(?:on[- ]?site|in(?: the)? office)'
+
+# Required clearance the candidate is not known to hold.
+clearance_patterns:
+  - '\bactive sc\b'
+  - '\bsc[- ]cleared\b'
+  - '\bsc\s*(?:\+|clearance|required|level)'
+  - '\bnppv'
+  - '\bdv[- ]cleared\b'
+  - 'security clearance'
+
 weights:
   title_max: 40            # best matching profile title weight is scaled to this
   ir35_outside: 20
@@ -62,3 +89,4 @@ weights:
   skills_max: 20
   fresh: 5                 # posted within half of filters.max_age_days
   day_rate_stated: 3
+  clearance_required: -20

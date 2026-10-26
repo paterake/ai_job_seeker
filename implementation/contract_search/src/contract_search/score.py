@@ -67,7 +67,13 @@ def score_listing(
     if policy.require_contract and not is_contract:
         return "no contract signal"
 
-    remote = listing.remote is True or _any(policy.remote, f"{listing.title}\n{listing.location}\n{desc[:1000]}")
+    if (listing.salary_min or 0) >= policy.yearly_salary_min and not (strong_contract or title_contract):
+        if _any(policy.yearly_salary_permanent, text) or not _any(policy.yearly_salary_contract, text):
+            return "yearly salary without contract wording"
+
+    remote = listing.remote is True or (
+        _any(policy.remote, f"{listing.title}\n{listing.location}\n{desc[:1000]}") and not _any(policy.hybrid, text)
+    )
     in_location = any(loc in location for loc in profile.locations)
     if not remote and not in_location:
         return "not in target location and not remote"
@@ -99,6 +105,10 @@ def score_listing(
     if any(_has_phrase(title, p) for p in policy.seniority_phrases):
         score += w["seniority"]
         evidence.append(f"seniority +{w['seniority']}")
+
+    if _any(policy.clearance, text):
+        score += w["clearance_required"]
+        evidence.append(f"clearance required {w['clearance_required']}")
 
     haystack = text.lower()
     matched = sorted({s for s in profile.skills if _has_phrase(haystack, s)})

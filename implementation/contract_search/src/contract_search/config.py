@@ -45,11 +45,16 @@ _SCORING_KEYS = {
     "remote_modes_without_location_pass": list,
     "blocked_title_phrases": list,
     "seniority_phrases": list,
+    "yearly_salary_min": int,
+    "yearly_salary_contract_patterns": list,
+    "yearly_salary_permanent_patterns": list,
+    "hybrid_patterns": list,
+    "clearance_patterns": list,
     "weights": dict,
 }
 _WEIGHT_KEYS = {
     "title_max", "ir35_outside", "ir35_inside", "remote", "in_target_location",
-    "seniority", "skills_per_match", "skills_max", "fresh", "day_rate_stated",
+    "seniority", "skills_per_match", "skills_max", "fresh", "day_rate_stated", "clearance_required",
 }
 _PROFILE_KEYS = {"identity", "target", "skills", "summary"}
 _TARGET_KEYS = {"queries", "title_weights", "locations", "remote"}
@@ -69,6 +74,11 @@ class Scoring:
     remote_modes_without_location_pass: frozenset[str]
     blocked_title_phrases: tuple[str, ...]
     seniority_phrases: tuple[str, ...]
+    yearly_salary_min: int
+    yearly_salary_contract: tuple[re.Pattern, ...]
+    yearly_salary_permanent: tuple[re.Pattern, ...]
+    hybrid: tuple[re.Pattern, ...]
+    clearance: tuple[re.Pattern, ...]
     weights: dict[str, int]
 
 
@@ -136,6 +146,11 @@ def load_scoring(path: str | Path = DEFAULT_SCORING_CFG) -> Scoring:
         remote_modes_without_location_pass=frozenset(str(x) for x in raw["remote_modes_without_location_pass"]),
         blocked_title_phrases=tuple(str(x).lower() for x in raw["blocked_title_phrases"]),
         seniority_phrases=tuple(str(x).lower() for x in raw["seniority_phrases"]),
+        yearly_salary_min=raw["yearly_salary_min"],
+        yearly_salary_contract=_patterns("yearly_salary_contract_patterns", raw["yearly_salary_contract_patterns"]),
+        yearly_salary_permanent=_patterns("yearly_salary_permanent_patterns", raw["yearly_salary_permanent_patterns"]),
+        hybrid=_patterns("hybrid_patterns", raw["hybrid_patterns"]),
+        clearance=_patterns("clearance_patterns", raw["clearance_patterns"]),
         weights=dict(weights),
     )
 
