@@ -1,7 +1,7 @@
 """Thin CLI entry point. Each subcommand is a thin wrapper over an importable
 phase module. Stage 1 ships `profile` only; further phases add subcommands.
 
-ai_agent_core is a pinned git dependency (0.25.1, installed by `uv sync`)
+ai_agent_core is a pinned git dependency (0.27.0, installed by `uv sync`)
 and is required by every subcommand: this module imports the match package at
 load, which imports ai_agent_core.execution. Some ai_agent_core imports below
 are still deferred to the point of use, so a broken install surfaces as a
@@ -389,7 +389,7 @@ def _atomic_json_dump(obj: Any, out_path: str | Path) -> Path:
 
 _AI_AGENT_CORE_IMPORT_ERR_HINT = (
     "ai_agent_core could not be imported. It is a pinned git dependency "
-    "(0.25.1) declared in the workspace pyproject.toml and is required "
+    "(0.27.0) declared in the workspace pyproject.toml and is required "
     "by every subcommand — run `uv sync` from the repo root to install it "
     "(needs network access to the ai_agent_core GitHub repo)."
 )

@@ -16,8 +16,8 @@ members = [
 
 [[package]]
 name = "ai-agent-core"
-version = "0.25.1"
-source = { git = "https://github.com/paterake/ai_agent_core.git?subdirectory=implementation%2Fai_agent_core&rev=231e46f4c7ffc1d1c6dbfa698a0326d8786488a8#231e46f4c7ffc1d1c6dbfa698a0326d8786488a8" }
+version = "0.27.0"
+source = { git = "https://github.com/paterake/ai_agent_core.git?subdirectory=implementation%2Fai_agent_core&rev=79ee2f696f4e22f8acdab041078397655d4d6d20#79ee2f696f4e22f8acdab041078397655d4d6d20" }
 dependencies = [
     { name = "chromadb" },
     { name = "llama-index" },
@@ -60,7 +60,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ai-agent-core", git = "https://github.com/paterake/ai_agent_core.git?subdirectory=implementation%2Fai_agent_core&rev=231e46f4c7ffc1d1c6dbfa698a0326d8786488a8" },
+    { name = "ai-agent-core", git = "https://github.com/paterake/ai_agent_core.git?subdirectory=implementation%2Fai_agent_core&rev=79ee2f696f4e22f8acdab041078397655d4d6d20" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.32.0" },

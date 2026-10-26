@@ -7,7 +7,7 @@ same YAML — keeps mechanism config in one file.
 ai_agent_core imports are lazy in the two functions that use it
 (load_backend_defaults / apply_backend_overrides); load_profile_defaults does
 not import it. ai_agent_core is still required at runtime — it is a pinned git
-dependency (0.25.1, installed by `uv sync`) and the CLI imports it at load.
+dependency (0.27.0, installed by `uv sync`) and the CLI imports it at load.
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ def load_backend_defaults(
         raise ImportError(
             "ai_agent_core.execution.ArgDefaults is unavailable — needed "
             "to build the match/draft CLI subparsers (they carry LLM-mode "
-            "flags). ai_agent_core is a pinned git dependency (0.25.1) "
+            "flags). ai_agent_core is a pinned git dependency (0.27.0) "
             "required by every subcommand; run `uv sync` from the repo root."
         ) from e
 
