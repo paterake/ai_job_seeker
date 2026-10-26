@@ -39,7 +39,7 @@ This resume line must be updated whenever the “Still todo” next step changes
 |---|---|
 | **Resume (start here)** | One-line pointer to the next item + next step for handover |
 | **Session start prompt** | Exact prompt to paste at session start (including skill invocations) — stored so the operator never reconstructs the formula |
-| **Done** | What changed, where, and verification result — file-level references |
+| **Done** | One line per finished item: what changed and the commit or PR. Git holds the detail; do not copy history, quotes or narrative here |
 | **Still Todo** | Remaining ordered actions, each with its state: open, in progress, deferred, parked or dropped |
 | **Accumulated Active Constraints** | Invariants established by completed items — grows as work progresses; never shrinks |
 | **Verification** | Exact command(s) — "should work" is not a check |
@@ -77,6 +77,14 @@ or a bare ✅/⏳ marker on the heading only).
 **Consequence**: status duplicated across a Resume line and a per-item prose section drifts the
 moment one is updated and the other isn't — a fresh session reading the per-item section sees a
 stale status and re-derives wrong assumptions about what's left to do.
+
+## Module Carve Re-homes Its To-dos
+
+A change that splits, renames, moves or retires a module re-homes or retires that module's to-dos (backlog items,
+their anchor docs under `docs/todo/`, and the `docs/TODO.md` index rows) in the same change.
+
+**Consequence**: a carve that leaves its to-dos behind orphans them under a name nothing owns; every split then
+reproduces the drift, and a later session works items for a module that no longer exists.
 
 ## Session-Close Self-Check (Required, Proactive)
 

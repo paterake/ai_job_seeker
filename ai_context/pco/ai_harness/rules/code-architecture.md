@@ -25,6 +25,10 @@ paths:
 
 **Consequence:** an environment value is invisible in the repo and in the run evidence, differs silently between shells, agents and machines, and cannot be reviewed or reproduced; config is committed, diffable and recorded with the run.
 
+- Config the project owns is declared and enforced: its loader names the key surface and fails on an undeclared key or a missing required key. A vendor or API payload the project consumes, and whose schema it does not own, is not owned config: document it as a consumed contract, pin its version where one exists, and read it defensively; never re-declare it as owned config.
+
+**Consequence:** an owned key that loads without a declaration is dead or mistyped config nobody notices; a vendor payload absorbed into owned config bloats the contract and turns every upstream API change into a config migration.
+
 **Config directory structure:**
 - `config/` — runtime config YAMLs (entity lists, thresholds, data paths, tuning params)
 - `config/prompts/` — LLM prompt YAMLs (one file per prompt, named by purpose)
