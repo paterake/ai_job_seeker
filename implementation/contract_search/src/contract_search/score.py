@@ -78,6 +78,15 @@ def score_listing(
     if not remote and not in_location:
         return "not in target location and not remote"
 
+    rate_lo = rate_hi = None
+    if rate_match:
+        rate_lo = int(rate_match.group("lo"))
+        rate_hi = int(rate_match.groupdict().get("hi") or rate_lo)
+    elif listing.salary_max and policy.day_rate_plausible_min <= listing.salary_max < policy.yearly_salary_min:
+        rate_lo, rate_hi = int(listing.salary_min or listing.salary_max), int(listing.salary_max)
+    if rate_hi is not None and rate_hi < policy.day_rate_floor:
+        return "day rate below floor"
+
     score = round(title_weight * w["title_max"] / 100)
     evidence.append(f"title match +{score}")
 
@@ -94,6 +103,14 @@ def score_listing(
         evidence.append(f"inside IR35 {w['ir35_inside']}")
     else:
         ir35 = "unstated"
+
+    if rate_hi is not None:
+        if rate_hi >= policy.day_rate_ideal:
+            score += w["rate_ideal"]
+            evidence.append(f"rate up to £{rate_hi} +{w['rate_ideal']}")
+        elif ir35 == "inside" and rate_hi < policy.day_rate_inside_target:
+            score += w["rate_below_inside_target"]
+            evidence.append(f"inside IR35 rate up to £{rate_hi} {w['rate_below_inside_target']}")
 
     if remote:
         score += w["remote"]
@@ -123,9 +140,8 @@ def score_listing(
         evidence.append(f"posted {age}d ago +{w['fresh']}")
 
     day_rate = None
-    if rate_match:
-        lo, hi = rate_match.group("lo"), rate_match.groupdict().get("hi")
-        day_rate = f"£{lo}-£{hi}/day" if hi else f"£{lo}/day"
+    if rate_hi is not None:
+        day_rate = f"£{rate_lo}-£{rate_hi}/day" if rate_hi != rate_lo else f"£{rate_lo}/day"
         score += w["day_rate_stated"]
         evidence.append(f"day rate {day_rate} +{w['day_rate_stated']}")
 

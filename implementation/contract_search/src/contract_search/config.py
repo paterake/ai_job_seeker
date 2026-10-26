@@ -46,6 +46,10 @@ _SCORING_KEYS = {
     "blocked_title_phrases": list,
     "seniority_phrases": list,
     "yearly_salary_min": int,
+    "day_rate_plausible_min": int,
+    "day_rate_floor": int,
+    "day_rate_inside_target": int,
+    "day_rate_ideal": int,
     "yearly_salary_contract_patterns": list,
     "yearly_salary_permanent_patterns": list,
     "hybrid_patterns": list,
@@ -54,7 +58,7 @@ _SCORING_KEYS = {
 }
 _WEIGHT_KEYS = {
     "title_max", "ir35_outside", "ir35_inside", "remote", "in_target_location",
-    "seniority", "skills_per_match", "skills_max", "fresh", "day_rate_stated", "clearance_required",
+    "seniority", "skills_per_match", "skills_max", "fresh", "day_rate_stated", "clearance_required", "rate_ideal", "rate_below_inside_target",
 }
 _PROFILE_KEYS = {"identity", "target", "skills", "summary"}
 _TARGET_KEYS = {"queries", "title_weights", "locations", "remote"}
@@ -75,6 +79,10 @@ class Scoring:
     blocked_title_phrases: tuple[str, ...]
     seniority_phrases: tuple[str, ...]
     yearly_salary_min: int
+    day_rate_plausible_min: int
+    day_rate_floor: int
+    day_rate_inside_target: int
+    day_rate_ideal: int
     yearly_salary_contract: tuple[re.Pattern, ...]
     yearly_salary_permanent: tuple[re.Pattern, ...]
     hybrid: tuple[re.Pattern, ...]
@@ -147,6 +155,10 @@ def load_scoring(path: str | Path = DEFAULT_SCORING_CFG) -> Scoring:
         blocked_title_phrases=tuple(str(x).lower() for x in raw["blocked_title_phrases"]),
         seniority_phrases=tuple(str(x).lower() for x in raw["seniority_phrases"]),
         yearly_salary_min=raw["yearly_salary_min"],
+        day_rate_plausible_min=raw["day_rate_plausible_min"],
+        day_rate_floor=raw["day_rate_floor"],
+        day_rate_inside_target=raw["day_rate_inside_target"],
+        day_rate_ideal=raw["day_rate_ideal"],
         yearly_salary_contract=_patterns("yearly_salary_contract_patterns", raw["yearly_salary_contract_patterns"]),
         yearly_salary_permanent=_patterns("yearly_salary_permanent_patterns", raw["yearly_salary_permanent_patterns"]),
         hybrid=_patterns("hybrid_patterns", raw["hybrid_patterns"]),

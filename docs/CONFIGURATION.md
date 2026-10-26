@@ -132,7 +132,7 @@ undeclared or missing key.
 | File | Tracked in git | Owns |
 |---|---|---|
 | `search.yaml` | yes | Job sources (Adzuna, Reed; The Muse is disabled because it returns 403 without a key) and the age filter (14 days) |
-| `scoring.yaml` | yes | Contract, day-rate, IR35 and remote patterns (case-insensitive regexes over title and description), the valid `target.remote` modes (`remote_modes`) and which of them skip the location-free query pass (`remote_modes_without_location_pass`), blocked title phrases, the yearly-salary threshold and its contract and permanent wording (`yearly_salary_min`, `yearly_salary_contract_patterns`, `yearly_salary_permanent_patterns`), the hybrid wording that cancels a text-read remote (`hybrid_patterns`), required-clearance patterns (`clearance_patterns`), and the score weights |
+| `scoring.yaml` | yes | Contract, day-rate, IR35 and remote patterns (case-insensitive regexes over title and description), the valid `target.remote` modes (`remote_modes`) and which of them skip the location-free query pass (`remote_modes_without_location_pass`), blocked title phrases, the yearly-salary threshold and its contract and permanent wording (`yearly_salary_min`, `yearly_salary_contract_patterns`, `yearly_salary_permanent_patterns`), the hybrid wording that cancels a text-read remote (`hybrid_patterns`), required-clearance patterns (`clearance_patterns`), the day-rate bounds (`day_rate_plausible_min`, `day_rate_floor`, `day_rate_inside_target`, `day_rate_ideal`), and the score weights |
 | `profile/<candidate>.yaml` | **no** (gitignored PII) | Identity, `skills`, and `target`: `queries` (one ingest pass each), `title_weights` (best phrase found in the title sets the title score, 1-100), `locations`, `remote` |
 | `apify.yaml` | yes | Opt-in Apify actors for CWJobs and JobServe: actor ids, input templates, the output-field mapping, `max_queries`, polling and wait limits |
 | `output/` | **no** (gitignored) | `latest_shortlist.{md,json}` plus a timestamped copy in `_archive/` |
@@ -142,7 +142,11 @@ A listing is dropped when its title is outside `title_weights`, matches a blocke
 contract signal (`require_contract`), carries a yearly salary (`yearly_salary_min`) without contract wording, or is
 neither in a target location nor remote. Adverts that say hybrid or name days on site are not read as remote. IR35
 changes the score (outside +20, inside -30) and is `unstated` when the advert does not say; required security
-clearance (SC, NPPV, DV) costs 20 (`clearance_required`).
+clearance (SC, NPPV, DV) costs 20 (`clearance_required`). A stated day rate (advert text, else a salary field
+between `day_rate_plausible_min` and `yearly_salary_min`) whose top figure is under `day_rate_floor` (650) drops the
+listing; an inside-IR35 top rate under `day_rate_inside_target` (750) costs 10; a top rate of `day_rate_ideal` (800)
+or more adds 5. An unstated rate is never dropped. Apify sends only the first `max_queries` profile queries, so
+keep the queries you most want from CWJobs and JobServe first.
 
 `--apify` adds CWJobs and JobServe through Apify. It needs `APIFY_API_TOKEN` in the environment (set with
 `secret-set`) and spends Apify credit: the free plan has $5 a month, and a run with three queries costs about

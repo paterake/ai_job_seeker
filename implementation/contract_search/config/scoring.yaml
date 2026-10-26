@@ -61,6 +61,15 @@ yearly_salary_contract_patterns:
 yearly_salary_permanent_patterns:
   - '\bpermanent\b'
 
+# Day rate in GBP, read from the advert text or, failing that, from a salary field between
+# day_rate_plausible_min (below it the figure is likely an hourly rate) and yearly_salary_min.
+# A stated top rate under the floor drops the listing; an unstated rate never does. An inside-IR35
+# rate under the target is penalised; a rate at or above the ideal is rewarded.
+day_rate_plausible_min: 200
+day_rate_floor: 650
+day_rate_inside_target: 750
+day_rate_ideal: 800
+
 # Hybrid wording means the role is not remote, so it must be in a target location. Applies to
 # remote read from text; a source's explicit remote flag is kept.
 hybrid_patterns:
@@ -90,3 +99,5 @@ weights:
   fresh: 5                 # posted within half of filters.max_age_days
   day_rate_stated: 3
   clearance_required: -20
+  rate_ideal: 5
+  rate_below_inside_target: -10
