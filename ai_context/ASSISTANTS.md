@@ -13,5 +13,5 @@
 
 ## Where to look
 
-1. **[pco/ASSISTANTS.md](pco/ASSISTANTS.md)** — spoke index: which DMBOK spoke and governance doc a task needs.
+1. **[pco/ASSISTANTS.md](pco/ASSISTANTS.md)** — spoke index: which spoke and governance doc a task needs.
 2. **[project/ASSISTANTS.md](project/ASSISTANTS.md)** — repo-specific posture, task routing, active backlog. Apply when working in this repo specifically.
