@@ -28,6 +28,19 @@ anything other than 0 or 2. When the adapter itself is missing or crashes: integ
   scan size cap are in `governance/data_guard.yaml`. A binary non-Office file (a PDF, say) and a file over the cap
   pass unscanned; an empty, directory or missing path passes. The deny line names the reason code, path, pattern
   or type and line number, never matched text, because the adapter forwards it to the model.
+  Repo exceptions: after the Office deny and the allowlist path check, an active entry in the repo's committed
+  `ai_context/project/governance/exception_registry.yaml` passes the files its `scope` covers unscanned. The
+  gate reads `HEAD` (`git show`), so a working-tree edit does nothing until committed. An entry applies when its `rule`
+  equals `exception_rule` in `data_guard.yaml`; `scope` is `path:<glob>` relative to the repo root, and the text before
+  its first `/` must be a plain name of letters, digits, dot, dash and underscore, with no pattern characters, and not
+  `.` or `..`, and no segment may be `..` (so `path:docs/fixtures/*` is accepted, `path:*.md`, `path:!(x)/*` and
+  `path:docs/../x` are not); after that name `*` crosses `/`. Office
+  types are never excepted. Entries that are expired, revoked or past `expires` are skipped and the file is scanned.
+  A missing field, a `granted` or `expires` that is not a quoted ISO date string, or a `status` other than active,
+  expired or revoked in any data-guard entry stops the gate (`GOVERNANCE STOP: ... cannot read exception registry`)
+  for every scanned text file in that repo until fixed; for an active, unexpired entry, so does `expires` more than
+  `exception_max_days` after `granted`, an `evidence` path not in `HEAD`, or a scope that fails the rule. A path
+  outside the repo never matches.
 
 Not hooks:
 - **Capability decisions** are guidance (`code-architecture.md` → Driver Selection), reviewed at code review

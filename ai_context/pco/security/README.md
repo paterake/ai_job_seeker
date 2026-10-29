@@ -19,7 +19,9 @@
   [security-threat-model.md](../ai_harness/rules/security-threat-model.md).
 - Office files (types in `governance/data_guard.yaml`) and files matching a named PII pattern are denied to the file
   Read and Grep tools in `ai_agent_pco`: hook `check_data_guard.sh` (`data_guard_refused`;
-  [hooks/README.md](../ai_harness/hooks/README.md)). Consumers are not guarded until their repo wires it.
+  [hooks/README.md](../ai_harness/hooks/README.md)). Consumers are not guarded until their repo wires it. A repo may
+  except a named top-level directory or file with a time-bounded, committed registry entry (hooks/README.md → Repo
+  exceptions).
 
 ## Not enforced
 

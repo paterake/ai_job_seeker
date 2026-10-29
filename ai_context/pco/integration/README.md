@@ -46,9 +46,16 @@
 - The data guard (`check_data_guard.sh`) does not cover: Bash, MCP connectors, NotebookRead and prompt submit; Grep
   with no path or a directory path; non-Office binaries, UTF-16 text (reported as binary) and files over the scan cap (unscanned). Office files are
   denied by type only, never scanned. The PII check is a heuristic tripwire. Consumer settings are not synced, so a
-  consumer is unguarded until its repo wires `Read|Grep`. The allowlist is PCO-owned, so a consumer false positive
-  needs a PCO allowlist change and a re-sync. A relative path with no `cwd` in the payload is resolved against the
-  hook's inherited working directory.
+  consumer is unguarded until its repo wires `Read|Grep`. A repo clears its own false positive with a time-bounded
+  `path:` entry in its own `exception_registry.yaml`, anchored to a named top-level directory or file; the entry counts
+  only once committed. A consumer's entry has no effect until that repo is synced with this gate; until then it runs
+  the previous gate, which reads no registry. The PCO allowlist stays PCO-owned, and the Office deny is never
+  excepted. Gap: an agent can
+  still commit a registry entry and its evidence file; only the reviewer verdict at the commit gate stands between
+  that and the exception taking effect. Bash reads are not guarded at all. `owner` and `granted_by` hold a name or
+  role, never an email address or phone number: the registry is itself scanned, so PII in it makes the Read tool
+  refuse the file. A relative path with no `cwd` in the payload is resolved against the hook's inherited working
+  directory.
 - Vendor third-party risk assessment before adoption: required by
   [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Procurement & Access Lifecycle; no PCO
   check.
