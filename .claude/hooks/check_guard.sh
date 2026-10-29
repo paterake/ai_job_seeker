@@ -2,13 +2,14 @@
 # gate_adapter.sh — adapter between the wired agent's pre-tool-use hook and the agent-neutral PCO gates in
 # ai_context/pco/ai_harness/hooks/. It is the only code that speaks the agent's hook protocol; which agent is wired
 # is set in config/agent_wiring.json. distill_harness.py wire installs this file into <agent config folder>/hooks/
-# once per gate, under the gate's own name (check_guard.sh, check_execution_limits.sh); the installed name picks
+# once per gate, under the gate's own name (check_guard.sh, check_execution_limits.sh, check_data_guard.sh); the installed name picks
 # the gate. Do not edit the installed copies.
 # Reads the hook payload on stdin and passes the call's command, file path and session id to the gate.
 # Gate exit 0: exit 0, no output, so the agent's normal permission flow applies (never "allow").
 # Gate exit 2: a pre-tool-use "deny" decision whose reason is the gate's stderr.
 # Fails closed (exit 2, one-line reason): HOME not set, no jq, a payload that is not a JSON object, a guard payload with neither
-# a command nor a file path, the gate is missing, or the gate exits with any other code.
+# a command nor a file path, the gate is missing, or the gate exits with any other code. A data-guard payload may
+# carry no path (a search without one), which the gate passes; a relative path is resolved against the payload's cwd.
 set -uo pipefail
 
 gate="$(basename "$0")"
@@ -37,6 +38,12 @@ case "$gate" in
         # Every tool this gate is wired to carries a command or a file path; neither means the call was not read.
         [[ -n "$cmd" || -n "$path" ]] || fail_closed "the hook payload has no command or file path"
         args=(--command "$cmd" --path "$path")
+        ;;
+    check_data_guard.sh)
+        path="$(field '.tool_input.file_path // .tool_input.path')"
+        cwd="$(field .cwd)"
+        [[ -z "$path" || "$path" == /* || -z "$cwd" ]] || path="$cwd/$path"
+        args=(--path "$path")
         ;;
     check_execution_limits.sh)
         args=(--state-dir "$state_dir" --session "$(field .session_id)")

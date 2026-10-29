@@ -14,8 +14,11 @@
 - A direct force-push command is denied: hook `check_guard.sh` (`force_push_refused`; what it matches:
   [hooks/README.md](../ai_harness/hooks/README.md)). The guard's other check, and the shell-call budget, are owned
   by the [knowledge](../knowledge/README.md) and [operations](../operations/README.md) spokes.
-- Both PCO gates are run on the pre-tool-use event through current agent adapters: validator
-  `validate_harness_wiring.py`, run from `ai_agent_pco`.
+- All three PCO gates are run on the pre-tool-use event in `ai_agent_pco` through current agent adapters: validator
+  `validate_harness_wiring.py`. In consumers the data guard runs only once the repo wires `Read|Grep` (see Not
+  enforced).
+- Office files, and files matching a named PII pattern, are denied to the file Read and Grep tools in `ai_agent_pco`: hook
+  `check_data_guard.sh` (`data_guard_refused`; what it matches: [hooks/README.md](../ai_harness/hooks/README.md)).
 - `ai_context/` names no specific agent and does not refer back to the agent entrypoint or configuration folder
   ([CONTRACT.md](../governance/CONTRACT.md) → What a Target Repo Must Look Like): validator `governance-audit
   --fail` (agent neutrality scan, run from `ai_agent_pco`).
@@ -40,6 +43,12 @@
 - Force push through indirection and other irreversible shell commands such as `rm -rf` or a hard reset: required
   by harness-tool-contract.md → Hooks: Guidance vs Enforcement; no PCO check. Only the direct force-push form is
   hooked ([hooks/README.md](../ai_harness/hooks/README.md)).
+- The data guard (`check_data_guard.sh`) does not cover: Bash, MCP connectors, NotebookRead and prompt submit; Grep
+  with no path or a directory path; non-Office binaries, UTF-16 text (reported as binary) and files over the scan cap (unscanned). Office files are
+  denied by type only, never scanned. The PII check is a heuristic tripwire. Consumer settings are not synced, so a
+  consumer is unguarded until its repo wires `Read|Grep`. The allowlist is PCO-owned, so a consumer false positive
+  needs a PCO allowlist change and a re-sync. A relative path with no `cwd` in the payload is resolved against the
+  hook's inherited working directory.
 - Vendor third-party risk assessment before adoption: required by
   [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Procurement & Access Lifecycle; no PCO
   check.

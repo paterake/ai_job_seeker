@@ -5,7 +5,7 @@
 ## Deny Response Shape
 
 The target shape for a denial event is these six fields. The current PCO hooks emit a subset:
-none emits `run_id`, `approval_record` or `policy_set`, and `check_guard.sh` also omits `risk_tier` (see Current Enforcement Points):
+none emits `run_id`, `approval_record` or `policy_set`, `check_guard.sh` also omits `risk_tier`, and `check_data_guard.sh` emits one line with only `denial_reason` and the path, pattern or type and line number (see Current Enforcement Points):
 
 ```
 run_id:           <stable run identifier propagated from entry point; "local" if outside a governed run>
@@ -28,6 +28,7 @@ next_action:      <what the operator must do to unblock>
 | `execution_limit_hit` | Emitted by the execution-limits gate when the session's shell-call budget is exhausted | Any |
 | `force_push_refused` | Emitted by the guard gate on a force push (what it matches: [hooks/README.md](../ai_harness/hooks/README.md)) | Any |
 | `synced_pco_edit_refused` | Emitted by the guard gate on a file edit to the synced layer outside the PCO ([hooks/README.md](../ai_harness/hooks/README.md)) | Any |
+| `data_guard_refused` | Emitted by the data guard gate on a read of an Office file or of a file matching a named PII pattern ([hooks/README.md](../ai_harness/hooks/README.md)) | Any |
 
 "Applicable tiers" are a solution's risk tiers (low to critical). They are distinct from capability tiers (1–4,
 [HUB.md](HUB.md) → Capability-tiered governance) and from a tool's own `risk_tier` (`lineage.md`).
@@ -43,7 +44,7 @@ next_action:      <what the operator must do to unblock>
 
 ## Current Enforcement Points
 
-The PCO gates `check_execution_limits.sh` and `check_guard.sh` emit the structured reason; the agent adapter carries it into the harness's pre-tool-use deny decision. How they deny, pass and fail closed: [hooks/README.md](../ai_harness/hooks/README.md).
+The PCO gates `check_execution_limits.sh`, `check_guard.sh` and `check_data_guard.sh` emit the structured reason; the agent adapter carries it into the harness's pre-tool-use deny decision. How they deny, pass and fail closed: [hooks/README.md](../ai_harness/hooks/README.md).
 
 The `approval_required` reason code and the High-tier row above remain the shape for any future protected-change gate; no PCO hook emits it today.
 

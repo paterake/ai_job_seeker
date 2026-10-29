@@ -17,6 +17,9 @@
   (§4), non-impersonation (§5), epistemic honesty (§6), External Research (Bounded) and Multi-Agent Trust: human
   review against
   [security-threat-model.md](../ai_harness/rules/security-threat-model.md).
+- Office files (types in `governance/data_guard.yaml`) and files matching a named PII pattern are denied to the file
+  Read and Grep tools in `ai_agent_pco`: hook `check_data_guard.sh` (`data_guard_refused`;
+  [hooks/README.md](../ai_harness/hooks/README.md)). Consumers are not guarded until their repo wires it.
 
 ## Not enforced
 
@@ -32,6 +35,9 @@
 - Data residency and access recertification: required by
   [ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md) → Data Residency / Sovereignty /
   Cross-Border Transfer and Procurement & Access Lifecycle; no PCO check.
+- Personal data and Office documents reaching the model by any other route (shell, MCP connectors, notebook read,
+  prompt submit, pathless or directory Grep, non-Office binaries, files over the scan cap), or in a consumer whose
+  settings do not wire the data guard: [integration spoke](../integration/README.md) → Not enforced.
 
 ## Rules
 
