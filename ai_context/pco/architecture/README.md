@@ -6,8 +6,8 @@
 - Driver and pattern choice, simplest first ([code-architecture.md](../ai_harness/rules/code-architecture.md) → Driver Selection)
 - Workflow patterns: prompt chaining, routing, parallelisation, orchestrator–workers and evaluator–optimizer are
   common patterns, not a closed list; autonomous agents are within Driver Selection
-- Code structure: config purity, reuse and shared-code home, one responsibility per file, modular entry points,
-  UV-only Python
+- Code structure: config purity, reuse and shared-code home, variant contracts and the duplicate-code ratchet, one
+  responsibility per file, modular entry points, UV-only Python
 - The boundary between the synced PCO layer and a repo's project-additive content
 
 ## Enforced
@@ -33,6 +33,12 @@
   (UV Only); no PCO check (the scan sees raw `python` commands only).
 - Reuse of the shared primitives layer (`ai_agent_core`) for LLM calls: required by code-architecture.md → AI
   Infrastructure Primitives; no PCO check.
+- One contract and facade before a second variant: required by code-architecture.md → Variant Capabilities; no PCO
+  check. The harness reviewer asks the variant question for code and scope changes, and the change-loop design review
+  asks it too; both live outside this repo, and a live run asking it is unverified.
+- A duplicate-code count that may only fall: required by code-architecture.md → Duplicate-Code Ratchet; no PCO check
+  (each consumer wires it in its own gate script; tool and settings unverified); scope is shipped code, build-time
+  scaffolding excluded.
 - `ai_agent_core`'s Platform Contract Implementations declaration: required by
   [CONTRACT.md](../governance/CONTRACT.md) → Special Case: `ai_agent_core`; no PCO check.
 

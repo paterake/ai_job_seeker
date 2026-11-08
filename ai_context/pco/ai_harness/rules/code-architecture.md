@@ -1,5 +1,5 @@
 ---
-description: Architecture rules for code — config purity, driver selection, simplest pattern first, reuse and shared-code homes, file structure, native-first integration. Loaded when editing code or configuration.
+description: Architecture rules for code — config purity, driver selection, simplest pattern first, reuse and shared-code homes, variant contracts, duplicate-code ratchet, file structure, native-first integration. Loaded when editing code or configuration.
 basis: operational-experience
 spoke: architecture
 paths:
@@ -92,6 +92,44 @@ The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its 
 - **Adding to the core is a versioned change.** Adding a new module/package to `ai_agent_core` is a versioned change — a semver bump on the shared package plus a dependency re-sync in consumers — never an untracked drop into the shared tree. An untracked addition leaves consumers building against a stale pinned dependency (the path-dependency stale-build trap).
 
 **Consequence:** without a home-selection rule, every utility shared by two modules defaults into the generic core — an agent following "elevate to the shared layer" as written is routed there by the contract, not by misjudgement. The core then accretes domain-specific code (e.g. a source connector or a duplicated file-hash helper), consumers weld to it, and each untracked addition trips the stale-build trap. Naming the least-general home converts "shared → promote to core" into "shared → place with the nearest owner," which is the same systemic-routing failure config-purity exists to prevent.
+
+### Variant Capabilities (extends Code Reuse Gate)
+
+When one capability has more than one variant (a language, a source, a store):
+
+- Define one input contract and one facade; every later step calls the facade, never a variant.
+- Each variant is an adapter registered by config. No variant name appears in a code path after extraction.
+- A second variant may not be added until the contract and the facade exist.
+
+**Consequence:** one module per variant duplicates the same logic in each and leaks variant shapes into every later
+step, so each new language or source multiplies the code and each fix is made several times. Evidence (reported by a
+consumer's director session, not verified in this repo): a six-key provenance dict repeated 23 times across sibling
+reader modules with no shared base, while Code Reuse Gate covered only a shared utility.
+
+### Duplicate-Code Ratchet (extends Code Reuse Gate)
+
+A repo keeps a duplicate-code count that may only fall: the count is a committed baseline integer, the gate fails when
+the count rises, and a zero threshold is not used while clones exist. Evidence for the design:
+`audit/capability_decisions/CDR-source-code-kb-quality-tooling.md` in `ai_context_engine` (commit 508cc63).
+
+The ratchet's scope is the code that ships. Code whose only purpose is to guard, measure or prove a change (checkers,
+parity or comparison harnesses, migration gates) is declared build-time scaffolding when it is created, with a
+retirement condition recorded next to it. Scaffolding is excluded from quality ratchets and clean-up passes
+(duplicate-code count, refactors), is not refactored, and is retired when its condition is met. The first step of
+driving a count down is to measure where the count sits and drop what is not retained.
+
+**Known gap:** this is a requirement only. The PCO ships no check; each consumer wires the count into its own gate
+script. The record names jscpd (PMD CPD as the Java fallback) and marks its flags, the count field and the
+determinism of the count as UNVERIFIED, so no tool settings are given here.
+The scaffolding exclusion is likewise unenforced: no PCO check reads a declaration or a retirement condition.
+
+**Consequence:** without a count that cannot rise, duplication grows with every addition and is found only after the
+fact, when a matrix, library research and a refactor must come before any other work.
+A ratchet that includes scaffolding turns clean-up effort into work on code about to be deleted, and a guard rewritten
+for tidiness is no longer the independent check it was. Evidence (reported by a consumer's director session, not
+verified here): in `ai_context_engine` module `ai_code_graph` the ratchet scanned about 32,000 lines of strict checkers
+against about 37,600 lines of module source, 224 of 329 clones were in the checkers, and 5 landed slices plus 1
+discarded one deduplicated code later established as build-time scaffolding to be retired.
 
 ### AI Infrastructure Primitives (extends Code Reuse Gate)
 
