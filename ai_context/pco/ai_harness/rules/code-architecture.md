@@ -88,8 +88,8 @@ The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its 
 "Shared by more than one module" answers *whether* to extract, not *where* it lands. Choose the home explicitly:
 
 - **Least-general shared home.** Place shared code in the most-specific module that covers its *actual* consumers. Code shared by two sibling implementation modules belongs with the more-specific owner of that capability (the module whose domain it serves), not the platform-wide core. Two modules happening to use a utility is not by itself grounds for promotion to the generic core — the test is whether the capability is needed **platform-wide**, not whether two modules touch it.
-- **Generic-core purity.** The generic primitives layer (`ai_agent_core`) holds **generic** AI/AIOps primitives only — the categories in *AI Infrastructure Primitives* below (LLM call surfaces, config loading, vector-store wiring, retrieval defaults, telemetry/tracing, CLI contracts, AIOps substrate). Domain- or source-specific capability (a source connector, a facet parser, a domain client) must **not** enter the generic core even when shared — route it to the owning domain module. This is the Config Purity principle applied to module placement: domain context does not belong in the reusable core.
-- **Adding to the core is a versioned change.** Adding a new module/package to `ai_agent_core` is a versioned change — a semver bump on the shared package plus a dependency re-sync in consumers — never an untracked drop into the shared tree. An untracked addition leaves consumers building against a stale pinned dependency (the path-dependency stale-build trap).
+- **Generic-core purity.** The generic primitives layer (the shared-code home) holds **generic** AI/AIOps primitives only — the categories in *AI Infrastructure Primitives* below (LLM call surfaces, config loading, vector-store wiring, retrieval defaults, telemetry/tracing, CLI contracts, AIOps substrate). Domain- or source-specific capability (a source connector, a facet parser, a domain client) must **not** enter the generic core even when shared — route it to the owning domain module. This is the Config Purity principle applied to module placement: domain context does not belong in the reusable core.
+- **Adding to the core is a versioned change.** Adding a new module/package to the shared-code home is a versioned change — a semver bump on the shared package plus a dependency re-sync in consumers — never an untracked drop into the shared tree. An untracked addition leaves consumers building against a stale pinned dependency (the path-dependency stale-build trap).
 
 **Consequence:** without a home-selection rule, every utility shared by two modules defaults into the generic core — an agent following "elevate to the shared layer" as written is routed there by the contract, not by misjudgement. The core then accretes domain-specific code (e.g. a source connector or a duplicated file-hash helper), consumers weld to it, and each untracked addition trips the stale-build trap. Naming the least-general home converts "shared → promote to core" into "shared → place with the nearest owner," which is the same systemic-routing failure config-purity exists to prevent.
 
@@ -109,8 +109,7 @@ reader modules with no shared base, while Code Reuse Gate covered only a shared 
 ### Duplicate-Code Ratchet (extends Code Reuse Gate)
 
 A repo keeps a duplicate-code count that may only fall: the count is a committed baseline integer, the gate fails when
-the count rises, and a zero threshold is not used while clones exist. Evidence for the design:
-`audit/capability_decisions/CDR-source-code-kb-quality-tooling.md` in `ai_context_engine` (commit 508cc63).
+the count rises, and a zero threshold is not used while clones exist.
 
 The ratchet's scope is the code that ships. Code whose only purpose is to guard, measure or prove a change (checkers,
 parity or comparison harnesses, migration gates) is declared build-time scaffolding when it is created, with a
@@ -126,10 +125,7 @@ The scaffolding exclusion is likewise unenforced: no PCO check reads a declarati
 **Consequence:** without a count that cannot rise, duplication grows with every addition and is found only after the
 fact, when a matrix, library research and a refactor must come before any other work.
 A ratchet that includes scaffolding turns clean-up effort into work on code about to be deleted, and a guard rewritten
-for tidiness is no longer the independent check it was. Evidence (reported by a consumer's director session, not
-verified here): in `ai_context_engine` module `ai_code_graph` the ratchet scanned about 32,000 lines of strict checkers
-against about 37,600 lines of module source, 224 of 329 clones were in the checkers, and 5 landed slices plus 1
-discarded one deduplicated code later established as build-time scaffolding to be retired.
+for tidiness is no longer the independent check it was.
 
 ### AI Infrastructure Primitives (extends Code Reuse Gate)
 
@@ -145,7 +141,7 @@ a shared AI primitives layer already provides it:
 
 How to check quickly:
 - Prefer a dedicated “primitives index” for your shared AI primitives layer (project-owned routing usually points to it).
-- If your repo uses `ai-agent-core`, print the packaged primitives index with `ai-agent-primitives-index`.
+- If your repo uses the shared-code home's package, print its packaged primitives index with the package's index command.
 
 **Why this rule must be explicit:** agent-driven development reproduces these from scratch
 in every module, because sessions are stateless — each session starts from the domain

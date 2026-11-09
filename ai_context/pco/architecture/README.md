@@ -31,7 +31,7 @@
   [code-architecture.md](../ai_harness/rules/code-architecture.md) → Config Purity, One Responsibility Per File; no PCO check.
 - No `pip`, Poetry, Pipenv, Conda or ad-hoc virtualenv workflows: required by code-architecture.md → Python Tooling
   (UV Only); no PCO check (the scan sees raw `python` commands only).
-- Reuse of the shared primitives layer (`ai_agent_core`) for LLM calls: required by code-architecture.md → AI
+- Reuse of the shared primitives layer (the shared-code home) for LLM calls: required by code-architecture.md → AI
   Infrastructure Primitives; no PCO check.
 - One contract and facade before a second variant: required by code-architecture.md → Variant Capabilities; no PCO
   check. The harness reviewer asks the variant question for code and scope changes, and the change-loop design review
@@ -39,8 +39,8 @@
 - A duplicate-code count that may only fall: required by code-architecture.md → Duplicate-Code Ratchet; no PCO check
   (each consumer wires it in its own gate script; tool and settings unverified); scope is shipped code, build-time
   scaffolding excluded.
-- `ai_agent_core`'s Platform Contract Implementations declaration: required by
-  [CONTRACT.md](../governance/CONTRACT.md) → Special Case: `ai_agent_core`; no PCO check.
+- The shared-code home's Platform Contract Implementations declaration: required by
+  [CONTRACT.md](../governance/CONTRACT.md) → Special Case: Shared-Code Home; no PCO check.
 
 ## Rules
 

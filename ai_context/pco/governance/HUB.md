@@ -157,12 +157,12 @@ New capabilities are tracked in [capability_registry.yaml](capability_registry.y
 and the registry contract: [CONTRACT.md](CONTRACT.md) → Capability Lifecycle; what is checked:
 [master-data spoke](../master-data/README.md).
 
-## `ai_agent_core` Relationship (Governed Implementation Substrate)
+## Shared-Code Home Relationship (Governed Implementation Substrate)
 
-`ai_agent_core` is a governed repo and the shared implementation substrate that downstream repos pin as a
+The shared-code home is a governed repo and the shared implementation substrate that downstream repos pin as a
 dependency, not vendor or modify. Because its changes reach every consumer, breaking changes need explicit
 release signalling. Whether consumers use it: [architecture spoke](../architecture/README.md) → Not enforced.
-Position and conformance declarations: [CONTRACT.md](CONTRACT.md) → Special Case: `ai_agent_core`.
+Position and conformance declarations: [CONTRACT.md](CONTRACT.md) → Special Case: Shared-Code Home.
 
 ## Harness Rule Enforcement Lifecycle (session-snapshot model)
 

@@ -36,7 +36,7 @@
 - Provenance on retrieval results and end-to-end retrieval traces at run time: required by
   [retrieval.md](../ai_harness/rules/retrieval.md) → Quality Gate and
   [observability.md](../ai_harness/rules/observability.md); no PCO check. Restriction to approved sources:
-  [security spoke](../security/README.md) → Not enforced. What is known of `ai_agent_core`'s
+  [security spoke](../security/README.md) → Not enforced. What is known of the shared-code home's
   runtime: [assurance spoke](../assurance/README.md) → Declared Scope of Validation.
 - Stale docs, runbooks included: required by [code-architecture.md](../ai_harness/rules/code-architecture.md) → Docs Currency; no
   PCO check.

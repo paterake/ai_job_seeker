@@ -111,9 +111,9 @@ Key principles:
 
 The harness is shared and `ai_context/` structure is fixed. Repo differences exist as content within the same spoke folders (and are explained by `ai_context/pco/governance/CONCERNS.md`), not as ad-hoc structure changes.
 
-## Special Case: `ai_agent_core`
+## Special Case: Shared-Code Home
 
-`ai_agent_core` is a governed repo and must be harness-wired exactly like other governed repos.
+The shared-code home is a governed repo and must be harness-wired exactly like other governed repos.
 
 Its position is distinct:
 

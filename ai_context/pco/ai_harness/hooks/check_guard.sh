@@ -4,7 +4,7 @@
 #   - a file edit under ai_context/pco/ (after resolving symlinks) in any repo other than the PCO: that tree is PCO-owned, and sync
 #     overwrites a local edit, so the fix never reaches the other repos;
 #   - git push --force (or -f / --force-with-lease / a +refspec): it rewrites shared history.
-# The PCO is recognised by its consumer manifest (ai_context/project/governance/consumers.yaml).
+# The PCO is recognised by its example consumer config (ai_context/project/governance/consumers.example.yaml).
 # Usage: check_guard.sh --command <shell command> --path <file path>
 # Pass: exit 0, no output. Deny: exit 2, structured reason on stderr. Called with neither flag: exit 2 (fails
 # closed), because a gate that is given nothing checks nothing.
@@ -66,7 +66,7 @@ fi
 
 if [[ "$path" == */ai_context/pco/* ]]; then
     root="${path%%ai_context/pco/*}"
-    if [[ ! -f "${root}ai_context/project/governance/consumers.yaml" ]]; then
+    if [[ ! -f "${root}ai_context/project/governance/consumers.example.yaml" ]]; then
         deny "GOVERNANCE DENY
 denial_reason: synced_pco_edit_refused
 next_action: ai_context/pco/ is PCO-owned and sync overwrites local edits; make the change in the PCO repo (ai_agent_pco) and re-sync, or put repo-specific content in ai_context/project/"

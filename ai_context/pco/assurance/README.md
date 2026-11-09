@@ -56,5 +56,5 @@ As of 2026-10-21 ([governance-provenance.md](../ai_harness/rules/governance-prov
 
 | Axis | Status | Evidence |
 |---|---|---|
-| Runtime governance: source trust, lineage, bounded execution, eval gates, multi-agent trust | Declared validated by the operator through production use | Production use, not an independent audit. The PCO checks no runtime conformance. A name-level read of `ai_agent_core` (2026-10-21, not a full audit) found bounds, `run_id`, degrade paths, input caps and run manifests, and no kill switch or per-call human approval; its retrieval defaults were not read |
+| Runtime governance: source trust, lineage, bounded execution, eval gates, multi-agent trust | Declared validated by the operator through production use | Production use, not an independent audit. The PCO checks no runtime conformance. A name-level read of the shared-code home (2026-10-21, not a full audit) found bounds, `run_id`, degrade paths, input caps and run manifests, and no kill switch or per-call human approval; its retrieval defaults were not read |
 | Legal, procurement, organisational | Workstream, not independently validated | Wording advisory until Legal/DPO sign-off ([ENTERPRISE_OBLIGATIONS.md](../governance/ENTERPRISE_OBLIGATIONS.md)) |
