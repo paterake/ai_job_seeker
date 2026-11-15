@@ -30,6 +30,12 @@ capabilities:
     stage_since: "2026-05-19"
     owner: pco-owner
     evidence: "ai_context/pco/ai_harness/skills/backlog-continuity/SKILL.md defines checkpointing for cross-session backlog execution."
+  - name: skill_retire_backlog
+    tier: 1
+    stage: emerging
+    stage_since: "2026-11-15"
+    owner: pco-owner
+    evidence: "ai_context/pco/ai_harness/skills/retire-backlog/SKILL.md defines folding a completed anchor doc and archiving or purging it with its docs/TODO.md row."
   - name: skill_use_context
     tier: 1
     stage: established

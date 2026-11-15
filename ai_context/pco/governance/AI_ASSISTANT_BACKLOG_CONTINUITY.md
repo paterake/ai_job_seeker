@@ -58,6 +58,18 @@ reading them as stated facts.
 | Cross-repo work | `docs/todo/<tracker>.md` in the affected root repo |
 | Contract/maturity gaps | the repo's backlog, like any other item ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → Required Set); `INTENT.md` → Known Limitations references it |
 
+## Backlog Lifecycle
+
+**Creation at intake.** When an operator intent or ask starts work that spans sessions and no anchor doc covers it,
+the agent creates one under this contract, with its `docs/TODO.md` row and the operator's words quoted, before the
+first slice. If an anchor doc already covers the work, the agent folds the ask into it as items instead of
+starting a second. **Consequence:** work begun without an anchor doc has no handoff, so the next session re-derives
+scope from chat, and a second doc for the same work splits its status across two homes.
+
+**Retirement.** When no open item remains, the agent applies the `retire-backlog` skill: durable content folded into
+its owning doc, then archived or purged as the operator decides ([DOCS_CONTRACT.md](DOCS_CONTRACT.md) → TODO File Structure). **Consequence:** a spent anchor doc stays in
+the index, and later sessions load it and re-work items already closed.
+
 ## Constraint Inheritance Rule
 
 Every completed item establishes constraints that all subsequent items must honour.

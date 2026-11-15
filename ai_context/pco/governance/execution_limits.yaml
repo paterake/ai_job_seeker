@@ -8,4 +8,4 @@ limits:
   # Counts shell calls only; other tool calls are not counted.
   max_tool_calls:
     value: 150
-    rationale: "Human-on-the-loop sessions need a defined review point. 150 shell calls is generous for focused work; a session exceeding this is accumulating context without a review checkpoint."
+    rationale: "Protects the precision of a session's context. A long session piles up task output until the constraints it loaded at the start (the operator's words, governance, the anchor doc) compete with noise, and an agent cannot reliably notice its own drift. 150 shell calls is generous for one focused backlog item. At the limit the work continues in a fresh session from the anchor doc, where those constraints load at full precision. That restart is the review point: a person's when one is on the loop; under a director run, the committed handoff record and the reviewer gate on every commit. Subagents and forks share the count, so they cannot extend a session."

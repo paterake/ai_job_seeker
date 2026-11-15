@@ -11,7 +11,7 @@ Maintain durable backlog state so each backlog item can be executed in a fresh s
 
 ## When to Invoke
 
-- The user asks to create a TODO/anchor doc for a backlog.
+- The user asks to create a TODO/anchor doc for a backlog, or states an intent or ask that starts work spanning sessions with no anchor doc covering it (contract § Backlog Lifecycle: create it, or fold the ask into the one that exists).
 - The user asks to continue/progress a backlog item across sessions.
 - The user asks for a checkpoint update (Done/Still Todo/Constraints/Verification/Gotchas).
 
