@@ -13,6 +13,10 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 - Before adding code that interprets content, choose the driver (config-, data- or AI-driven) with the
   explicit-vs-inference test in `code-architecture.md` → Driver Selection. *Defaulting builds parsers for semantic
   problems, or models for exact derivations.*
+- Before writing code for a capability, name the industry standard or maintained library that provides it and how
+  it will be used, or record why none fits; custom code is the fallback, not the default. *Custom code is the
+  agent's cheapest move, so without this question at design time it becomes the default and is challenged only in
+  review, after it exists.*
 - Define how you will verify before you start: state the enterprise-grade bar for this work, which you set from
   the work at hand (assurance spoke → Enterprise Grade), and report against stated criteria, never a grade label.
   Finish with the proof (commands and results), not "done". *Weak success criteria produce false success signals;

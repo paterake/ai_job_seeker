@@ -7,7 +7,8 @@
 - Workflow patterns: prompt chaining, routing, parallelisation, orchestrator–workers and evaluator–optimizer are
   common patterns, not a closed list; autonomous agents are within Driver Selection
 - Code structure: config purity, reuse and shared-code home, variant contracts and the duplicate-code ratchet, one
-  responsibility per file, modular entry points, UV-only Python
+  responsibility per file, modular entry points, module boundaries (one-way dependencies, public names, one config
+  owner, no dead modules), dependency updates, UV-only Python
 - The boundary between the synced PCO layer and a repo's project-additive content
 
 ## Enforced
@@ -17,6 +18,9 @@
 - A consumer's `REPO_CONTRACT.md` exists, has the required sections and maps only real spokes: validator
   `validate --scope governance|full` ([CONTRACT.md](../governance/CONTRACT.md)).
 - The synced PCO layer is not edited in a consumer: [knowledge spoke](../knowledge/README.md) → Enforced.
+- Naming the standard or maintained library before custom code: required by the core
+  ([AGENTS.md](../AGENTS.md) → Before you start); reviewer judgement at design review against the always-loaded core;
+  no PCO check, and no reviewer prompt names it.
 - Driver choice: human review at code review ([harness-tool-contract.md](../ai_harness/rules/harness-tool-contract.md)
   → Capability Decisions Are Reviewed, Not Gated).
 - Config purity, code reuse gate and shared-code home, one responsibility per file, modular entry points: human
@@ -39,6 +43,10 @@
 - A duplicate-code count that may only fall: required by code-architecture.md → Duplicate-Code Ratchet; no PCO check
   (each consumer wires it in its own gate script; tool and settings unverified); scope is shipped code, build-time
   scaffolding excluded.
+- Module boundaries (one-way imports, public names only, one config owner, no dead modules): required by
+  code-architecture.md → Module Boundaries; no PCO check; reviewer judgement.
+- Dependency updates watched by a standard tool: required by code-architecture.md → Dependency Updates; no PCO
+  check, and no governed repo has a tool configured (its Known gap).
 - The shared-code home's Platform Contract Implementations declaration: required by
   [CONTRACT.md](../governance/CONTRACT.md) → Special Case: Shared-Code Home; no PCO check.
 

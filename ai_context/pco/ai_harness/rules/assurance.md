@@ -23,9 +23,21 @@ paths:
 - A change keeps the catalogued tests passing and adds none: no test for a fix, a review finding, a historical item,
   a library swap or an agent task. A new test is added only for a newly delivered capability, through a catalogue
   edit the operator approves.
+- A catalogue test made stale by a library adoption or a library version change (it specifies the custom code the
+  adoption replaces, a feature the adoption drops, or what the library did before the upgrade) is dropped in the same
+  change, with the catalogue count lowered, when the change shows all of: the named cause (the adoption or version
+  change, and the feature it drops or changes); what the test checked, what happens now, and why that difference is
+  the intended result of that decision, not a regression; and the authorisation, secrets and redaction and
+  provenance tests passing unchanged. The reviewer checks each drop against these and returns REVISE when one is
+  missing; an agent that cannot make the case stops and reports; the commit message lists every test dropped.
+  Never under this: dropping or weakening a test of authorisation, secrets and redaction or provenance; re-aiming a
+  dropped test at the new behaviour (a new guarantee test is a new test, through the catalogue edit above); dropping
+  a test whose failure the decision does not explain (that is a regression, and it is fixed).
 - **Consequence:** without a fixed catalogue every change adds tests (one consumer repo grew to about 4,500 tests,
   a third of its commits adding some, and kept about 760 after a purge); the suite then measures change history, not
   intent, costs more effort than the work, and hides which tests prove what the repo delivers.
+  A test that pins the code an adoption replaces, or one library version, blocks the adoption the OSS preference
+  asks for (`code-architecture.md` → Low-Code / OSS Preference) and turns every upgrade into a test rewrite.
 
 ## Error Analysis Before Gates
 

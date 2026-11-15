@@ -1,5 +1,5 @@
 ---
-description: Architecture rules for code — config purity, driver selection, simplest pattern first, reuse and shared-code homes, variant contracts, duplicate-code ratchet, file structure, native-first integration. Loaded when editing code or configuration.
+description: Architecture rules for code — config purity, driver selection, simplest pattern first, reuse and shared-code homes, variant contracts, duplicate-code ratchet, file structure, module boundaries, dependency updates, native-first integration. Loaded when editing code or configuration.
 basis: operational-experience
 spoke: architecture
 paths:
@@ -76,6 +76,25 @@ The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its 
 - If Python tooling is required for a repo, represent it via `pyproject.toml` + `uv.lock`.
 - **Consequence:** one execution path outside UV resolves different versions, so a result cannot be reproduced.
 
+## Dependency Updates
+
+- Dependencies resolve from a committed lockfile (`uv.lock` for Python). Moving a pinned version is a deliberate
+  change, named in its commit message, never done in passing; only code the new version requires moves with it.
+- A standard dependency-update tool watches the pinned dependencies and opens one change per upgrade, so a release,
+  deprecation or security fix is seen when it ships. No custom watcher is built (Low-Code / OSS Preference).
+- An upgrade is accepted when the repo's pipelines run end to end on it and its authorisation, secrets and redaction
+  and provenance tests pass unchanged; tests the upgrade makes stale follow `assurance.md` → Test Catalogue.
+- A dependency pinned in more than one place (for example a git revision in the workspace sources and an exact
+  version in each package) moves in one change, in every place.
+
+**Known gap:** the PCO ships no update-tool configuration and names no tool as verified. On 2026-11-15 none of the
+eight governed repos had a pipeline definition or an update-tool configuration committed in the repo, and five pinned
+the shared-code home by git revision. Whether a candidate tool (Renovate, Dependabot) updates `uv.lock` and a
+git-revision pin is UNVERIFIED; until a consumer wires one and records the result, no tool watches the pins.
+
+**Consequence:** pins nobody watches fall behind silently: a security fix is missed, and the eventual upgrade spans
+several versions at once, the costly migration the OSS preference is meant to avoid.
+
 ## Code Reuse Gate
 
 - Before writing new infrastructure code, check whether a shared utility already exists.
@@ -98,6 +117,8 @@ The core states the rule ([AGENTS.md](../../AGENTS.md) → While you work). Its 
 When one capability has more than one variant (a language, a source, a store):
 
 - Define one input contract and one facade; every later step calls the facade, never a variant.
+- The contract is documented where the facade is owned: what goes in, what comes out, what policy it enforces, and
+  where an external component would bind. A facade whose contract is not documented does not meet the first bullet.
 - Each variant is an adapter registered by config. No variant name appears in a code path after extraction.
 - A second variant may not be added until the contract and the facade exist.
 
@@ -105,6 +126,7 @@ When one capability has more than one variant (a language, a source, a store):
 step, so each new language or source multiplies the code and each fix is made several times. Evidence (reported by a
 consumer's director session, not verified in this repo): a six-key provenance dict repeated 23 times across sibling
 reader modules with no shared base, while Code Reuse Gate covered only a shared utility.
+An undocumented contract cannot be bound, reviewed or described in an architecture document without reading its code.
 
 ### Duplicate-Code Ratchet (extends Code Reuse Gate)
 
@@ -171,6 +193,26 @@ accumulates until a single shared config change requires edits across multiple m
 - **Consequence:** logic that lives only in a script cannot be tested in isolation or reused by another module,
   so it is copied instead.
 
+## Module Boundaries
+
+For a repo with more than one module:
+
+- Dependencies run one way, with no cycles. The repo records its module layers; a module imports only from layers
+  below its own, and modules in one layer do not import each other's code: one consumes another's outputs as data.
+- Across modules, import public names only, never an underscore module or name. A need for private code means the
+  owner exposes it, the code moves to its real owner, or the consumer is restructured to sit downstream of the owner.
+- Every config file has one owning module. Another module gets a value through the owner's public API, or the run
+  passes it the location; it never reads the owner's config folder by path.
+- A module with no consumer and no entry point in use is retired or recorded as parked with the trigger that brings
+  it back; no new dependency on a parked module is added. A retirement is its own decided change, never a side effect
+  of other work (the core: mention unrelated dead code; don't delete it).
+
+**Consequence:** an upward or sideways import welds two modules and becomes a cycle the first time the lower one needs
+the upper one; a private import blocks every rename in its owner; a config file read by two modules drifts, and a path
+into another module's folder breaks silently when the owner moves it; a dead module is still maintained and built on.
+Evidence (reported by a consumer's director session, not verified in this repo): about 20 private cross-module imports
+found and removed in one consumer, each of which blocked a rename in its owner.
+
 ## Docs Currency
 
 Any code or config change must be reflected, in the same change and without being asked, in every doc that owns
@@ -184,14 +226,25 @@ stale fact, and a deferred doc fix is never made.
 ## Low-Code / OSS Preference
 
 - Prefer an existing OSS library over custom code when one covers the requirement adequately.
-- Custom code requires justification: the OSS option does not exist, is too heavy for the task, or
-  requires more wiring than the problem warrants.
-- Balanced decision rule: a small in-line parser or test utility may be faster than wiring a library.
-  The test is: "does this custom code become a maintenance liability or block reuse?" If yes, find the library.
+- Preference order: a standard or protocol, then a widely used maintained library (pinned, behind an interface the
+  repo owns), then custom code as glue only.
+- Adopt a library when it keeps the guarantees, not the features: authorisation (who may see which data), secrets
+  and redaction (nothing sensitive reaches outputs, logs or traces) and provenance (every answer traces to its
+  source) are kept regardless; every other feature of the replaced code that the library lacks is listed and
+  dropped, not rebuilt. Byte-identical output is not required: the change records the output before and after and
+  classifies every difference.
+- A guarantee is enforced through the library's own mechanism first (filter, hook, middleware, callback); custom code
+  covers only what the library cannot do, as a thin check before or after the call, never a parallel implementation.
+- Custom code is justified only when no standard or maintained library covers the requirement, or none can keep the
+  three guarantees above. A library being heavier than the task, or needing more wiring than the problem seems to
+  warrant, is not a reason; neither is custom code being faster to write.
 - Custom code that reimplements something an OSS library already provides well is a governance violation,
   not just a style preference.
 - **Consequence:** custom code reimplements tested paths with fewer users finding its bugs, and its maintenance
-  is paid forever.
+  is paid forever; an adoption that rebuilds every feature of the code it replaces keeps that maintenance.
+  Evidence (reported by the operator, not verified in this repo): custom code accumulated across three incarnations
+  of one consumer repo. The exceptions removed here ("too heavy", "more wiring", "a small in-line parser is faster")
+  were the openings the old rule text left for it.
 
 ## Native First
 

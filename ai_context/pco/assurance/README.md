@@ -23,6 +23,7 @@
 
 - Evals as blocking gates, threshold changes backed by regression evidence, pinned dataset versions: required by [assurance.md](../ai_harness/rules/assurance.md) → Eval as a Gate, Dataset Governance; no PCO check. A consumer's gates are its own, declared in its `REPO_CONTRACT.md`.
 - Online-to-offline loop (production failures become regression cases): required by [assurance.md](../ai_harness/rules/assurance.md) → Online-to-Offline Loop; no PCO check.
+- Stale-test drops after a library adoption or upgrade: required by [assurance.md](../ai_harness/rules/assurance.md) → Test Catalogue; reviewer judgement, no PCO check.
 - Incident reports in `audit/incidents/` from the [incident template](../templates/incident_report.md): required by [assurance.md](../ai_harness/rules/assurance.md) → Incident Capture; no PCO check.
 
 ## Rules
