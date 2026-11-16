@@ -22,22 +22,34 @@ paths:
   count, and a gate fails on an unlisted file, a gone file or a changed count.
 - A change keeps the catalogued tests passing and adds none: no test for a fix, a review finding, a historical item,
   a library swap or an agent task. A new test is added only for a newly delivered capability, through a catalogue
-  edit the operator approves.
-- A catalogue test made stale by a library adoption or a library version change (it specifies the custom code the
-  adoption replaces, a feature the adoption drops, or what the library did before the upgrade) is dropped in the same
-  change, with the catalogue count lowered, when the change shows all of: the named cause (the adoption or version
-  change, and the feature it drops or changes); what the test checked, what happens now, and why that difference is
-  the intended result of that decision, not a regression; and the authorisation, secrets and redaction and
-  provenance tests passing unchanged. The reviewer checks each drop against these and returns REVISE when one is
-  missing; an agent that cannot make the case stops and reports; the commit message lists every test dropped.
-  Never under this: dropping or weakening a test of authorisation, secrets and redaction or provenance; re-aiming a
-  dropped test at the new behaviour (a new guarantee test is a new test, through the catalogue edit above); dropping
-  a test whose failure the decision does not explain (that is a regression, and it is fixed).
+  edit below.
+- Agents own every catalogue edit, each gated by an independent reviewer's PASS ([HUB.md](../../governance/HUB.md) →
+  Independent review pattern); the reviewer is trusted with this because it judges in a fresh context, so the
+  "self-evaluation is advisory only" limit (Eval as a Gate) does not apply to it. The operator is involved only when
+  the reviewer returns ESCALATE. The catalogue edits are: a new test for a newly delivered capability (the reviewer
+  checks it proves a capability and is not a fix, a finding or a task in disguise); a change to a test's setup only,
+  its assertions unchanged; test names and docstrings; moving tests between files or features, with the counts
+  adjusted; lowering an eval floor when its cases go with a dropped feature; dropping a stale or wrong test (below).
+- A failing catalogue test is classified as regression, stale or wrong. Regression: fix the product. Stale (the
+  behaviour changed by a recorded decision, such as a library adoption or version change or a dropped feature) or
+  wrong (it pins layout, private internals or one library version, or forces a workaround in the product): fix its
+  setup or drop it, with the catalogue count lowered, when the change shows all of: the cause (the decision, or the
+  defect in the test); what the test checked, what happens now, and why that difference is intended, not a
+  regression; and the authorisation, secrets and redaction and provenance tests passing unchanged. The reviewer
+  checks each drop against these and returns REVISE when one is missing, when the product was bent to satisfy a
+  test, or when a test was bent or dropped to hide a regression; an agent that cannot make the case stops and
+  reports; the commit message lists every test dropped. If the dropped test's behaviour still matters, the agent adds
+  a fresh capability test as a catalogue edit above.
+  Never: dropping or weakening a test of authorisation, secrets and redaction or provenance; re-aiming a dropped test
+  at the new behaviour; rewriting an assertion to get green; dropping a test whose failure the cause does not explain
+  (that is a regression, and it is fixed).
 - **Consequence:** without a fixed catalogue every change adds tests (one consumer repo grew to about 4,500 tests,
   a third of its commits adding some, and kept about 760 after a purge); the suite then measures change history, not
   intent, costs more effort than the work, and hides which tests prove what the repo delivers.
   A test that pins the code an adoption replaces, or one library version, blocks the adoption the OSS preference
   asks for (`code-architecture.md` → Low-Code / OSS Preference) and turns every upgrade into a test rewrite.
+  Routing catalogue edits to the operator burned delivery cycles on test shaping and kept the operator in test
+  management; a test an agent must work around is itself likely wrong.
 
 ## Error Analysis Before Gates
 
@@ -51,7 +63,8 @@ paths:
 
 - Evals are blocking gates, not advisory reporting. Metrics that do not gate real outcomes are metrics theatre.
 - "Should work" is not a threshold. The measurable property and the minimum acceptable score must be explicit and versioned.
-- Any threshold change is a governance change — it requires regression evidence before taking effect.
+- Any threshold change is a governance change — it requires regression evidence before taking effect. The one
+  exception is lowering a floor whose cases go with a dropped feature, which is a catalogue edit (Test Catalogue).
 - Self-evaluation is advisory only ([HUB.md](../../governance/HUB.md) → Independent review pattern); its known failure modes must be documented before use.
 - **Consequence:** an advisory eval or an unstated threshold lets a regression ship with a passing report, and a
   threshold lowered without evidence hides the regression it was set to catch.

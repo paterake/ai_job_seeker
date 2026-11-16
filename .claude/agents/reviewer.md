@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Fresh-context judge for a design or a built change. Use before accepting a design, before committing, and inside /agent-harness:change-loop. Give it what to judge (paths), the brief or the operator's words, and for a build review the staged tree hash from `git write-tree`. The caller leaves any commit-message trailer line (such as a Co-Authored-By line) out of the prompt. Returns PASS, REVISE with exact fixes, or ESCALATE.
+description: Cloud sessions only. On a laptop use agent-harness:reviewer instead, because the commit gate records only its PASS there. Fresh-context judge for a design or a built change. Use before accepting a design, before committing, and inside /agent-harness:change-loop. Give it what to judge (paths), the brief or the operator's words, and for a build review the staged tree hash from `git write-tree`. The caller leaves any commit-message trailer line (such as a Co-Authored-By line) out of the prompt. Returns PASS, REVISE with exact fixes, or ESCALATE.
 tools: Read, Grep, Glob, WebFetch
 model: opus
 ---

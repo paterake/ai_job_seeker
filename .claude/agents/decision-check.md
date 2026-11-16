@@ -1,6 +1,6 @@
 ---
 name: decision-check
-description: Before a scope change, a delete, a routing change, or a claim about how a mechanism behaves is put to the operator, checks that decision against the operator's own recorded words and the evidence on disk. Give it the decision and where the operator's words are recorded (briefs, anchor docs, TODO files, commit messages).
+description: Cloud sessions only. On a laptop use agent-harness:decision-check instead. Before a scope change, a delete, a routing change, or a claim about how a mechanism behaves is put to the operator, checks that decision against the operator's own recorded words and the evidence on disk. Give it the decision and where the operator's words are recorded (briefs, anchor docs, TODO files, commit messages).
 tools: Read, Grep, Glob
 model: opus
 ---
