@@ -228,6 +228,11 @@ stale fact, and a deferred doc fix is never made.
 - Prefer an existing OSS library over custom code when one covers the requirement adequately.
 - Preference order: a standard or protocol, then a widely used maintained library (pinned, behind an interface the
   repo owns), then custom code as glue only.
+- At a boundary another component binds to (a port), the interface is the standard where one exists, even where a
+  native interface does more or runs faster. Where no standard is supported, the boundary is a maintained library's
+  or framework's interface, behind the thin interface the repo owns that the preference order allows; that own
+  interface names the standard to watch and is replaced whole, not wrapped, once implementers support the standard.
+  Judge a standard by what implementers support today, not by what is announced.
 - Adopt a library when it keeps the guarantees, not the features: authorisation (who may see which data), secrets
   and redaction (nothing sensitive reaches outputs, logs or traces) and provenance (every answer traces to its
   source) are kept regardless; every other feature of the replaced code that the library lacks is listed and
@@ -241,7 +246,8 @@ stale fact, and a deferred doc fix is never made.
 - Custom code that reimplements something an OSS library already provides well is a governance violation,
   not just a style preference.
 - **Consequence:** custom code reimplements tested paths with fewer users finding its bugs, and its maintenance
-  is paid forever; an adoption that rebuilds every feature of the code it replaces keeps that maintenance.
+  is paid forever; an adoption that rebuilds every feature of the code it replaces keeps that maintenance. A port
+  that keeps its own interface after a standard is supported makes every implementer support two.
   Evidence (reported by the operator, not verified in this repo): custom code accumulated across three incarnations
   of one consumer repo. The exceptions removed here ("too heavy", "more wiring", "a small in-line parser is faster")
   were the openings the old rule text left for it.
