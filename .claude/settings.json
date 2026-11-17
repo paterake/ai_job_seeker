@@ -101,6 +101,14 @@
               "session_start.sh",
               "2"
             ]
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/agent-harness/cloud_only.sh",
+            "args": [
+              "session_start.sh",
+              "3"
+            ]
           }
         ]
       }

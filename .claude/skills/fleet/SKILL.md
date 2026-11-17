@@ -202,11 +202,13 @@ for the operator to start one. Operator, 2026-11-11 (relayed): "I dont agree on:
   5. Run the repo's validators once as an end-to-end check before starting new work; a failure is reported, not
      worked around.
 - **Operator relay**: the operator's interactive session during a section 8 run. It carries the operator's words to the active director, forwarded verbatim as the rule's "Director runs" requires, and
-  the director's batched questions back. It does no work, never dispatches a worker and never claims; its only launch is the first background director (section 8), plus that launch's start-up checks (`claude agents`, `claude logs <id>`). Everything else it does is messages, plus the pushes below. The relay sends one `PushNotification` for each message labelled `DECISION` or `END REPORT`, leading with what the operator must act on (for a decision, the question; for the end report, the outcome and any step left for the operator). It sends nothing for `INFO` or progress. If the launch is blocked, it returns the exact launch command for the operator to run. It never stands in as director. A relay whose own
+  the director's batched questions back. It does no work, never dispatches a worker and never claims; its only launch is the first background director (section 8), plus that launch's start-up checks (`claude agents`, `claude logs <id>`). Everything else it does is messages, plus the pushes below. The relay sends one `PushNotification` for each message labelled `DECISION` or `END REPORT`, leading with what the operator must act on (for a decision, the question; for the end report, the outcome and any step left for the operator). It also pushes the `INFO` "relay moved to <name>" (rule, "Moving the relay"), quoting it as received. It sends nothing for any other `INFO` or progress. If the launch is blocked, it returns the exact launch command for the operator to run. It never stands in as director. A relay whose own
   context runs out is replaced by a fresh operator session started with "You are NOT the director" and the active
-  director's name from the Resume doc. Before the old relay closes, it messages the active director the new relay's
-  session name, and the director records it in the handoff record. If the old relay cannot send it, the operator gives
-  the new address once by `claude attach <id>`. The director never takes a new relay address from the new session's own message.
+  director's name from the Resume doc. The relays and the director make the swap between them: the old relay messages
+  the active director the new relay's address, or the new session forwards the operator's one handover line; the
+  director accepts, records and announces it as the rule's "Relayed approvals" ("Moving the relay") says. In cloud
+  only the first way applies, or the operator gives the new session id once in the director's session. The director
+  takes a new relay address from no other message.
 - **Director messages to the relay**: every message starts with one label: `DECISION` (one batched question), `END REPORT`, or `INFO`. Only the relay pushes; the director and workers never call `PushNotification`, because the operator does not watch them.
 - **End of a run**, after the teardown (sections 6-7), in this order:
   1. If no open item remains in the anchor doc, the retire-backlog skill's archive-or-purge choice comes from the

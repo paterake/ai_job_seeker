@@ -32,6 +32,14 @@ The repo's own context starts at `ai_context/project/ASSISTANTS.md`.
 - Config drives code: domain names, datasets and thresholds live in config, never in source or code paths.
   Design approval is not governance approval, so test every proposed file map against this. *Domain-coupled
   code cannot be reused and is regenerated per domain.*
+- Serve the intent, not the method. Adopting a tool, removing custom code, a test, lint or coverage count, or an
+  alignment backlog is a means to what the work sets out to deliver, never the goal: a change that makes the work
+  look cleaner but deliver less has failed, whatever its metric says. The tension runs both ways: too far toward the
+  method drops what the product needs; too far toward delivery keeps custom code that rots. Adopt the recognised
+  tool first and add custom code only for a gap critical to the intent, measured against what the work must
+  deliver, not against a rule about tools. A swap lands only with proof of no regression; a removal is listed,
+  audited and independently reviewed before it happens. *A tooling-alignment run closed on a status count, and none
+  of the code it judged had been measured against the product.*
 
 ## Sessions and memory
 - One coherent slice per session. Work that spans sessions runs from an anchor doc

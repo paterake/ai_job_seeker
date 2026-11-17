@@ -233,11 +233,13 @@ stale fact, and a deferred doc fix is never made.
   or framework's interface, behind the thin interface the repo owns that the preference order allows; that own
   interface names the standard to watch and is replaced whole, not wrapped, once implementers support the standard.
   Judge a standard by what implementers support today, not by what is announced.
-- Adopt a library when it keeps the guarantees, not the features: authorisation (who may see which data), secrets
-  and redaction (nothing sensitive reaches outputs, logs or traces) and provenance (every answer traces to its
-  source) are kept regardless; every other feature of the replaced code that the library lacks is listed and
-  dropped, not rebuilt. Byte-identical output is not required: the change records the output before and after and
-  classifies every difference.
+- Adopt a library when it keeps the guarantees: authorisation (who may see which data), secrets and redaction
+  (nothing sensitive reaches outputs, logs or traces) and provenance (every answer traces to its source) are kept
+  regardless. Every other feature of the replaced code that the library lacks is listed and measured against the
+  intent or ask: one critical to it is filled by thin custom code beside the library, never a parallel
+  implementation; the rest are recorded as gaps. The swap lands only with proof of no regression against the
+  intent, and a feature is removed only after the list is audited and independently reviewed. Byte-identical
+  output is not required: the change records the output before and after and classifies every difference.
 - A guarantee is enforced through the library's own mechanism first (filter, hook, middleware, callback); custom code
   covers only what the library cannot do, as a thin check before or after the call, never a parallel implementation.
 - Custom code is justified only when no standard or maintained library covers the requirement, or none can keep the
@@ -246,8 +248,9 @@ stale fact, and a deferred doc fix is never made.
 - Custom code that reimplements something an OSS library already provides well is a governance violation,
   not just a style preference.
 - **Consequence:** custom code reimplements tested paths with fewer users finding its bugs, and its maintenance
-  is paid forever; an adoption that rebuilds every feature of the code it replaces keeps that maintenance. A port
-  that keeps its own interface after a standard is supported makes every implementer support two.
+  is paid forever; an adoption that rebuilds every feature of the code it replaces keeps that maintenance, and
+  one that drops a feature the intent needs leaves a cleaner repo that delivers less. A port that keeps its own
+  interface after a standard is supported makes every implementer support two.
   Evidence (reported by the operator, not verified in this repo): custom code accumulated across three incarnations
   of one consumer repo. The exceptions removed here ("too heavy", "more wiring", "a small in-line parser is faster")
   were the openings the old rule text left for it.
