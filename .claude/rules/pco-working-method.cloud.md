@@ -26,6 +26,14 @@ or a doc line you read this session, shows it. Quote the line or the output.
 **Consequence:** an unproven claim about a control is how a control that never worked gets
 trusted.
 
+## Native first
+Before building a control or feature, check the Claude Code docs for a native feature or setting;
+configure it instead of building. Never present a harness copy of a native feature as harness work.
+Operator (relayed by ai-publish-b9, 2026-11-17): "we cant build solutions when native capabiities
+exist and it is a case of configuring those features of the coding-agent".
+**Consequence:** a harness clone of a native feature gets claimed as the harness's own work, then
+needs upkeep the native one would not.
+
 ## Scaffold hygiene
 Verification code written to guard, measure or prove a change (tests, checkers, comparison
 harnesses) is declared build-time scaffolding when it is created, with its retirement condition

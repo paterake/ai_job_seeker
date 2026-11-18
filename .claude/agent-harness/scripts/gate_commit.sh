@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse (Bash, if "git *"): allow a commit only when a reviewer PASS is recorded for
+# PreToolUse (Bash, if "*git*commit*" or "*git*push*"): allow a commit only when a reviewer PASS is recorded for
 # the staged tree. Emits hookSpecificOutput deny — top-level/defer decisions are ignored interactively.
 set -uo pipefail
 
@@ -15,7 +15,7 @@ cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')" || { prin
 # still gets the reviewer-PASS check below. It sources its helpers with a plain skip: a missing file means the
 # director check is not run (fail open, deliberate), never a new refusal. The check runs in a command
 # substitution and cannot deny: only its return code 10 becomes a refusal; any other outcome is a skip.
-if grep -Eq '(^|[;&|(`[:space:]])git([[:space:]]+(-[cC]|--(namespace|config-env|shallow-file|attr-source|git-dir|work-tree))[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+push([[:space:]]|$)' <<<"$cmd"; then
+if grep -Eq '(^|[;&|(`[:space:]])([^[:space:];&|(`]*/)?git([[:space:]]+(-[cC]|--(namespace|config-env|shallow-file|attr-source|git-dir|work-tree))[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+push([[:space:]]|$)' <<<"$cmd"; then
   if . "$(dirname "$0")/gate_deny.sh" 2>/dev/null && . "$(dirname "$0")/director_lock.sh" 2>/dev/null; then
     dmsg="$(director_check push 2>/dev/null)"; drc=$?
     [ "$drc" -eq 10 ] && deny "$dmsg" director_held
@@ -32,7 +32,7 @@ trap 'deny "COMMIT GATE: gate script error, commit refused (fail closed)." scrip
 # substitution makes it live; the raw text if it cannot read the command, so it fails closed). It refuses
 # when the raw text or the skeleton holds a git commit and the skeleton holds a token. Here-strings, not
 # pipes: under pipefail grep -q can SIGPIPE printf and skip the deny.
-cw='(^|[;&|(`[:space:]])git([[:space:]]+(-[cC]|--(namespace|config-env|shallow-file|attr-source|git-dir|work-tree))[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)'
+cw='(^|[;&|(`[:space:]])([^[:space:];&|(`]*/)?git([[:space:]]+(-[cC]|--(namespace|config-env|shallow-file|attr-source|git-dir|work-tree))[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)'
 skel="$(printf '%s' "$cmd" | perl "$(dirname "$0")/shell_skeleton.pl")" || skel=$cmd
 [ -n "$skel" ] || skel=$cmd
 if { grep -Eq -e "$cw" <<<"$cmd" || grep -Eq -e "$cw" <<<"$skel"; } \
@@ -45,7 +45,7 @@ if { grep -Eq -e "$cw" <<<"$cmd" || grep -Eq -e "$cw" <<<"$skel"; } \
   [ "$n" -gt 1 ] && mt="multiple"
   deny "COMMIT GATE: refused a commit command that changes directory or repo (cd, pushd, -C, --git-dir, --work-tree, GIT_*): the gate only inspects the session cwd. Run cd <repo> in a separate Bash call, then commit alone from that cwd." cd_or_repo_change "$mt"
 fi
-# The if filter also fires on any git command, $(), backticks or $VAR; act only on a git commit.
+# The if filters also fire on any command whose text holds git and commit or push, $(), backticks or $VAR; act only on a git commit.
 grep -Eq -e "$cw" <<<"$cmd" || exit 0
 how="Stage the change, run agent-harness:reviewer with the git write-tree hash, get 'VERDICT: PASS tree=<hash>', then git commit (no -a, no paths)."
 

@@ -72,7 +72,7 @@ _dl_push_hits_default() {
 director_check() {   # $1 = commit | push | dispatch
   local kind="${1:-}" dir="${cwd:-$PWD}" c def cur m hs hn st
   if [ "$kind" = push ]; then
-    c="$(sed -nE 's/.*[[:space:]]git[[:space:]]+-C[[:space:]]+([^[:space:]]+).*/\1/p' <<<" $cmd")"
+    c="$(sed -nE 's/.*[[:space:]]([^[:space:]]*\/)?git[[:space:]]+-C[[:space:]]+([^[:space:]]+).*/\2/p' <<<" $cmd")"
     c="${c//[\'\"]/}"
     if [ -n "$c" ]; then case "$c" in /*) dir="$c" ;; *) dir="$dir/$c" ;; esac; fi
   fi
@@ -101,7 +101,7 @@ director_check() {   # $1 = commit | push | dispatch
 }
 
 # Successor-launch loop guard for a background launch. A successor launch carries PCO_DIRECTOR_GEN in its
-# --settings env (worker dispatches carry only PCO_PARENT_SESSION and are never touched). The hook env's
+# --settings env (worker dispatches carry no PCO_DIRECTOR_GEN and are never touched). The hook env's
 # PCO_DIRECTOR_GEN is the caller's own generation (absent = 0). Unverified residual: a successor launched
 # without GEN, or a session that strips its own env, is not caught.
 director_loopguard() {

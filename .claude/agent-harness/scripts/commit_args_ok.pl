@@ -20,7 +20,7 @@ my $is_prefix  = sub { my ($n, @full) = @_; grep { index($_, $n) == 0 } @full };
 sub refuse { print "git commit $_[0]"; exit 1 }
 
 for (my $i = 0; $i < @t; $i++) {
-  next unless $t[$i] =~ /(?:^|[;&|(`])git$/;
+  next unless $t[$i] =~ /(?:^|[;&|(`])(?:[^\s;&|(`]*\/)?git$/;
   my $j = $i + 1;
   while ($j < @t && $t[$j] =~ /^-/) { $j += ($t[$j] =~ /^(?:-[cC]|--(?:namespace|config-env|shallow-file|attr-source|git-dir|work-tree))$/) ? 2 : 1 }   # global options; value options take an argument
   next unless $j < @t && $t[$j] eq 'commit';

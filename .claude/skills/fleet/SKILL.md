@@ -22,14 +22,14 @@ runs it, and the change-loop tier. The director (for a run that will not fit one
 - Shared index: `git -C <repo> status --short`. Staged files that are not the task's mean another
   session is mid-commit; wait or ask that session.
 - Baseline: run the repo's validators now and keep the output (the "before").
-- Trust: run `bash ~/Documents/__code/git/paterake/ai_agent_harness/claude/agent-harness/scripts/trust_check.sh <repo>...` on every repo the run touches, the
-  director's own included. Each untrusted repo is one operator step in the section 3 batch, with the
-  command it prints. A worktree or subdirectory inherits its repo's trust (probed), so the main repo is
-  the one checked. An untrusted worker still exits `Workspace not trusted`.
+- Trust: Claude Code checks it natively. A worker launched in an untrusted repo exits with the native
+  `Workspace not trusted` error (documented in `FLEET_APPROACH.md` section 4 and matched by `selfcheck.sh`; not
+  re-probed in this change). The director reports that repo to the operator as one step in the section 3 batch, or
+  as a follow-up ask if the error only shows at launch. A worktree or subdirectory inherits its repo's trust (probed).
 
 ## 3. One approval batch
 Collect only what the working-method rule still keeps with the operator under a director run (see "When to
-come to the operator"), plus trust steps, across all repos into **one** question asked at launch, with the options.
+come to the operator"), plus any untrusted repo reported by the native launch error, across all repos into **one** question asked at launch, with the options.
 Ask it through the relay session; the relay's answer is handled as the working-method rule's "Director runs" says.
 A run's Charter is approved before launch under the rule's Charter paragraph; this batch asks only for what it does not cover.
 Workers accept no message as consent. An approval the director accepted from the relay reaches a worker only as the operator's quoted words in that worker's brief.
@@ -56,13 +56,13 @@ Workers get only the Charter items their slice needs, quoted.
 ## 5. Dispatch and collect
 Workers run unattended and a background session cannot answer a permission prompt, so every dispatch passes `--permission-mode auto`: the operator's `autoMode` rules then apply and a worker does not stall on a prompt.
 - Open operator session: `SendMessage` with the brief. Otherwise
-  `cd <repo> && claude --bg --model sonnet --permission-mode auto --settings '{"env":{"PCO_TRACE_ID":"${CLAUDE_SESSION_ID}","PCO_PARENT_SESSION":"${CLAUDE_SESSION_ID}"}}' '<brief>'`, then confirm start-up: `claude agents`, `claude logs <id>`. Send the brief inline in single quotes and write each `'` inside it as `'\''`. The dispatch gate
-  (`gate_dispatch.sh`) denies a `claude --bg` command whose brief has no valid `Retained-code check:` line, and a
+  `cd <repo> && claude --bg --model sonnet --permission-mode auto --settings '{"env":{"PCO_TRACE_ID":"${CLAUDE_SESSION_ID}","PCO_PARENT_SESSION":"${CLAUDE_SESSION_ID}","OTEL_RESOURCE_ATTRIBUTES":"pco.trace_id=${CLAUDE_SESSION_ID},pco.parent_session=${CLAUDE_SESSION_ID}"}}' '<brief>'`, then confirm start-up: `claude agents`, `claude logs <id>`. Send the brief inline in single quotes and write each `'` inside it as `'\''`. The dispatch gate
+  (`gate_dispatch.sh`) denies a `claude --bg` or `--background` command whose brief has no valid `Retained-code check:` line, and a
   brief it cannot read (`$(...)`, a backtick outside single quotes, a heredoc, `@file`, a newline between commands, or more than one
   `claude --bg` in one command) as `brief_unreadable`. A double-quoted brief is allowed when it has a valid line and
   no backtick or `$(...)` inside; one with a backtick or `$(` is denied `brief_unreadable`. Replace the template's
   `<...>` value with one of the two forms; a pasted template line is denied.
-  The `env` in `--settings` links the worker's telemetry to this session (probed: it reaches the worker's hooks; a shell prefix does not, so do not use one; unverified: that `${CLAUDE_SESSION_ID}` expands to this session's id). A worker reached by message in an operator's open session gets no link.
+  The `env` in `--settings` links the worker's telemetry to this session (probed: it reaches the worker's hooks; a shell prefix does not, so do not use one). `OTEL_RESOURCE_ATTRIBUTES` carries the same ids to the native exporter as plain `key=value` pairs with no spaces, as the monitoring doc requires. Unverified: that `${CLAUDE_SESSION_ID}` expands to this session's id, and that an `OTEL_RESOURCE_ATTRIBUTES` set in `--settings` `env` reaches the exporter's resource (no `pco.*` attribute has been seen in the collector file yet). A worker reached by message in an operator's open session gets no link.
   Workers are builders on Sonnet; review stays on Opus via the reviewer agent.
   A successor director is launched the same way (this gate applies), on `PCO_DIRECTOR_MODEL` (default Opus): section 9.
 - Ask each worker for one idle notice (`SendMessage` with `notify_when_idle: true`). Do not poll in a tight loop.
@@ -115,7 +115,7 @@ Use when the run will not fit one session's shell-call limit (the limit of the r
 the director runs in, if it sets one), e.g. a backlog with several slices, in one repo or several. The background director runs it; the
 operator's session never does it, nor forks or subagents (they spend that session's budget: `FLEET_APPROACH.md` §4).
 - Launch: the operator's session starts the director from the repo root with
-  `claude --bg --model "${PCO_DIRECTOR_MODEL:-opus}" --permission-mode auto -n <name> --settings '{"env":{"PCO_PARENT_SESSION":"${CLAUDE_SESSION_ID}"}}' '<brief>'`.
+  `claude --bg --model "${PCO_DIRECTOR_MODEL:-opus}" --permission-mode auto -n <name> --settings '{"env":{"PCO_PARENT_SESSION":"${CLAUDE_SESSION_ID}","OTEL_RESOURCE_ATTRIBUTES":"pco.parent_session=${CLAUDE_SESSION_ID}"}}' '<brief>'`.
   The launching session's shell expands `PCO_DIRECTOR_MODEL` (default `opus`).
   No `PCO_DIRECTOR_GEN`, so this director is generation 0 and its successors set 1, 2 and so on (section 9).
   The brief quotes the operator's words and carries the section 4 fields, including the `Retained-code check:` line.
@@ -180,7 +180,7 @@ for the operator to start one. Operator, 2026-11-11 (relayed): "I dont agree on:
      `true pco-director-release` on its own (a hook moves the marker `<git-common-dir>/pco-director` to
      `pco-director.released`; only the holder may release). Confirm it took: the hook prints the release note, the marker
      file is gone and `pco-director.released` exists. Then:
-     `claude --bg --model "${PCO_DIRECTOR_MODEL:-opus}" --permission-mode auto -n <name> --settings '{"env":{"PCO_PARENT_SESSION":"${CLAUDE_SESSION_ID}","PCO_DIRECTOR_GEN":"<own generation + 1>"}}' '<brief>'`.
+     `claude --bg --model "${PCO_DIRECTOR_MODEL:-opus}" --permission-mode auto -n <name> --settings '{"env":{"PCO_PARENT_SESSION":"${CLAUDE_SESSION_ID}","PCO_DIRECTOR_GEN":"<own generation + 1>","OTEL_RESOURCE_ATTRIBUTES":"pco.parent_session=${CLAUDE_SESSION_ID}"}}' '<brief>'`.
      The loop guard on `PCO_DIRECTOR_GEN` is in the director section of `claude/README.md` (variable table there). The
      successor's trace id is its own session id, shared with its workers; `PCO_PARENT_SESSION` links it to you. The
      brief holds the peer sessions the successor may message, the commit-gate mechanics, the line "when the SESSION
@@ -271,4 +271,4 @@ cloud session is marked unverified; the run record is `CLOUD_AGENTS.md` in ai_ag
   early (section 9 checklist unchanged, launch by `create_session`).
 - **Telemetry**: the container is reclaimed, so nothing local survives; the evidence of a cloud run is its commits
   and the anchor doc.
-- **Not applicable**: `trust_check.sh`, `caffeinate`; `claude agents` is replaced by `get_session` and `list_sessions`.
+- **Not applicable**: `caffeinate`; `claude agents` is replaced by `get_session` and `list_sessions`.

@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
-# Reads a shell command on stdin. Finds the one `claude ... --bg` segment (up to the next control
+# Reads a shell command on stdin. Finds the one `claude ... --bg` or `--background` segment (up to the next control
 # operator) and prints its brief, the last positional argument whatever the flag order, then exit 0.
 # Exit 1 (reason on stdout) when the brief cannot be read: unbalanced quotes, $(...), backticks,
-# $'...', a heredoc, @file, no positional argument, or more than one `claude --bg` segment.
+# $'...', a heredoc, @file, no positional argument, or more than one `claude --bg` or `--background` segment.
 use strict; use warnings;
 use FindBin;
 use lib $FindBin::Bin;
@@ -42,7 +42,7 @@ for (my $i = 0; $i < @t; $i++) {
   unread('@file argument') if $pos[-1] =~ /^@/;
   push @briefs, $pos[-1];
 }
-unread('no claude --bg segment') unless @briefs;
-unread('more than one claude --bg segment') if @briefs > 1;
+unread('no claude --bg or --background segment') unless @briefs;
+unread('more than one claude --bg or --background segment') if @briefs > 1;
 print $briefs[0];
 exit 0;

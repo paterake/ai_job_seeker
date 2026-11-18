@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse: a dispatch must carry a Retained-code check line in its brief. A dispatch is a Bash `claude ... --bg`
+# PreToolUse: a dispatch must carry a Retained-code check line in its brief. A dispatch is a Bash `claude ... --bg` or `--background`
 # command (brief: its last positional argument) or a cloud `mcp__claude-code-remote__create_session` call (brief:
 # tool_input.prompt; an empty prompt is denied). Proves a record exists in the brief at dispatch, not that
 # decision-check ran or was right. Anything else exits 0 silently, with no telemetry.
@@ -14,7 +14,7 @@ else
   via=bg
   cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')" \
     || { printf 'gate: jq failed, refused (fail closed)\n' >&2; exit 2; }
-  grep -Eq '(^|[;&|(`[:space:]])claude[[:space:]]([^;&|]*[[:space:]])?--bg([[:space:]]|$)' <<<"${cmd//$'\n'/ }" || exit 0   # newlines folded: grep matches per line
+  grep -Eq '(^|[;&|(`[:space:]])claude[[:space:]]([^;&|]*[[:space:]])?--(bg|background)([[:space:]]|$)' <<<"${cmd//$'\n'/ }" || exit 0   # newlines folded: grep matches per line
 fi
 
 sid=""; tree=""
@@ -33,7 +33,7 @@ else
 how="Add one line to the brief, in one of these forms: $forms. Send the brief inline in single quotes (write each ' as '\\'')."
 
 brief="$(printf '%s' "$cmd" | perl "$(dirname "$0")/dispatch_brief.pl")" \
-  || deny "DISPATCH GATE: cannot read the brief of this claude --bg command (${brief:-no detail}). Use one claude --bg command with an inline brief in single quotes: no heredoc, \$(...), backticks outside single quotes, or @file. $how" brief_unreadable
+  || deny "DISPATCH GATE: cannot read the brief of this claude --bg or --background command (${brief:-no detail}). Use one claude --bg or --background command with an inline brief in single quotes: no heredoc, \$(...), backticks outside single quotes, or @file. $how" brief_unreadable
 fi
 
 re='^[[:space:]]*Retained-code check:[[:space:]]*(not a metric-driven backlog|decision-check CONSISTENT, excluded: (.+))[[:space:]]*$'

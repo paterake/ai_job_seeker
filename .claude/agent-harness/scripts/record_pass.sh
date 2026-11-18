@@ -9,11 +9,9 @@ cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty')"
 
 # The reviewer's final answer:
 # - PostToolUse on SubagentHandback (background and interactive sessions): the report is the call's
-#   tool_input.message, delivered in the hook input itself. The transcript is written asynchronously
-#   and may lag when SubagentStop fires, so this hook input is the primary source.
-# - SubagentStop with a final text answer: last_assistant_message. A hand-back reaches SubagentStop
-#   only through the transcript, read as a last resort (an interim PASS followed by another tool call
-#   records nothing).
+#   tool_input.message, delivered in the hook input itself.
+# - SubagentStop with a final text answer: last_assistant_message. Nothing else is read; a hook input
+#   with neither records nothing.
 event="$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')"
 agent_type="$(printf '%s' "$payload" | jq -r '.agent_type // empty')"
 final=""
@@ -25,17 +23,7 @@ case "$event" in
     final="$(printf '%s' "$payload" | jq -r '.tool_input.message // empty')"
     ;;
   SubagentStop)
-    transcript="$(printf '%s' "$payload" | jq -r '.agent_transcript_path // empty')"
-    case "$transcript" in "~/"*) transcript="$HOME/${transcript#\~/}" ;; esac
     final="$(printf '%s' "$payload" | jq -r '.last_assistant_message // empty')"
-    if printf '%s' "$final" | head -n 1 | grep -Eq '^VERDICT: '; then
-      :
-    elif [ -n "$transcript" ] && [ -f "$transcript" ]; then
-      final="$(jq -rs '[.[] | select(.type == "assistant") | .message.content[]?
-          | select(.type != "thinking" and .type != "redacted_thinking")] | last
-          | if .type == "tool_use" and .name == "SubagentHandback" then (.input.message // "")
-            elif .type == "text" then .text else "" end' "$transcript" 2>/dev/null)"
-    fi
     ;;
   *) exit 0 ;;
 esac

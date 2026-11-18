@@ -42,7 +42,16 @@
             "args": [
               "gate_commit.sh"
             ],
-            "if": "Bash(git *)",
+            "if": "Bash(*git*commit*)",
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/agent-harness/cloud_only.sh",
+            "args": [
+              "gate_commit.sh"
+            ],
+            "if": "Bash(*git*push*)",
             "onFailure": "block"
           },
           {
@@ -51,7 +60,7 @@
             "args": [
               "check_work_ids.sh"
             ],
-            "if": "Bash(git *)",
+            "if": "Bash(*git*commit*)",
             "onFailure": "block"
           }
         ]
@@ -79,36 +88,6 @@
               "gate_add_repo.sh"
             ],
             "onFailure": "block"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/agent-harness/cloud_only.sh",
-            "args": [
-              "session_start.sh",
-              "1"
-            ]
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/agent-harness/cloud_only.sh",
-            "args": [
-              "session_start.sh",
-              "2"
-            ]
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/agent-harness/cloud_only.sh",
-            "args": [
-              "session_start.sh",
-              "3"
-            ]
           }
         ]
       }

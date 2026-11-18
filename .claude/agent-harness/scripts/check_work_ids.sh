@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# PreToolUse (Bash, if "git *"): deny a commit whose staged diff ADDS a line matching a
+# PreToolUse (Bash, if "*git*commit*"): deny a commit whose staged diff ADDS a line matching a
 # repo-supplied work-id pattern. Patterns come from the staged .pco/work_id_patterns.json; the
 # harness ships none. Own hook entry, separate from gate_commit.sh, so a bug here cannot trip
 # that script's fail-closed trap. Config errors fail closed only once the repo config is in the index;
-# a hook crash, timeout or start failure blocks every git command in every repo (onFailure: block on Bash(git *)).
+# a hook crash, timeout or start failure blocks every command whose text holds git and commit (onFailure: block on Bash(*git*commit*)).
 set -uo pipefail
 
 GATE_TOOL=check_work_ids
@@ -13,7 +13,7 @@ payload="$(cat)" || exit 0
 cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty')" || exit 0
 cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')" || exit 0
 sid="$(printf '%s' "$payload" | jq -r '.session_id // empty')" || sid=""
-grep -Eq '(^|[;&|(`[:space:]])git([[:space:]]+(-[cC]|--(namespace|config-env|shallow-file|attr-source|git-dir|work-tree))[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)' <<<"$cmd" || exit 0
+grep -Eq '(^|[;&|(`[:space:]])([^[:space:];&|(`]*/)?git([[:space:]]+(-[cC]|--(namespace|config-env|shallow-file|attr-source|git-dir|work-tree))[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)' <<<"$cmd" || exit 0
 . "$(dirname "$0")/gate_deny.sh" || { printf 'gate: gate_deny.sh missing, refused (fail closed)\n' >&2; exit 2; }
 
 root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)" || { tel allowed not_a_repo; exit 0; }   # gate_commit.sh denies this case
