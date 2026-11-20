@@ -1,5 +1,5 @@
 {
-  "_comment": "Repo-owned TRAE hook wiring. The baseline hooks run the gate adapters that distill_harness.py wire installs in .trae/hooks/. The SessionStart hook loads the PCO core. Add project-specific hooks below the governed baseline.",
+  "_comment": "Repo-owned TRAE hook wiring. The baseline hooks run the gate adapters that distill_harness.py wire installs in .trae/hooks/; the SessionStart hook loads the PCO core, and the PostToolUse hook appends tool-call telemetry. Add project-specific hooks below the governed baseline.",
   "version": 1,
   "hooks": {
     "PreToolUse": [
@@ -12,6 +12,11 @@
       ]},
       {"matcher": "Read|Grep", "hooks": [
         {"type": "command", "command": "\"${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}\"/.trae/hooks/check_data_guard.sh"}
+      ]}
+    ],
+    "PostToolUse": [
+      {"hooks": [
+        {"type": "command", "command": "\"${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}\"/.trae/hooks/tel_emit.sh"}
       ]}
     ],
     "SessionStart": [
