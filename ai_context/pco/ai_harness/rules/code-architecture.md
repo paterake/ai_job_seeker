@@ -249,13 +249,19 @@ stale fact, and a deferred doc fix is never made.
   warrant, is not a reason; neither is custom code being faster to write.
 - Custom code that reimplements something an OSS library already provides well is a governance violation,
   not just a style preference.
+- Trust an adopted tool for what it does. Once a maintained library or a recognised standard provides a behaviour,
+  that behaviour is the tool's to define: a test that pins the adopted tool's output, version or internals is the
+  defect, not the tool (`assurance.md` → Test Catalogue). The swap is still proved against the intent — by
+  recording and reviewing the output, never by pinning the tool.
 - **Consequence:** custom code reimplements tested paths with fewer users finding its bugs, and its maintenance
   is paid forever; an adoption that rebuilds every feature of the code it replaces keeps that maintenance, and
   one that drops a feature the intent needs leaves a cleaner repo that delivers less. A port that keeps its own
-  interface after a standard is supported makes every implementer support two.
+  interface after a standard is supported makes every implementer support two. A test that pins the tool outlives
+  the code the adoption replaced, and the agent bends the product to keep it green.
   Evidence (reported by the operator, not verified in this repo): custom code accumulated across three incarnations
   of one consumer repo. The exceptions removed here ("too heavy", "more wiring", "a small in-line parser is faster")
-  were the openings the old rule text left for it.
+  were the openings the old rule text left for it. Tests written to conform to the custom output buckled the move
+  onto OSS tools: they pinned behaviour the tool now owns, and the agents building the adoption worked around them.
 
 ## Native First
 
