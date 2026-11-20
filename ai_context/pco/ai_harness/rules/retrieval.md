@@ -6,6 +6,8 @@ paths:
   - "**/retriev*/**"
   - "**/ingest*/**"
   - "**/query*/**"
+alwaysApply: false
+globs: "**/retriev*/**, **/ingest*/**, **/query*/**"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

@@ -5,6 +5,8 @@ spoke: assurance
 paths:
   - "ai_context/**/*.md"
   - "docs/**/*.md"
+alwaysApply: false
+globs: "ai_context/**/*.md, docs/**/*.md"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)

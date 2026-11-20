@@ -37,21 +37,22 @@ For a target repo to be “harness-wired”, it must have a **two-layer `ai_cont
 
 Additionally:
 
-- The agent's configuration links its rules to `ai_context/pco/ai_harness/rules`, and its skills one by one: PCO
+- Each wired agent's configuration links its rules to `ai_context/pco/ai_harness/rules`, and its skills one by one: PCO
   skills into `pco/ai_harness/skills/`, project skills into `project/ai_harness/skills/`. A project skill that
   reuses a PCO skill's name shadows it (the project link wins), which overrides a platform skill locally: name it
   differently. Only skills are wired from the project layer; its rules and hooks are not. Its pre-tool-use hooks run the agent-neutral gates in
   `ai_context/pco/ai_harness/hooks/` through an agent adapter kept in the agent's configuration, outside
   `ai_context/`. The PCO repo's sync tooling manages the links and installs the adapter.
-- The repo's agent entrypoint loads the always-loaded core from the synced layer (`ai_context/pco/AGENTS.md`) and
-  routes to `ai_context/project/ASSISTANTS.md`; there is no root copy of the core. The entrypoint is repo-owned and sync
-  never writes it.
-- One agent is wired; which entrypoint and configuration folder it uses is set in `ai_agent_pco`'s wiring
-  configuration, never in `ai_context/`. Other agents read the committed context their own way; the PCO does not
-  wire or validate them.
+- Each wired agent loads the always-loaded core from the synced layer (`ai_context/pco/AGENTS.md`) — through its
+  entrypoint, or through a session-start hook when it has no root entrypoint — and routes to
+  `ai_context/project/ASSISTANTS.md`; there is no root copy of the core. The entrypoint and hook are repo-owned and
+  sync never writes them.
+- The PCO wires one or more agents; each agent's entrypoint and configuration folder are set in `ai_agent_pco`'s
+  wiring configuration, never in `ai_context/`. An agent that is not wired reads the committed context its own
+  way; the PCO does not wire or validate it.
 - Content under `ai_context/` is agent-agnostic: it names no specific agent and never refers back to the agent
-  entrypoint or configuration folder. **Consequence:** governance that names one agent is coupled to that vendor,
-  and a consumer that runs a different agent reads instructions that do not apply to it.
+  entrypoint or configuration folder. **Consequence:** governance that names a specific agent is coupled to that
+  vendor, and a consumer that runs a different agent reads instructions that do not apply to it.
 
 **Why two layers:** `pco/` is a clean platform namespace that can be blown away and resynced without risk. `project/` is repo-owned and a sync never touches it. This eliminates namespace collision, so no protected-file list is needed.
 
@@ -87,7 +88,7 @@ Minimum required sections:
 The Additive Content Map must include a markdown table whose first column is `Spoke`. Each `Spoke` value must map to a canonical platform spoke (one of the `ai_context/` spoke folder names) or `harness`.
 
 A consumer references the PCO only from its agent layer, in three ways:
-- Load: the agent entrypoint loads the core (`ai_context/pco/AGENTS.md`).
+- Load: the agent's entrypoint (or its session-start hook, if it has no entrypoint) loads the core (`ai_context/pco/AGENTS.md`).
 - Navigation: entrypoint → core → `project/ASSISTANTS.md` → the PCO docs it names (spoke index `pco/ASSISTANTS.md`); a file under
   `ai_context/project/` may name the PCO doc its task needs.
 - Wiring: the agent configuration's links into `ai_context/pco/ai_harness/`.

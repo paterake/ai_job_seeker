@@ -6,6 +6,8 @@ paths:
   - "publication/**/*.md"
   - "ai_context/**/*.md"
   - "docs/enterprise/**/*.md"
+alwaysApply: false
+globs: "publication/**/*.md, ai_context/**/*.md, docs/enterprise/**/*.md"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

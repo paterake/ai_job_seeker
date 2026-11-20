@@ -10,6 +10,8 @@ paths:
   - "**/*.yaml"
   - "**/*.yml"
   - "**/*.toml"
+alwaysApply: false
+globs: "**/*.py, **/*.sh, **/*.js, **/*.ts, **/*.yaml, **/*.yml, **/*.toml"
 ---
 
 > Governance narrative: [architecture spoke](../../architecture/README.md)

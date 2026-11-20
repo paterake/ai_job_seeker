@@ -9,6 +9,8 @@ paths:
   - "audit/**"
   - "**/test_*.py"
   - "**/test_catalogue.yaml"
+alwaysApply: false
+globs: "**/eval*/**, **/*eval*.py, **/*eval*.yaml, audit/**, **/test_*.py, **/test_catalogue.yaml"
 ---
 
 > Governance narrative: [assurance spoke](../../assurance/README.md)

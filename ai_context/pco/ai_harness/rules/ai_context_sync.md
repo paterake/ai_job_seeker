@@ -4,6 +4,8 @@ basis: operational-experience
 spoke: knowledge
 paths:
   - "ai_context/**"
+alwaysApply: false
+globs: "ai_context/**"
 ---
 
 > Governance narrative: [knowledge spoke](../../knowledge/README.md)

@@ -5,6 +5,8 @@ spoke: integration
 paths:
   - "ai_context/**"
   - "audit/**"
+alwaysApply: false
+globs: "ai_context/**, audit/**"
 ---
 
 > Governance narrative: [integration spoke](../../integration/README.md)

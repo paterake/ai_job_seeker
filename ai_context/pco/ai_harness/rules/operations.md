@@ -4,6 +4,8 @@ basis: operational-experience
 spoke: operations
 paths:
   - "**/*.py"
+alwaysApply: false
+globs: "**/*.py"
 ---
 
 > Governance narrative: [operations spoke](../../operations/README.md). Tracing and telemetry: `observability.md`.

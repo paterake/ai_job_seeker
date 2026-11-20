@@ -4,6 +4,8 @@ basis: operational-experience
 spoke: observability
 paths:
   - "**/*.py"
+alwaysApply: false
+globs: "**/*.py"
 ---
 
 > Governance narrative: [observability spoke](../../observability/README.md)

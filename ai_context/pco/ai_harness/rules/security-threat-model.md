@@ -8,6 +8,8 @@ paths:
   - "**/*mcp*"
   - "**/retriev*/**"
   - "**/ingest*/**"
+alwaysApply: false
+globs: "**/agent*/**, **/tool*/**, **/*mcp*, **/retriev*/**, **/ingest*/**"
 ---
 
 > Governance narrative: [security spoke](../../security/README.md)

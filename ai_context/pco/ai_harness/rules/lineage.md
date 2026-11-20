@@ -4,6 +4,8 @@ basis: operational-experience
 spoke: lineage
 paths:
   - "**/*.py"
+alwaysApply: false
+globs: "**/*.py"
 ---
 
 > Governance narrative: [lineage spoke](../../lineage/README.md). Registry data: [master-data spoke](../../master-data/README.md).
